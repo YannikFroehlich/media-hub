@@ -37,4 +37,5 @@ $shortcut.Description = 'Media Hub starten'
 $shortcut.Save()
 
 & (Join-Path $InstallRoot 'start-media-hub.ps1') -Port $Port -InstallRoot $InstallRoot
-Write-Host "Media Hub wurde installiert und startet künftig automatisch."
+Write-Host "Media Hub wurde installiert. Der lokale Server startet künftig automatisch."
+Write-Host "Adresse: http://127.0.0.1:$Port"

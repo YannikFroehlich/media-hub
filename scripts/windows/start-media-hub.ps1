@@ -5,7 +5,6 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $healthUrl = "http://127.0.0.1:$Port/health"
-$appUrl = "http://127.0.0.1:$Port"
 $alreadyRunning = $false
 
 try {
@@ -43,17 +42,4 @@ if (-not $alreadyRunning) {
   if (-not $ready) {
     throw "Media Hub konnte Port $Port nicht starten. Möglicherweise ist der Port bereits belegt."
   }
-}
-
-$chromeCandidates = @(
-  (Join-Path $env:ProgramFiles 'Google\Chrome\Application\chrome.exe'),
-  (Join-Path ${env:ProgramFiles(x86)} 'Google\Chrome\Application\chrome.exe'),
-  (Join-Path $env:LOCALAPPDATA 'Google\Chrome\Application\chrome.exe')
-)
-$chrome = $chromeCandidates | Where-Object { $_ -and (Test-Path -LiteralPath $_) } | Select-Object -First 1
-
-if ($chrome) {
-  Start-Process -FilePath $chrome -ArgumentList @("--app=$appUrl", '--start-maximized')
-} else {
-  Start-Process $appUrl
 }
