@@ -1,59 +1,52 @@
-# MediaHub
+# Media Hub
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.21.
+Media Hub ist ein lokales, TV-taugliches Dashboard für Medien, Websites und häufig verwendete Tools. Gruppen, Verknüpfungen, Farben und das Erscheinungsbild lassen sich direkt in der Oberfläche anpassen und werden ausschließlich im Browser gespeichert.
 
-## Development server
+## Enthaltene Funktionen
 
-To start a local development server, run:
+- responsives 16:9-Dashboard mit Dark- und Light-Theme
+- Gruppen und Verknüpfungen erstellen, bearbeiten, löschen und per Drag-and-drop sortieren
+- sichere URL- und Sucheingabe mit konfigurierbarer Suchmaschine
+- Font-Awesome-Iconkatalog, eigene Icon-Klassen und frei wählbare Akzentfarben
+- Tastaturkürzel: `/` fokussiert die Suche, `E` schaltet den Editiermodus, `Esc` schließt Sidepanels
+- Pfeilnavigation für die zentralen Bedienelemente und Tastatur-Sortierung an den Handles
+- lokale Speicherung mit Backup sowie validierter JSON-Import und -Export
+- Windows-Startskripte für einen lokalen Server und ein maximiertes Chrome-Appfenster
 
-```bash
-ng serve
+## Entwicklung
+
+Voraussetzung ist Node.js 24 LTS.
+
+```powershell
+npm ci
+npm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Die Entwicklungsansicht läuft standardmäßig unter `http://localhost:4200`.
 
-## Code scaffolding
+## Prüfen
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```powershell
+npm test -- --watch=false
+npm run build
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Der Production-Build liegt anschließend unter `dist/media-hub/browser`.
 
-```bash
-ng generate --help
+## Lokal unter Windows installieren
+
+PowerShell im Projektordner öffnen und ausführen:
+
+```powershell
+.\scripts\windows\install.ps1
 ```
 
-## Building
+Das Skript erstellt den Production-Build, installiert ihn unter `%LOCALAPPDATA%\MediaHub`, richtet den Autostart ein und öffnet Media Hub unter `http://127.0.0.1:4173` als Chrome-App. Ist Chrome nicht installiert, wird der Standardbrowser verwendet.
 
-To build the project run:
+Deinstallation:
 
-```bash
-ng build
+```powershell
+.\scripts\windows\uninstall.ps1
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Die gespeicherte Hub-Konfiguration gehört zum Browserprofil und wird durch die Deinstallation der lokalen Dateien nicht automatisch gelöscht.
