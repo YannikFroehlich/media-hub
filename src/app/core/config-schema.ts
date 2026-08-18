@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { ExportEnvelope, MediaHubConfig } from './models';
 
+export const SHORTCUTS_PER_GROUP_LIMIT = 50;
+
 const colorSchema = z
   .string()
   .regex(/^#[0-9A-Fa-f]{6}$/)
@@ -40,7 +42,7 @@ const groupSchema = z.object({
     showTitle: z.boolean(),
     useAccentBackground: z.boolean(),
   }),
-  shortcuts: z.array(shortcutSchema).max(50),
+  shortcuts: z.array(shortcutSchema).max(SHORTCUTS_PER_GROUP_LIMIT),
 });
 
 export const mediaHubConfigSchema = z
