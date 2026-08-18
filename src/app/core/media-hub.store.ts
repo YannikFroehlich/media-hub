@@ -1,4 +1,5 @@
 import { computed, effect, Injectable, signal } from '@angular/core';
+import { SHORTCUTS_PER_GROUP_LIMIT } from './config-schema';
 import { ConfigRepository } from './config-repository';
 import { createDefaultConfig } from './default-config';
 import { HubGroup, MediaHubConfig, Shortcut } from './models';
@@ -10,7 +11,9 @@ export class MediaHubStore {
   private readonly configState = signal<MediaHubConfig>(this.initial.config);
   private readonly editModeState = signal(false);
   private readonly toastState = signal<string | null>(
-    this.initial.recovered ? 'Die gespeicherte Konfiguration wurde sicher wiederhergestellt.' : null,
+    this.initial.recovered
+      ? 'Die gespeicherte Konfiguration wurde sicher wiederhergestellt.'
+      : null,
   );
 
   readonly config = this.configState.asReadonly();
@@ -50,14 +53,18 @@ export class MediaHubStore {
   }
 
   upsertShortcut(groupId: string, shortcut: Shortcut): void {
-    const isNew = !this.groups().some((group) => group.shortcuts.some((item) => item.id === shortcut.id));
+    const isNew = !this.groups().some((group) =>
+      group.shortcuts.some((item) => item.id === shortcut.id),
+    );
     const groups = this.groups().map((group) => {
       const without = group.shortcuts.filter((item) => item.id !== shortcut.id);
       if (group.id !== groupId) return { ...group, shortcuts: without };
       return { ...group, shortcuts: [...without, shortcut] };
     });
     this.commit({ ...this.configState(), groups });
-    this.notify(isNew ? `„${shortcut.name}“ wurde hinzugefügt.` : `„${shortcut.name}“ wurde gespeichert.`);
+    this.notify(
+      isNew ? `„${shortcut.name}“ wurde hinzugefügt.` : `„${shortcut.name}“ wurde gespeichert.`,
+    );
   }
 
   deleteShortcut(groupId: string, shortcutId: string): void {
@@ -88,6 +95,38 @@ export class MediaHubStore {
       return { ...group, shortcuts };
     });
     this.commit({ ...this.configState(), groups });
+  }
+
+  moveShortcutToGroup(
+    fromGroupId: string,
+    toGroupId: string,
+    previousIndex: number,
+    currentIndex: number,
+  ): void {
+    const source = this.groups().find((group) => group.id === fromGroupId);
+    const target = this.groups().find((group) => group.id === toGroupId);
+    const moved = source?.shortcuts[previousIndex];
+    if (!source || !target || !moved || source.id === target.id) return;
+    if (target.shortcuts.length >= SHORTCUTS_PER_GROUP_LIMIT) {
+      this.notify(
+        `„${target.name}“ ist voll. Es sind höchstens ${SHORTCUTS_PER_GROUP_LIMIT} Verknüpfungen möglich.`,
+      );
+      return;
+    }
+
+    const groups = this.groups().map((group) => {
+      if (group.id === fromGroupId) {
+        return { ...group, shortcuts: group.shortcuts.filter((item) => item.id !== moved.id) };
+      }
+      if (group.id === toGroupId) {
+        const shortcuts = [...group.shortcuts];
+        shortcuts.splice(Math.max(0, Math.min(shortcuts.length, currentIndex)), 0, moved);
+        return { ...group, shortcuts };
+      }
+      return group;
+    });
+    this.commit({ ...this.configState(), groups });
+    this.notify(`„${moved.name}“ ist jetzt in „${target.name}“.`);
   }
 
   moveGroupByKeyboard(id: string, direction: number): void {

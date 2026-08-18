@@ -101,6 +101,7 @@
       <div
         class="dashboard"
         cdkDropList
+        cdkDropListGroup
         cdkDropListOrientation="mixed"
         [cdkDropListData]="store.groups()"
         (cdkDropListDropped)="dropGroup($event)"
@@ -167,9 +168,9 @@
               class="shortcut-strip"
               cdkDropList
               cdkDropListOrientation="horizontal"
-              [cdkDropListData]="group.shortcuts"
+              [cdkDropListData]="group"
               [cdkDropListDisabled]="!store.editMode() || !group.options.allowShortcutReordering"
-              (cdkDropListDropped)="dropShortcut(group.id, $event)"
+              (cdkDropListDropped)="dropShortcut($event)"
             >
               @for (shortcut of group.shortcuts; track shortcut.id) {
                 @if (shortcut.enabled || store.editMode()) {

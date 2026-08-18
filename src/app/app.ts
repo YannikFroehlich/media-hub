@@ -5,6 +5,7 @@ import {
   CdkDragHandle,
   CdkDragPlaceholder,
   CdkDropList,
+  CdkDropListGroup,
 } from '@angular/cdk/drag-drop';
 import { DOCUMENT } from '@angular/common';
 import {
@@ -43,6 +44,7 @@ interface IconPreset {
   imports: [
     ReactiveFormsModule,
     CdkDropList,
+    CdkDropListGroup,
     CdkDrag,
     CdkDragHandle,
     CdkDragPlaceholder,
@@ -399,9 +401,16 @@ export class App {
     this.announce(this.store.toast() ?? 'Gruppe neu angeordnet.');
   }
 
-  protected dropShortcut(groupId: string, event: CdkDragDrop<Shortcut[]>): void {
-    if (!this.store.editMode() || event.previousIndex === event.currentIndex) return;
-    this.store.reorderShortcuts(groupId, event.previousIndex, event.currentIndex);
+  protected dropShortcut(event: CdkDragDrop<HubGroup>): void {
+    if (!this.store.editMode()) return;
+    const source = event.previousContainer.data;
+    const target = event.container.data;
+    if (source.id === target.id) {
+      if (event.previousIndex === event.currentIndex) return;
+      this.store.reorderShortcuts(target.id, event.previousIndex, event.currentIndex);
+    } else {
+      this.store.moveShortcutToGroup(source.id, target.id, event.previousIndex, event.currentIndex);
+    }
     this.announce(this.store.toast() ?? 'Verknüpfung neu angeordnet.');
   }
 
