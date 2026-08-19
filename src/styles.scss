@@ -91,14 +91,46 @@ textarea {
   outline: none;
 }
 
+button:focus,
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible {
+  /* Remove browser default outline to avoid the thick outer border seen on some platforms */
+  outline: none !important;
+  /* Elevate the focused element to avoid clipping from overflow on ancestor containers */
+  position: relative;
+  z-index: 60;
   box-shadow:
     0 0 0 2px var(--bg),
-    0 0 0 4px var(--focus) !important;
+    0 0 0 5px var(--focus) !important;
+  border-radius: 8px;
+}
+
+/* Remove Firefox inner focus border for buttons */
+button::-moz-focus-inner {
+  border: 0;
+}
+
+/* Ensure interactive tiles and focusable controls have an uncropped, visible focus ring */
+[data-focusable]:focus,
+[data-focusable]:focus-visible,
+.shortcut-card:focus,
+.shortcut-card:focus-visible,
+.icon-button:focus,
+.icon-button:focus-visible,
+.header-button:focus,
+.header-button:focus-visible,
+.panel-close:focus,
+.panel-close:focus-visible {
+  outline: none !important;
+  position: relative;
+  z-index: 70;
+  box-shadow:
+    0 0 0 3px var(--bg),
+    0 0 0 6px var(--focus) !important;
+  border-radius: 12px;
 }
 
 app-root {
@@ -604,6 +636,19 @@ app-root {
   transform: translateY(-1px);
 }
 
+/* Focus visible for shortcut cards: use an inset highlight so it's not clipped by
+   ancestor overflow. This makes the focus ring appear inside the card border. */
+.shortcut-card:focus-visible {
+  outline: none;
+  border-color: var(--focus);
+  box-shadow: inset 0 0 0 3px rgba(55, 165, 255, 0.12), inset 0 1px 0 rgba(255,255,255,0.04);
+  transform: translateY(-1px);
+}
+
+/* Additional stronger focus state for keyboard navigation */
+.shortcut-card:focus-visible .shortcut-icon {
+  filter: drop-shadow(0 0 12px rgba(55,165,255,0.16));
+}
 .shortcut-card > span:last-child {
   display: block;
   width: 100%;
@@ -838,6 +883,71 @@ kbd {
   background: rgba(0, 4, 12, 0.28);
   backdrop-filter: blur(1px);
   animation: fade-in 180ms ease-out both;
+}
+
+/* Keyboard help overlay */
+.keyboard-help-backdrop {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  background: rgba(0, 4, 12, 0.32);
+  backdrop-filter: blur(1px);
+  animation: fade-in 180ms ease-out both;
+}
+
+.keyboard-help {
+  position: fixed;
+  z-index: 65;
+  left: 50%;
+  top: 12%;
+  transform: translateX(-50%);
+  width: min(880px, calc(100vw - 48px));
+  border-radius: 14px;
+  background: var(--surface-strong);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  animation: panel-in 180ms cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
+.keyboard-help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.keyboard-help-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.keyboard-help-content {
+  padding: 8px 4px;
+  color: var(--muted);
+}
+
+.keyboard-help dl {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 10px 18px;
+  align-items: center;
+}
+
+.kb-row dt {
+  margin: 0;
+}
+
+.kb-row dd {
+  margin: 0;
+}
+
+.kb-note {
+  margin-top: 12px;
+  color: var(--faint);
+  font-size: 13px;
 }
 
 .sidepanel {
