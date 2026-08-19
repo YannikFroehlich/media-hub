@@ -68,6 +68,7 @@ export class App {
   protected readonly selectedShortcutId = signal<string | null>(null);
   protected readonly importError = signal<string | null>(null);
   protected readonly liveMessage = signal('');
+  protected readonly showKeyboardHelp = signal(false);
   protected readonly colorPresets = [
     '#3882F6',
     '#2563EB',
@@ -490,23 +491,64 @@ export class App {
   protected handleGlobalKeyboard(event: KeyboardEvent): void {
     const target = event.target as HTMLElement | null;
     const isTyping = target?.matches('input, textarea, select, [contenteditable="true"]');
-    if (event.key === 'Escape' && this.panel()) {
+    const isSearchFocused = target === this.searchInput?.nativeElement;
+    // Escape should close either an open panel or the keyboard help overlay
+    if (event.key === 'Escape' && (this.panel() || this.showKeyboardHelp())) {
       event.preventDefault();
-      this.closePanel();
+      if (this.panel()) this.closePanel();
+      if (this.showKeyboardHelp()) this.closeKeyboardHelp();
       return;
     }
-    if (isTyping || this.panel()) return;
+
+    // If user is typing in an input other than the search box, or a panel/help is open,
+    // do not handle global shortcuts. Allow navigation when the search input is focused.
+    if ((isTyping && !isSearchFocused) || this.panel() || this.showKeyboardHelp()) return;
+
     if (event.key === '/') {
       event.preventDefault();
       this.searchInput?.nativeElement.focus();
       return;
     }
-    if (event.key.toLowerCase() === 'e') {
+
+    // '?' opens the keyboard help overlay (Shift+/ produces '?')
+    if (event.key === '?') {
+      event.preventDefault();
+      this.openKeyboardHelp();
+      return;
+    }
+
+    // 'E' should not trigger while typing into the search input
+    if (event.key.toLowerCase() === 'e' && !isSearchFocused) {
       event.preventDefault();
       this.store.toggleEditMode();
       return;
     }
+
+    // Activate focused element with Enter or Space
+    if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+      const active = document.activeElement as HTMLElement | null;
+      if (active?.matches && active.matches('[data-focusable]:not([disabled])')) {
+        event.preventDefault();
+        // Use click to trigger the element's action. For buttons this is native.
+        (active as HTMLElement).click();
+        return;
+      }
+    }
+
+    // Arrow-key spatial navigation. If nothing focused or focused element is not in the
+    // focusable set, move focus to the first focusable candidate.
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+      const candidates = Array.from(
+        this.document.querySelectorAll<HTMLElement>('[data-focusable]:not([disabled])'),
+      ).filter((el) => el.offsetParent !== null);
+      const active = document.activeElement as HTMLElement | null;
+      if (!active || !candidates.includes(active)) {
+        if (candidates[0]) {
+          event.preventDefault();
+          candidates[0].focus();
+        }
+        return;
+      }
       this.spatialNavigate(event);
     }
   }
@@ -518,6 +560,18 @@ export class App {
       event?.currentTarget instanceof HTMLElement
         ? event.currentTarget
         : (this.document.activeElement as HTMLElement | null);
+  }
+
+  protected openKeyboardHelp(): void {
+    this.showKeyboardHelp.set(true);
+  }
+
+  protected closeKeyboardHelp(): void {
+    this.showKeyboardHelp.set(false);
+  }
+
+  protected toggleKeyboardHelp(): void {
+    this.showKeyboardHelp.set(!this.showKeyboardHelp());
   }
 
   private activeForm() {
