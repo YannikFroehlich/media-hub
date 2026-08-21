@@ -51,6 +51,7 @@ export const mediaHubConfigSchema = z
     updatedAt: z.string(),
     settings: z.object({
       theme: z.enum(['dark', 'light']),
+      displayMode: z.enum(['standard', 'tv']).default('standard'),
       defaultOpenBehavior: z.enum(['same-tab', 'new-tab']),
       searchEngine: z.object({
         name: z.string().trim().min(1).max(32),

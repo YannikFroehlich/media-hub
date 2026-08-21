@@ -44,6 +44,7 @@ export function createDefaultConfig(): MediaHubConfig {
     updatedAt: new Date().toISOString(),
     settings: {
       theme: 'dark',
+      displayMode: 'standard',
       defaultOpenBehavior: 'same-tab',
       searchEngine: {
         name: 'Google',
@@ -54,7 +55,13 @@ export function createDefaultConfig(): MediaHubConfig {
     },
     groups: [
       group('streaming', 'Streaming', 'streaming', '#18b9ff', [
-        shortcut('Filme', 'https://www.netflix.com/browse/genre/34399', 'movies', '#2799ff', 'movies'),
+        shortcut(
+          'Filme',
+          'https://www.netflix.com/browse/genre/34399',
+          'movies',
+          '#2799ff',
+          'movies',
+        ),
         shortcut('Serien', 'https://www.netflix.com/browse/genre/83', 'tv', '#6556ff', 'series'),
         shortcut('YouTube', 'https://www.youtube.com', 'youtube', '#ff1738', 'youtube'),
         shortcut('Streams', 'https://www.twitch.tv', 'broadcast', '#a348ff', 'streams'),
@@ -63,7 +70,13 @@ export function createDefaultConfig(): MediaHubConfig {
         shortcut('Mediathek', 'https://www.ardmediathek.de', 'folder-play', '#9e47ff', 'mediathek'),
         shortcut('Genres', 'https://www.imdb.com/feature/genre', 'masks', '#a94bff', 'genres'),
         shortcut('Neuzugänge', 'https://www.justwatch.com/de', 'star', '#a448ff', 'new'),
-        shortcut('Watchlist', 'https://www.imdb.com/list/watchlist', 'bookmark', '#a448ff', 'watchlist'),
+        shortcut(
+          'Watchlist',
+          'https://www.imdb.com/list/watchlist',
+          'bookmark',
+          '#a448ff',
+          'watchlist',
+        ),
       ]),
       group('favorites', 'Favoriten', 'heart', '#82df29', [
         shortcut('Musik', 'https://open.spotify.com', 'music', '#82df29', 'music'),
