@@ -1,6 +1,7 @@
 export type Theme = 'dark' | 'light';
 export type OpenBehavior = 'inherit' | 'same-tab' | 'new-tab';
 export type GroupLayout = 'compact' | 'standard' | 'large';
+export type DisplayMode = 'standard' | 'tv';
 
 export type IconConfig =
   | { kind: 'preset'; id: string }
@@ -39,6 +40,7 @@ export interface HubGroup {
 
 export interface GlobalSettings {
   theme: Theme;
+  displayMode: DisplayMode;
   defaultOpenBehavior: Exclude<OpenBehavior, 'inherit'>;
   searchEngine: {
     name: string;

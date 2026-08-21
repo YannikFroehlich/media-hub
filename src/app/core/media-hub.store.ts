@@ -23,7 +23,10 @@ export class MediaHubStore {
   readonly toast = this.toastState.asReadonly();
 
   constructor() {
-    effect(() => document.documentElement.setAttribute('data-theme', this.settings().theme));
+    effect(() => {
+      document.documentElement.setAttribute('data-theme', this.settings().theme);
+      document.documentElement.setAttribute('data-display-mode', this.settings().displayMode);
+    });
   }
 
   toggleEditMode(): void {

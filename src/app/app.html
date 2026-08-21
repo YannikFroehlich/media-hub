@@ -1,4 +1,4 @@
-<div class="hub-shell" [class.is-editing]="store.editMode()">
+<div class="hub-shell" [class.is-editing]="store.editMode()" [class.cursor-idle]="cursorIdle()">
   <header class="topbar">
     <div class="brand" aria-label="Media Hub">
       <span class="brand-mark" aria-hidden="true">
@@ -678,6 +678,34 @@
                   ><strong>Hell</strong>
                 </button>
               </div>
+            </fieldset>
+
+            <fieldset class="picker-fieldset">
+              <legend>Anzeigegröße</legend>
+              <div class="segment-control">
+                <button
+                  type="button"
+                  [class.selected]="settingsForm.controls.displayMode.value === 'standard'"
+                  (click)="
+                    settingsForm.controls.displayMode.setValue('standard');
+                    settingsForm.markAsDirty()
+                  "
+                >
+                  Standard
+                </button>
+                <button
+                  type="button"
+                  [class.selected]="settingsForm.controls.displayMode.value === 'tv'"
+                  (click)="
+                    settingsForm.controls.displayMode.setValue('tv'); settingsForm.markAsDirty()
+                  "
+                >
+                  TV-Modus
+                </button>
+              </div>
+              <small
+                >Größere Kacheln und Schrift für die Ansicht aus mehreren Metern Entfernung.</small
+              >
             </fieldset>
 
             <label class="field">

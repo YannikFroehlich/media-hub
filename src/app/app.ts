@@ -21,6 +21,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { parseExport } from './core/config-schema';
 import { MediaHubStore } from './core/media-hub.store';
 import {
+  DisplayMode,
   ExportEnvelope,
   GroupLayout,
   HubGroup,
@@ -68,6 +69,7 @@ export class App {
   protected readonly selectedShortcutId = signal<string | null>(null);
   protected readonly importError = signal<string | null>(null);
   protected readonly liveMessage = signal('');
+  protected readonly cursorIdle = signal(false);
   protected readonly colorPresets = [
     '#3882F6',
     '#2563EB',
@@ -137,6 +139,7 @@ export class App {
 
   protected readonly settingsForm = this.fb.nonNullable.group({
     theme: ['dark' as 'dark' | 'light'],
+    displayMode: ['standard' as DisplayMode],
     defaultOpenBehavior: ['same-tab' as 'same-tab' | 'new-tab'],
     searchName: ['', [Validators.required, Validators.maxLength(32)]],
     searchTemplate: ['', Validators.required],
@@ -153,6 +156,10 @@ export class App {
     }
     return 'Media Hub anpassen';
   });
+
+  constructor() {
+    this.armCursorIdleTimer();
+  }
 
   protected iconClass(icon: IconConfig): string {
     if (icon.kind === 'font-awesome') return `${icon.family} ${icon.name}`;
@@ -233,6 +240,7 @@ export class App {
     const settings = this.store.settings();
     this.settingsForm.reset({
       theme: settings.theme,
+      displayMode: settings.displayMode,
       defaultOpenBehavior: settings.defaultOpenBehavior,
       searchName: settings.searchEngine.name,
       searchTemplate: settings.searchEngine.urlTemplate,
@@ -312,6 +320,7 @@ export class App {
     }
     this.store.updateSettings({
       theme: value.theme,
+      displayMode: value.displayMode,
       defaultOpenBehavior: value.defaultOpenBehavior,
       searchEngine: { name: value.searchName.trim(), urlTemplate: value.searchTemplate.trim() },
       showSubtitle: value.showSubtitle,
@@ -509,6 +518,19 @@ export class App {
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
       this.spatialNavigate(event);
     }
+  }
+
+  @HostListener('document:mousemove')
+  protected handlePointerActivity(): void {
+    this.armCursorIdleTimer();
+  }
+
+  private idleTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private armCursorIdleTimer(): void {
+    this.cursorIdle.set(false);
+    if (this.idleTimer !== null) window.clearTimeout(this.idleTimer);
+    this.idleTimer = window.setTimeout(() => this.cursorIdle.set(true), 3000);
   }
 
   private lastTrigger: HTMLElement | null = null;
