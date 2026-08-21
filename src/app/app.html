@@ -271,6 +271,29 @@
     </div>
   }
 
+  @if (showKeyboardHelp()) {
+    <div class="keyboard-help-backdrop" (click)="closeKeyboardHelp()"></div>
+    <section class="keyboard-help" role="dialog" aria-modal="true" aria-label="Tastaturkürzel">
+      <header class="keyboard-help-header">
+        <h2>Tastaturkürzel</h2>
+        <button class="panel-close" type="button" aria-label="Schließen" (click)="closeKeyboardHelp()">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </header>
+      <div class="keyboard-help-content">
+        <dl>
+          <div class="kb-row"><dt><kbd>/</kbd></dt><dd>Fokus auf die Suche</dd></div>
+          <div class="kb-row"><dt><kbd>E</kbd></dt><dd>Bearbeitungsmodus umschalten</dd></div>
+          <div class="kb-row"><dt><kbd>?</kbd></dt><dd>Diese Hilfe anzeigen</dd></div>
+          <div class="kb-row"><dt><kbd>Esc</kbd></dt><dd>Panel oder Hilfe schließen</dd></div>
+          <div class="kb-row"><dt><kbd>Pfeiltasten</kbd></dt><dd>Navigation zwischen Kacheln</dd></div>
+          <div class="kb-row"><dt><kbd>Enter</kbd></dt><dd>Ausgewählte Aktion / Shortcut ausführen</dd></div>
+        </dl>
+        <p class="kb-note">Weitere Kürzel: Drücke <kbd>/</kbd> für die Suche, <kbd>E</kbd> für Editiermodus.</p>
+      </div>
+    </section>
+  }
+
   @if (panel()) {
     <div class="panel-backdrop" (click)="closePanel()"></div>
     <aside
