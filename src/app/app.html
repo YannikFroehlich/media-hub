@@ -1,4 +1,13 @@
 <div class="hub-shell" [class.is-editing]="store.editMode()" [class.cursor-idle]="cursorIdle()">
+  <div
+    class="focus-glider"
+    aria-hidden="true"
+    [class.is-visible]="focusGlider().visible"
+    [style.transform]="focusGliderTransform()"
+    [style.width.px]="focusGlider().w"
+    [style.height.px]="focusGlider().h"
+  ></div>
+
   <header class="topbar">
     <div class="brand" aria-label="Media Hub">
       <span class="brand-mark" aria-hidden="true">
@@ -106,7 +115,7 @@
         [cdkDropListData]="store.groups()"
         (cdkDropListDropped)="dropGroup($event)"
       >
-        @for (group of store.groups(); track group.id) {
+        @for (group of store.groups(); track group.id; let groupIdx = $index) {
           <section
             class="group-card"
             cdkDrag
@@ -116,6 +125,7 @@
             [class.layout-large]="group.layout === 'large'"
             [class.accent-background]="group.options.useAccentBackground"
             [style.--group-color]="group.color"
+            [style.--stagger-index]="groupIdx"
           >
             <div class="group-placeholder" *cdkDragPlaceholder></div>
             <header class="group-header">
@@ -172,7 +182,7 @@
               [cdkDropListDisabled]="!store.editMode() || !group.options.allowShortcutReordering"
               (cdkDropListDropped)="dropShortcut($event)"
             >
-              @for (shortcut of group.shortcuts; track shortcut.id) {
+              @for (shortcut of group.shortcuts; track shortcut.id; let shortcutIdx = $index) {
                 @if (shortcut.enabled || store.editMode()) {
                   <button
                     class="shortcut-card"
@@ -182,6 +192,7 @@
                     [cdkDragDisabled]="!store.editMode() || !group.options.allowShortcutReordering"
                     [class.is-disabled]="!shortcut.enabled"
                     [style.--shortcut-color]="shortcut.color"
+                    [style.--stagger-index]="shortcutIdx"
                     data-focusable
                     [attr.title]="shortcut.name"
                     [attr.aria-label]="
