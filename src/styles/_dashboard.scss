@@ -1,0 +1,216 @@
+.dashboard-wrap {
+  position: relative;
+  z-index: 1;
+  width: min(1920px, 100%);
+  margin: 0 auto;
+  padding: 14px clamp(30px, 3vw, 56px) clamp(120px, 12vh, 150px);
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 24px;
+}
+
+.group-card {
+  --group-color: #18b9ff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: clamp(286px, 31vh, 330px);
+  padding: 20px 22px 17px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--group-color) 62%, transparent);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(
+      circle at 30% 0%,
+      color-mix(in srgb, var(--group-color) 7%, transparent),
+      transparent 48%
+    ),
+    linear-gradient(135deg, rgba(8, 21, 37, 0.86), rgba(5, 15, 28, 0.72));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 12px 34px rgba(0, 0, 0, 0.13);
+  transition:
+    border-color 170ms ease,
+    box-shadow 170ms ease,
+    transform 170ms ease;
+  animation: card-in 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(min(var(--stagger-index, 0), 8) * 70ms);
+}
+
+/* Rotating energy glow, revealed on hover/drag. Sits behind the header/strip content
+   (both are earlier flex-item paint order ties at the default z-index) and stays
+   inside the card's own overflow:hidden clip so it never bleeds past the border.
+   Inset well past the blur radius: a conic-gradient reaches full-bleed to its own
+   box edge at any given angle, so with inset:0 the blur got hard-clipped mid-fade
+   by overflow:hidden instead of tapering to transparent first — that hard seam is
+   what showed up at whichever edge the rotating band currently pointed at. */
+.group-card::before {
+  content: '';
+  position: absolute;
+  inset: 26px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0% 58%,
+    color-mix(in srgb, var(--group-color) 85%, white 15%) 76%,
+    transparent 94%
+  );
+  opacity: 0;
+  filter: blur(16px);
+  transition: opacity 260ms ease;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.group-card:hover::before,
+.group-card.cdk-drag-preview::before {
+  opacity: 0.5;
+  animation: group-spin 3.2s linear infinite;
+}
+
+:root[data-theme='light'] .group-card {
+  background:
+    radial-gradient(
+      circle at 30% 0%,
+      color-mix(in srgb, var(--group-color) 9%, transparent),
+      transparent 50%
+    ),
+    rgba(255, 255, 255, 0.76);
+  box-shadow: 0 10px 28px rgba(35, 67, 100, 0.09);
+}
+
+.group-card.accent-background {
+  background:
+    radial-gradient(
+      circle at 25% 10%,
+      color-mix(in srgb, var(--group-color) 22%, transparent),
+      transparent 52%
+    ),
+    linear-gradient(135deg, rgba(8, 21, 37, 0.9), rgba(5, 15, 28, 0.74));
+}
+
+.group-card.layout-compact {
+  min-height: 255px;
+}
+
+.group-card.layout-large {
+  min-height: 375px;
+}
+
+.group-card:hover {
+  border-color: color-mix(in srgb, var(--group-color) 84%, transparent);
+}
+
+.group-card.cdk-drag-preview {
+  border-color: var(--group-color);
+  box-shadow: 0 22px 70px color-mix(in srgb, var(--group-color) 22%, rgba(0, 0, 0, 0.5));
+  transform: rotate(0.7deg) scale(1.01);
+  /* The preview is a freshly cloned node — skip the entrance replay it would
+     otherwise trigger the instant a drag starts. */
+  animation: none;
+}
+
+.group-placeholder {
+  min-height: 300px;
+  border: 1px dashed color-mix(in srgb, var(--group-color) 72%, transparent);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--group-color) 8%, transparent);
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  min-height: 50px;
+  gap: 13px;
+  padding: 0 1px 13px;
+}
+
+.group-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin: 0;
+  color: var(--group-color);
+  font-size: var(--group-title-size);
+  font-weight: 680;
+  line-height: 1;
+}
+
+.group-header h2 i {
+  width: 32px;
+  text-align: center;
+  font-size: 27px;
+}
+
+.group-description {
+  min-width: 0;
+  margin: 1px 0 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drag-handle {
+  width: 28px;
+  height: 44px;
+  margin-left: -7px;
+  border: 0;
+  background: transparent;
+  color: #a8b2c0;
+  font-size: 25px;
+  cursor: grab;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.group-actions {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.group-actions .danger {
+  color: var(--danger);
+}
+
+.empty-dashboard {
+  display: flex;
+  min-height: 62vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 24px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.empty-dashboard > span {
+  display: grid;
+  place-items: center;
+  width: 86px;
+  height: 86px;
+  border-radius: 24px;
+  background: rgba(56, 130, 246, 0.13);
+  color: #4fa8ff;
+  font-size: 36px;
+}
+
+.empty-dashboard h1 {
+  margin: 24px 0 8px;
+}
+
+.empty-dashboard p {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 18px;
+}
