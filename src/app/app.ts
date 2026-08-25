@@ -71,6 +71,16 @@ export class App {
   protected readonly liveMessage = signal('');
   protected readonly cursorIdle = signal(false);
   protected readonly showKeyboardHelp = signal(false);
+  protected readonly focusGlider = signal<{
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    visible: boolean;
+  }>({ x: 0, y: 0, w: 0, h: 0, visible: false });
+  protected readonly focusGliderTransform = computed(
+    () => `translate(${this.focusGlider().x}px, ${this.focusGlider().y}px)`,
+  );
   protected readonly colorPresets = [
     '#3882F6',
     '#2563EB',
@@ -562,9 +572,22 @@ export class App {
     }
   }
 
-  @HostListener('document:mousemove')
-  protected handlePointerActivity(): void {
+  @HostListener('document:mousemove', ['$event'])
+  protected handlePointerActivity(event: MouseEvent): void {
     this.armCursorIdleTimer();
+    this.updateTiltTarget(event);
+  }
+
+  @HostListener('document:focusin', ['$event'])
+  protected handleFocusIn(event: FocusEvent): void {
+    this.updateFocusGlider(event.target as HTMLElement | null);
+  }
+
+  @HostListener('window:resize')
+  protected handleWindowResize(): void {
+    if (this.focusGlider().visible) {
+      this.updateFocusGlider(this.document.activeElement as HTMLElement | null);
+    }
   }
 
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -663,5 +686,65 @@ export class App {
       event.preventDefault();
       ranked[0].element.focus();
     }
+  }
+
+  private tiltTarget: HTMLElement | null = null;
+  private pendingTiltEvent: MouseEvent | null = null;
+  private tiltRafId: number | null = null;
+
+  // Only stash the event here; mousemove can fire far more often than the display
+  // refreshes, so reading layout (getBoundingClientRect) on every event thrashes
+  // the main thread. Do the actual read+write once per animation frame instead.
+  private updateTiltTarget(event: MouseEvent): void {
+    this.pendingTiltEvent = event;
+    if (this.tiltRafId !== null) return;
+    this.tiltRafId = requestAnimationFrame(() => {
+      this.tiltRafId = null;
+      if (this.pendingTiltEvent) this.applyTilt(this.pendingTiltEvent);
+    });
+  }
+
+  private applyTilt(event: MouseEvent): void {
+    const target = (event.target as HTMLElement | null)?.closest?.(
+      '.shortcut-card:not(.cdk-drag-preview)',
+    ) as HTMLElement | null;
+    if (target !== this.tiltTarget) {
+      this.resetTilt(this.tiltTarget);
+      this.tiltTarget = target;
+    }
+    if (!target) return;
+    const rect = target.getBoundingClientRect();
+    const px = (event.clientX - rect.left) / rect.width;
+    const py = (event.clientY - rect.top) / rect.height;
+    target.style.setProperty('--tilt-x', `${((0.5 - py) * 14).toFixed(2)}deg`);
+    target.style.setProperty('--tilt-y', `${((px - 0.5) * 14).toFixed(2)}deg`);
+    target.style.setProperty('--glow-x', `${(px * 100).toFixed(1)}%`);
+    target.style.setProperty('--glow-y', `${(py * 100).toFixed(1)}%`);
+  }
+
+  private resetTilt(element: HTMLElement | null): void {
+    element?.style.removeProperty('--tilt-x');
+    element?.style.removeProperty('--tilt-y');
+    element?.style.removeProperty('--glow-x');
+    element?.style.removeProperty('--glow-y');
+  }
+
+  private updateFocusGlider(target: HTMLElement | null): void {
+    // The search pill already has its own deliberate, understated focus treatment
+    // (see `.search input:focus-visible` / `.search:focus-within` in styles.scss) —
+    // the glider's glow would just re-add the thick ring that styling exists to avoid.
+    if (!target?.matches?.('[data-focusable]') || target.closest('.search')) {
+      this.focusGlider.update((state) => ({ ...state, visible: false }));
+      return;
+    }
+    const rect = target.getBoundingClientRect();
+    const pad = 4;
+    this.focusGlider.set({
+      x: rect.left - pad,
+      y: rect.top - pad,
+      w: rect.width + pad * 2,
+      h: rect.height + pad * 2,
+      visible: true,
+    });
   }
 }
