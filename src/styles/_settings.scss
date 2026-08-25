@@ -1,0 +1,129 @@
+.settings-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px;
+  border: 1px solid rgba(76, 144, 255, 0.25);
+  border-radius: 14px;
+  background: rgba(48, 112, 221, 0.1);
+}
+
+.settings-hero > span {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 12px;
+  background: rgba(58, 133, 255, 0.18);
+  color: #66adff;
+  font-size: 20px;
+}
+
+.settings-hero div,
+.settings-hero div span,
+.data-card > div > span,
+.reset-card span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.settings-hero strong {
+  font-size: 16px;
+}
+
+.settings-hero small,
+.data-card small,
+.reset-card small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.theme-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.theme-cards > button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.theme-cards > button.selected {
+  border-color: #4c9cff;
+  box-shadow: 0 0 0 2px rgba(55, 135, 255, 0.14);
+}
+
+.theme-preview {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 38px;
+  border-radius: 8px;
+}
+
+.theme-preview.dark {
+  background: #07101f;
+  color: #a88aff;
+}
+
+.theme-preview.light {
+  border: 1px solid #d3dfec;
+  background: #f5f9fd;
+  color: #f1a61a;
+}
+
+.data-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface-soft);
+}
+
+.data-card > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.data-card > div:first-child > i {
+  color: #4aa0ff;
+  font-size: 21px;
+}
+
+.data-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+}
+
+.reset-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 73, 91, 0.2);
+  border-radius: 12px;
+  background: rgba(114, 23, 34, 0.11);
+  color: #ff6875;
+  text-align: left;
+}
+
+.reset-card:hover {
+  border-color: rgba(255, 73, 91, 0.43);
+  background: rgba(114, 23, 34, 0.2);
+}
+
+.reset-card small {
+  color: var(--muted);
+}

@@ -1,0 +1,48 @@
+.hub-shell {
+  position: relative;
+  min-height: 100vh;
+  isolation: isolate;
+  background: linear-gradient(145deg, var(--bg-deep), var(--bg) 50%, #020817);
+  overflow: hidden;
+}
+
+/* Living background: two drifting nebula blobs, animated via transform (not the
+   gradient position itself, which CSS can't tween without @property) so they glide
+   slowly behind the dashboard content. */
+.hub-shell::before,
+.hub-shell::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: -20%;
+  pointer-events: none;
+  filter: blur(6px);
+  will-change: transform;
+}
+
+.hub-shell::before {
+  background: radial-gradient(circle at 35% 34%, rgba(12, 61, 105, 0.16), transparent 34%);
+  animation: aurora-drift-a 46s ease-in-out infinite;
+}
+
+.hub-shell::after {
+  background: radial-gradient(circle at 90% 7%, rgba(84, 31, 189, 0.12), transparent 27%);
+  animation: aurora-drift-b 58s ease-in-out infinite;
+}
+
+.hub-shell.cursor-idle,
+.hub-shell.cursor-idle * {
+  cursor: none !important;
+}
+
+:root[data-theme='light'] .hub-shell {
+  background: linear-gradient(145deg, var(--bg-deep), var(--bg));
+}
+
+:root[data-theme='light'] .hub-shell::before {
+  background: radial-gradient(circle at 35% 34%, rgba(52, 154, 219, 0.14), transparent 35%);
+}
+
+:root[data-theme='light'] .hub-shell::after {
+  background: radial-gradient(circle at 90% 7%, rgba(124, 77, 255, 0.09), transparent 30%);
+}

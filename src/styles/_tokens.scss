@@ -1,0 +1,55 @@
+:root {
+  color-scheme: dark;
+  --bg: #020712;
+  --bg-deep: #00040d;
+  --surface: rgba(9, 20, 36, 0.78);
+  --surface-strong: rgba(13, 25, 43, 0.96);
+  --surface-soft: rgba(19, 33, 51, 0.72);
+  --surface-hover: rgba(28, 45, 68, 0.82);
+  --line: rgba(153, 181, 214, 0.2);
+  --line-strong: rgba(161, 190, 224, 0.34);
+  --text: #f6f8fc;
+  --muted: #a4acbb;
+  --faint: #727d8e;
+  --primary: #7944ff;
+  --primary-bright: #9961ff;
+  --cyan: #19c7ff;
+  --danger: #ff3a4c;
+  --shadow: 0 18px 60px rgba(0, 0, 0, 0.34);
+  --focus: #37a5ff;
+  --radius-xl: 20px;
+  --radius-lg: 15px;
+  --radius-md: 12px;
+  --tile-basis: clamp(122px, 7.8vw, 142px);
+  --tile-height: clamp(146px, 17vh, 172px);
+  --tile-icon-size: clamp(35px, 2.5vw, 46px);
+  --tile-label-size: clamp(17px, 1.05vw, 21px);
+  --group-title-size: clamp(21px, 1.35vw, 27px);
+  font-family: 'Roboto Condensed Variable', 'Segoe UI', sans-serif;
+  font-synthesis: none;
+  background: var(--bg);
+}
+
+:root[data-display-mode='tv'] {
+  --tile-basis: clamp(152px, 10vw, 192px);
+  --tile-height: clamp(182px, 21vh, 218px);
+  --tile-icon-size: clamp(46px, 3.2vw, 58px);
+  --tile-label-size: clamp(21px, 1.4vw, 26px);
+  --group-title-size: clamp(26px, 1.7vw, 34px);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #e9f0f8;
+  --bg-deep: #dbe6f1;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-strong: rgba(252, 254, 255, 0.98);
+  --surface-soft: rgba(238, 245, 252, 0.88);
+  --surface-hover: rgba(225, 237, 249, 0.98);
+  --line: rgba(24, 52, 84, 0.17);
+  --line-strong: rgba(24, 52, 84, 0.32);
+  --text: #0c1c31;
+  --muted: #52647a;
+  --faint: #75869a;
+  --shadow: 0 18px 48px rgba(36, 69, 106, 0.15);
+}

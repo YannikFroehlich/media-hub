@@ -1,0 +1,23 @@
+.toast {
+  position: fixed;
+  z-index: 70;
+  left: 50%;
+  bottom: 112px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  max-width: min(440px, calc(100vw - 32px));
+  padding: 13px 17px;
+  border: 1px solid rgba(80, 193, 132, 0.4);
+  border-radius: 12px;
+  background: rgba(13, 37, 34, 0.94);
+  color: #b7f1d1;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
+  transform: translateX(-50%);
+  animation: toast-in 180ms ease-out both;
+}
+
+:root[data-theme='light'] .toast {
+  background: rgba(236, 255, 246, 0.98);
+  color: #14633a;
+}
