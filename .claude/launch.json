@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["start"],
       "port": 4200
+    },
+    {
+      "name": "media-hub-8099",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start", "--", "--port", "8099"],
+      "port": 8099
     }
   ]
 }
