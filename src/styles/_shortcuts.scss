@@ -40,12 +40,14 @@
   background:
     radial-gradient(
       circle at 50% 25%,
-      color-mix(in srgb, var(--shortcut-color) 7%, transparent),
+      color-mix(in srgb, var(--shortcut-color) 9%, transparent),
       transparent 44%
     ),
-    linear-gradient(145deg, rgba(25, 42, 63, 0.84), rgba(10, 22, 39, 0.84));
+    linear-gradient(145deg, rgba(30, 42, 60, 0.42), rgba(14, 22, 36, 0.4));
+  backdrop-filter: blur(var(--blur-sm));
+  -webkit-backdrop-filter: blur(var(--blur-sm));
   color: var(--text);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   /* Transform gets its own short, snappy transition so the cursor-tracking tilt
      (updated once per animation frame, see App.applyTilt) doesn't inherit the
      slower 160ms used for color/background settling. */
@@ -95,10 +97,11 @@
   background:
     radial-gradient(
       circle at 50% 25%,
-      color-mix(in srgb, var(--shortcut-color) 8%, transparent),
+      color-mix(in srgb, var(--shortcut-color) 9%, transparent),
       transparent 48%
     ),
-    rgba(247, 251, 255, 0.95);
+    rgba(255, 255, 255, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .shortcut-card:hover {
@@ -233,13 +236,9 @@
 
 .add-card {
   gap: 12px;
-  border: 1px dashed rgba(155, 167, 185, 0.58);
-  background: rgba(8, 17, 30, 0.35);
+  border: 1px dashed var(--line-strong);
+  background: var(--surface-soft);
   color: var(--muted);
-}
-
-:root[data-theme='light'] .add-card {
-  background: rgba(240, 247, 253, 0.72);
 }
 
 .add-card > i {

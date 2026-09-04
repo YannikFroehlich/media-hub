@@ -1,13 +1,13 @@
 :root {
   color-scheme: dark;
-  --bg: #020712;
-  --bg-deep: #00040d;
-  --surface: rgba(9, 20, 36, 0.78);
-  --surface-strong: rgba(13, 25, 43, 0.96);
-  --surface-soft: rgba(19, 33, 51, 0.72);
-  --surface-hover: rgba(28, 45, 68, 0.82);
-  --line: rgba(153, 181, 214, 0.2);
-  --line-strong: rgba(161, 190, 224, 0.34);
+  --bg: #05070d;
+  --bg-deep: #020308;
+  --surface: rgba(16, 22, 34, 0.6);
+  --surface-strong: rgba(18, 25, 38, 0.86);
+  --surface-soft: rgba(22, 29, 43, 0.5);
+  --surface-hover: rgba(34, 43, 61, 0.62);
+  --line: rgba(180, 196, 224, 0.12);
+  --line-strong: rgba(190, 205, 230, 0.22);
   --text: #f6f8fc;
   --muted: #a4acbb;
   --faint: #727d8e;
@@ -15,11 +15,17 @@
   --primary-bright: #9961ff;
   --cyan: #19c7ff;
   --danger: #ff3a4c;
-  --shadow: 0 18px 60px rgba(0, 0, 0, 0.34);
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.18);
+  --shadow-md: 0 16px 40px -12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 30px 80px -20px rgba(0, 0, 0, 0.55);
+  --shadow: var(--shadow-md);
   --focus: #37a5ff;
-  --radius-xl: 20px;
-  --radius-lg: 15px;
-  --radius-md: 12px;
+  --blur-sm: 14px;
+  --blur-md: 22px;
+  --blur-lg: 34px;
+  --radius-xl: 24px;
+  --radius-lg: 18px;
+  --radius-md: 14px;
   --tile-basis: clamp(122px, 7.8vw, 142px);
   --tile-height: clamp(146px, 17vh, 172px);
   --tile-icon-size: clamp(35px, 2.5vw, 46px);
@@ -40,16 +46,19 @@
 
 :root[data-theme='light'] {
   color-scheme: light;
-  --bg: #e9f0f8;
-  --bg-deep: #dbe6f1;
-  --surface: rgba(255, 255, 255, 0.78);
-  --surface-strong: rgba(252, 254, 255, 0.98);
-  --surface-soft: rgba(238, 245, 252, 0.88);
-  --surface-hover: rgba(225, 237, 249, 0.98);
-  --line: rgba(24, 52, 84, 0.17);
-  --line-strong: rgba(24, 52, 84, 0.32);
-  --text: #0c1c31;
-  --muted: #52647a;
-  --faint: #75869a;
-  --shadow: 0 18px 48px rgba(36, 69, 106, 0.15);
+  --bg: #eef1f7;
+  --bg-deep: #e3e7f0;
+  --surface: rgba(255, 255, 255, 0.66);
+  --surface-strong: rgba(255, 255, 255, 0.92);
+  --surface-soft: rgba(255, 255, 255, 0.58);
+  --surface-hover: rgba(255, 255, 255, 0.85);
+  --line: rgba(30, 41, 59, 0.08);
+  --line-strong: rgba(30, 41, 59, 0.16);
+  --text: #10182b;
+  --muted: #57647a;
+  --faint: #7c879c;
+  --shadow-sm: 0 2px 10px rgba(30, 41, 59, 0.05);
+  --shadow-md: 0 16px 40px -14px rgba(30, 41, 59, 0.16);
+  --shadow-lg: 0 30px 70px -20px rgba(30, 41, 59, 0.22);
+  --shadow: var(--shadow-md);
 }
