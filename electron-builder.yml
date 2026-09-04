@@ -1,0 +1,19 @@
+appId: com.solarlux.mediahub
+productName: Media Hub
+directories:
+  output: release
+files:
+  - electron/**/*
+  - scripts/windows/server.mjs
+  - package.json
+  - "!node_modules/**/*"
+extraResources:
+  - from: dist/media-hub/browser
+    to: app
+asar: true
+win:
+  target: portable
+  icon: public/favicon.png
+  artifactName: '${productName}-${version}-portable.exe'
+portable:
+  requestExecutionLevel: user

@@ -18,12 +18,15 @@ npm start                     # dev server at http://localhost:4200
 npm test -- --watch=false     # run the full Vitest suite once
 npm run build                 # production build (enforces Angular budgets)
 npm run serve:prod            # serve dist/media-hub/browser at http://127.0.0.1:4173
+npm run electron:dev          # build + launch the Windows tray app locally
+npm run electron:pack         # build + package a portable Windows .exe (release/)
 ```
 
 - Tests use Angular's `@angular/build:unit-test` builder with Vitest and jsdom. There is no separate lint script or `ng lint`.
 - To run a single spec file: `ng test -- src/app/core/url-resolver.spec.ts` (or open Vitest watch mode with `npm test` and filter interactively).
 - Format before submitting broad changes: `npx prettier --write <files>` (100-char print width, single quotes, Angular parser for `*.html`, configured in `.prettierrc`).
-- Windows install/uninstall scripts (`scripts/windows/install.ps1`, `uninstall.ps1`) build the app, copy it to `%LOCALAPPDATA%\MediaHub`, and register autostart via `start-media-hub.ps1` + `server.mjs` (a small static file server with a `/health` endpoint and path-traversal guard). These are user-facing deployment tools, not part of the normal dev loop.
+- `scripts/windows/server.mjs` is a small dependency-free static file server (`/health` endpoint, path-traversal guard, SPA fallback) exposing `startServer`/`stopServer`. It's used two ways: directly via `npm run serve:prod` for a local production preview, and as an importable module consumed by the Electron tray app in `electron/main.mjs`.
+- The Windows deployment path is an Electron tray application (`electron/main.mjs`), not PowerShell scripts. It has no visible window — a tray icon offers "Dashboard öffnen" (opens the system default browser at the served URL), an autostart checkbox backed by `app.setLoginItemSettings`, and "Beenden" (stops the embedded server gracefully, then quits). Packaging config lives in `electron-builder.yml` (portable, no-admin `.exe` target). These are user-facing deployment tools, not part of the normal dev loop.
 
 ## Architecture
 
