@@ -6,11 +6,14 @@ files:
   - electron/**/*
   - scripts/windows/server.mjs
   - package.json
-  - '!node_modules/**/*'
 extraResources:
   - from: dist/media-hub/browser
     to: app
 asar: true
+publish:
+  - provider: github
+    owner: YannikFroehlich
+    repo: media-hub
 win:
   target:
     - target: nsis
@@ -21,11 +24,11 @@ win:
         - x64
   icon: public/favicon.png
 nsis:
-  artifactName: '${productName}-${version}-setup.${ext}'
+  artifactName: 'Media-Hub-${version}-setup.${ext}'
   oneClick: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
 portable:
-  artifactName: '${productName}-${version}-portable.${ext}'
+  artifactName: 'Media-Hub-${version}-portable.${ext}'
   requestExecutionLevel: user
