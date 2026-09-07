@@ -13,7 +13,7 @@
     "test": "ng test",
     "electron:start": "electron .",
     "electron:dev": "npm run build && npm run electron:start",
-    "electron:pack": "npm run build && electron-builder --win"
+    "electron:pack": "npm run build && electron-builder --win --publish never"
   },
   "private": true,
   "engines": {
