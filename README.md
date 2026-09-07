@@ -33,16 +33,25 @@ npm run build
 
 Der Production-Build liegt anschließend unter `dist/media-hub/browser`.
 
-## Lokal unter Windows installieren
+## Windows-App bauen
 
-Portable `.exe` bauen:
+Installer und portable `.exe` bauen:
 
 ```powershell
 npm run electron:pack
 ```
 
-Die fertige Datei liegt danach unter `release\Media Hub-<version>-portable.exe`. Einmal starten — ein Tray-Icon erscheint. Über das Tray-Menü lässt sich der Autostart mit Windows aktivieren ("Bei Windows-Start automatisch starten"), "Dashboard öffnen" öffnet `http://127.0.0.1:4173` im Standardbrowser, und "Beenden" stoppt den eingebetteten Server und schließt das Programm.
+Danach liegen unter `release\` zwei Dateien:
 
-Zum Deinstallieren genügt es, den Autostart-Haken im Tray-Menü zu entfernen und die `.exe` zu löschen — es gibt keinen separaten Installer und keine Registry-Einträge außerhalb des Autostart-Eintrags.
+- `Media Hub-<version>-setup.exe` installiert Media Hub mit Startmenü- und Desktop-Verknüpfung.
+- `Media Hub-<version>-portable.exe` läuft ohne Installation.
+
+Nach dem Start erscheint ein Tray-Icon. Über das Tray-Menü lässt sich der Autostart mit Windows aktivieren ("Bei Windows-Start automatisch starten"), "Dashboard öffnen" öffnet `http://127.0.0.1:4173` im Standardbrowser, und "Beenden" stoppt den eingebetteten Server und schließt das Programm.
+
+Die installierte Variante lässt sich über die Windows-Einstellungen deinstallieren. Bei der portablen Variante genügt es, den Autostart-Haken im Tray-Menü zu entfernen und die `.exe` zu löschen.
 
 Die gespeicherte Hub-Konfiguration gehört zum Browserprofil und bleibt davon unberührt.
+
+## Automatische Releases
+
+Jeder Push beziehungsweise Merge auf `main` startet den Workflow `Windows release`. Er installiert die gesperrten Abhängigkeiten, führt alle Tests aus, baut Installer und portable EXE und veröffentlicht beide Dateien als neuestes GitHub Release. Der Workflow lässt sich außerdem manuell über GitHub Actions starten.
