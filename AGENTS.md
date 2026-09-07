@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-Media Hub is an Angular 21 standalone SPA. Application bootstrap files live in `src/main.ts` and `src/app/app.config.ts`. The primary dashboard component is split across `src/app/app.ts`, `app.html`, and global styling in `src/styles.scss`. Domain models, validation, persistence, URL handling, defaults, and signal-based state belong in `src/app/core/`. Keep unit tests beside their implementation as `*.spec.ts`. Static brand assets and favicons live under `public/`; the local-server utility lives in `scripts/windows/server.mjs`; the Windows tray app (Electron) lives in `electron/`. Production output is generated in `dist/media-hub/browser/` and must not be committed.
+Media Hub is an Angular 22 standalone SPA. Application bootstrap files live in `src/main.ts` and `src/app/app.config.ts`. The primary dashboard component is split across `src/app/app.ts`, `app.html`, and global styling in `src/styles.scss`. Domain models, validation, persistence, URL handling, defaults, and signal-based state belong in `src/app/core/`. Keep unit tests beside their implementation as `*.spec.ts`. Static brand assets and favicons live under `public/`; the local-server utility lives in `scripts/windows/server.mjs`; the Windows tray app (Electron) lives in `electron/`. Production output is generated in `dist/media-hub/browser/` and must not be committed.
 
 ## Build, Test, and Development Commands
 

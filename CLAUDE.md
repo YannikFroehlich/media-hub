@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Media Hub is a local, TV-friendly dashboard (Angular 21 standalone SPA) for media, websites, and frequently used tools. Users create groups and shortcuts, customize colors/icons/layout, and everything is persisted client-side only (localStorage) — there is no backend.
+Media Hub is a local, TV-friendly dashboard (Angular 22 standalone SPA) for media, websites, and frequently used tools. Users create groups and shortcuts, customize colors/icons/layout, and everything is persisted client-side only (localStorage) — there is no backend.
 
 Coding-style conventions (naming, formatting, commit style) are documented in [AGENTS.md](AGENTS.md) — read it alongside this file.
 
