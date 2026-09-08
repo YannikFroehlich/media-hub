@@ -9,7 +9,7 @@
   ></div>
 
   <header class="topbar">
-    <span class="liquid-glass-effect" aria-hidden="true"></span>
+    <span appLiquidGlass class="liquid-glass-effect" aria-hidden="true"></span>
     <span class="liquid-glass-tint" aria-hidden="true"></span>
     <span class="liquid-glass-shine" aria-hidden="true"></span>
 
@@ -131,7 +131,7 @@
             [style.--group-color]="group.color"
             [style.--stagger-index]="groupIdx"
           >
-            <span class="liquid-glass-effect" aria-hidden="true"></span>
+            <span appLiquidGlass class="liquid-glass-effect" aria-hidden="true"></span>
             <span class="liquid-glass-tint" aria-hidden="true"></span>
             <span class="liquid-glass-shine" aria-hidden="true"></span>
 
@@ -209,7 +209,7 @@
                     (click)="activateShortcut(group, shortcut, $event)"
                     (keydown)="keyboardMoveShortcut(group.id, shortcut.id, $event)"
                   >
-                    <span class="liquid-glass-effect" aria-hidden="true"></span>
+                    <span appLiquidGlass class="liquid-glass-effect" aria-hidden="true"></span>
                     <span class="liquid-glass-tint" aria-hidden="true"></span>
                     <span class="liquid-glass-shine" aria-hidden="true"></span>
 
@@ -249,6 +249,9 @@
                   data-focusable
                   (click)="openShortcutPanel(group.id, undefined, $event)"
                 >
+                  <span appLiquidGlass class="liquid-glass-effect" aria-hidden="true"></span>
+                  <span class="liquid-glass-tint" aria-hidden="true"></span>
+                  <span class="liquid-glass-shine" aria-hidden="true"></span>
                   <i class="fa-solid fa-plus" aria-hidden="true"></i>
                   <span>Verknüpfung<br />hinzufügen</span>
                 </button>
@@ -299,7 +302,12 @@
     <section class="keyboard-help" role="dialog" aria-modal="true" aria-label="Tastaturkürzel">
       <header class="keyboard-help-header">
         <h2>Tastaturkürzel</h2>
-        <button class="panel-close" type="button" aria-label="Schließen" (click)="closeKeyboardHelp()">
+        <button
+          class="panel-close"
+          type="button"
+          aria-label="Schließen"
+          (click)="closeKeyboardHelp()"
+        >
           <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
       </header>
@@ -327,7 +335,7 @@
       cdkTrapFocus
       [cdkTrapFocusAutoCapture]="true"
     >
-      <span class="liquid-glass-effect" aria-hidden="true"></span>
+      <span appLiquidGlass class="liquid-glass-effect" aria-hidden="true"></span>
       <span class="liquid-glass-tint" aria-hidden="true"></span>
       <span class="liquid-glass-shine" aria-hidden="true"></span>
 
@@ -350,6 +358,9 @@
                 class="shortcut-card preview-card"
                 [style.--shortcut-color]="shortcutForm.controls.color.value"
               >
+                <span appLiquidGlass class="liquid-glass-effect" aria-hidden="true"></span>
+                <span class="liquid-glass-tint" aria-hidden="true"></span>
+                <span class="liquid-glass-shine" aria-hidden="true"></span>
                 @if (shortcutForm.controls.useWebsiteIcon.value) {
                   <span class="shortcut-icon website-icon" aria-hidden="true">
                     <i class="fa-solid fa-globe favicon-fallback"></i>

@@ -33,6 +33,7 @@ import {
 } from './core/models';
 import { UrlResolver } from './core/url-resolver';
 import { WebsiteIconResolver } from './core/website-icon-resolver';
+import { LiquidGlassDirective } from './liquid-glass.directive';
 
 type PanelKind = 'shortcut' | 'group' | 'settings' | null;
 
@@ -51,6 +52,7 @@ interface IconPreset {
 @Component({
   selector: 'app-root',
   imports: [
+    LiquidGlassDirective,
     ReactiveFormsModule,
     CdkDropList,
     CdkDropListGroup,
