@@ -9,6 +9,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.MEDIA_HUB_PORT ?? 4173);
 const RELEASES_URL = 'https://github.com/YannikFroehlich/media-hub/releases/latest';
 const IS_PORTABLE = Boolean(process.env.PORTABLE_EXECUTABLE_FILE);
+const IS_SMOKE_TEST = process.env.MEDIA_HUB_SMOKE_TEST === '1';
 
 const webRoot = app.isPackaged
   ? join(process.resourcesPath, 'app')
@@ -235,7 +236,9 @@ if (!app.requestSingleInstanceLock()) {
     tray = new Tray(nativeImage.createFromPath(iconPath));
     tray.setToolTip(`Media Hub – läuft auf Port ${PORT}`);
     tray.setContextMenu(buildMenu());
-    if (app.isPackaged && !IS_PORTABLE) {
+    if (IS_SMOKE_TEST) {
+      setTimeout(() => app.quit(), 3_000);
+    } else if (app.isPackaged && !IS_PORTABLE) {
       setTimeout(() => void checkForUpdates(false), 10_000);
     }
   });

@@ -4,7 +4,7 @@ Media Hub ist ein lokales, TV-taugliches Dashboard für Medien, Websites und hä
 
 ## Enthaltene Funktionen
 
-- responsives 16:9-Dashboard mit Dark- und Light-Theme
+- responsives 16:9-Dashboard mit Dark- und Light-Theme sowie den Stilen Klassisch und Liquid Glass
 - Gruppen und Verknüpfungen erstellen, bearbeiten, löschen und per Drag-and-drop sortieren
 - sichere URL- und Sucheingabe mit konfigurierbarer Suchmaschine
 - Font-Awesome-Iconkatalog, eigene Icon-Klassen und frei wählbare Akzentfarben
@@ -40,7 +40,11 @@ Installer und portable `.exe` bauen:
 
 ```powershell
 npm run electron:pack
+npm run electron:smoke
 ```
+
+Der Smoke-Test startet die gepackte Anwendung auf einem separaten lokalen Port, prüft ihren
+Health-Endpunkt und beendet sie anschließend automatisch.
 
 Danach liegen unter `release\` zwei Dateien:
 
@@ -57,4 +61,10 @@ Die gespeicherte Hub-Konfiguration gehört zum Browserprofil und bleibt davon un
 
 ## Automatische Releases
 
-Jeder Push beziehungsweise Merge auf `main` startet den Workflow `Windows release`. Er installiert die gesperrten Abhängigkeiten, führt alle Tests aus, baut Installer und portable EXE und veröffentlicht beide Dateien zusammen mit den benötigten Update-Metadaten als neuestes GitHub Release. Der Workflow lässt sich außerdem manuell über GitHub Actions starten.
+Jeder Push beziehungsweise Merge auf `main` und jeder Pull Request gegen `main` startet den
+CI-Workflow mit Tests und Produktions-Build.
+
+Ein Release entsteht ausschließlich durch einen semantischen Versionstag wie `v1.2.0` oder
+manuell über GitHub Actions mit einer Version im Format `1.2.0`. Der Workflow `Windows release`
+führt erneut alle Tests aus, baut Installer und portable EXE, startet den Paket-Smoke-Test und
+veröffentlicht die Dateien zusammen mit den Update-Metadaten als neuestes GitHub Release.
