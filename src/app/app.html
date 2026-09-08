@@ -9,9 +9,13 @@
   ></div>
 
   <header class="topbar">
+    <span class="liquid-glass-effect" aria-hidden="true"></span>
+    <span class="liquid-glass-tint" aria-hidden="true"></span>
+    <span class="liquid-glass-shine" aria-hidden="true"></span>
+
     <div class="brand" aria-label="Media Hub">
       <span class="brand-mark" aria-hidden="true">
-        <img src="assets/brand/yf-logo.png" alt="" />
+        <img src="assets/brand/yf-logo.png" alt="" width="50" height="50" />
       </span>
       <span class="brand-copy">
         <strong>Media Hub</strong>
@@ -127,6 +131,10 @@
             [style.--group-color]="group.color"
             [style.--stagger-index]="groupIdx"
           >
+            <span class="liquid-glass-effect" aria-hidden="true"></span>
+            <span class="liquid-glass-tint" aria-hidden="true"></span>
+            <span class="liquid-glass-shine" aria-hidden="true"></span>
+
             <div class="group-placeholder" *cdkDragPlaceholder></div>
             <header class="group-header">
               @if (store.editMode()) {
@@ -201,6 +209,10 @@
                     (click)="activateShortcut(group, shortcut, $event)"
                     (keydown)="keyboardMoveShortcut(group.id, shortcut.id, $event)"
                   >
+                    <span class="liquid-glass-effect" aria-hidden="true"></span>
+                    <span class="liquid-glass-tint" aria-hidden="true"></span>
+                    <span class="liquid-glass-shine" aria-hidden="true"></span>
+
                     @if (store.editMode()) {
                       <span class="card-menu" aria-hidden="true"
                         ><i class="fa-solid fa-ellipsis-vertical"></i
@@ -315,6 +327,10 @@
       cdkTrapFocus
       [cdkTrapFocusAutoCapture]="true"
     >
+      <span class="liquid-glass-effect" aria-hidden="true"></span>
+      <span class="liquid-glass-tint" aria-hidden="true"></span>
+      <span class="liquid-glass-shine" aria-hidden="true"></span>
+
       <header class="panel-header">
         <div>
           <span class="eyebrow">Media Hub</span>
@@ -691,7 +707,99 @@
             </section>
 
             <fieldset class="picker-fieldset">
-              <legend>Design</legend>
+              <legend>Oberflächenstil</legend>
+              <div class="style-cards">
+                <button
+                  type="button"
+                  [class.selected]="settingsForm.controls.visualStyle.value === 'classic'"
+                  [attr.aria-pressed]="settingsForm.controls.visualStyle.value === 'classic'"
+                  (click)="
+                    settingsForm.controls.visualStyle.setValue('classic');
+                    settingsForm.markAsDirty()
+                  "
+                >
+                  <span class="style-preview classic" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                  </span>
+                  <span class="style-card-copy">
+                    <strong>Klassisch</strong>
+                    <small>Der vertraute Media-Hub-Look</small>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  [class.selected]="settingsForm.controls.visualStyle.value === 'liquid-glass'"
+                  [attr.aria-pressed]="
+                    settingsForm.controls.visualStyle.value === 'liquid-glass'
+                  "
+                  (click)="
+                    settingsForm.controls.visualStyle.setValue('liquid-glass');
+                    settingsForm.markAsDirty()
+                  "
+                >
+                  <span class="style-preview liquid-glass" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                  </span>
+                  <span class="style-card-copy">
+                    <strong>Liquid Glass</strong>
+                    <small>Fließendes Glas mit Lichtbrechung</small>
+                  </span>
+                </button>
+              </div>
+            </fieldset>
+
+            @if (settingsForm.controls.visualStyle.value === 'liquid-glass') {
+              <fieldset class="picker-fieldset liquid-background-fieldset">
+                <legend>Liquid-Glass-Hintergrund</legend>
+                <div class="background-picker">
+                  <span
+                    class="background-preview"
+                    [style.background-image]="liquidGlassBackgroundPreview()"
+                    aria-hidden="true"
+                  ></span>
+                  <div class="background-picker-copy">
+                    <span>
+                      <strong>
+                        {{
+                          settingsForm.controls.liquidGlassBackgroundImage.value
+                            ? 'Eigenes Hintergrundbild'
+                            : 'Standard-Hintergrund'
+                        }}
+                      </strong>
+                      <small>JPG, PNG oder WebP bis 15 MB</small>
+                    </span>
+                    <div class="background-actions">
+                      <button
+                        type="button"
+                        class="secondary-button"
+                        (click)="chooseLiquidGlassBackground()"
+                      >
+                        <i class="fa-regular fa-image" aria-hidden="true"></i>Bild auswählen
+                      </button>
+                      @if (settingsForm.controls.liquidGlassBackgroundImage.value) {
+                        <button
+                          type="button"
+                          class="secondary-button"
+                          (click)="resetLiquidGlassBackground()"
+                        >
+                          <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>Standard
+                        </button>
+                      }
+                    </div>
+                    <input
+                      #liquidGlassBackgroundInput
+                      class="visually-hidden liquid-background-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                      (change)="selectLiquidGlassBackground($event)"
+                    />
+                  </div>
+                </div>
+              </fieldset>
+            }
+
+            <fieldset class="picker-fieldset">
+              <legend>Farbschema</legend>
               <div class="theme-cards">
                 <button
                   type="button"

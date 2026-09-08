@@ -1,0 +1,292 @@
+.liquid-glass-effect,
+.liquid-glass-tint,
+.liquid-glass-shine {
+  display: none;
+}
+
+:root[data-style='liquid-glass'] {
+  --surface: rgba(255, 255, 255, 0.12);
+  --surface-strong: rgba(12, 20, 27, 0.72);
+  --surface-soft: rgba(255, 255, 255, 0.1);
+  --surface-hover: rgba(255, 255, 255, 0.2);
+  --line: rgba(255, 255, 255, 0.24);
+  --line-strong: rgba(255, 255, 255, 0.45);
+  --muted: #d5dce3;
+  --faint: #aebac4;
+  --shadow-sm: 0 6px 6px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 12px 30px rgba(0, 0, 0, 0.24), 0 0 28px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 30px 80px -20px rgba(0, 0, 0, 0.62);
+  --liquid-tint: rgba(255, 255, 255, 0.25);
+  --liquid-tint-hover: rgba(255, 255, 255, 0.32);
+  --liquid-shine: rgba(255, 255, 255, 0.5);
+  --liquid-motion: 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+}
+
+:root[data-theme='light'][data-style='liquid-glass'] {
+  --surface: rgba(255, 255, 255, 0.2);
+  --surface-strong: rgba(246, 250, 251, 0.76);
+  --surface-soft: rgba(255, 255, 255, 0.18);
+  --surface-hover: rgba(255, 255, 255, 0.34);
+  --line: rgba(255, 255, 255, 0.4);
+  --line-strong: rgba(255, 255, 255, 0.68);
+  --text: #10202a;
+  --muted: #405461;
+  --faint: #647783;
+  --liquid-tint: rgba(255, 255, 255, 0.28);
+  --liquid-tint-hover: rgba(255, 255, 255, 0.38);
+  --liquid-shine: rgba(255, 255, 255, 0.68);
+}
+
+:root[data-style='liquid-glass'] .hub-shell {
+  background-color: #07121d;
+  background-image: var(--liquid-background-image, url('/assets/liquid-glass/flowers.jpg'));
+  background-attachment: fixed;
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 500px;
+}
+
+:root[data-style='liquid-glass'][data-liquid-background='custom'] .hub-shell {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+:root[data-style='liquid-glass'] .hub-shell::before,
+:root[data-style='liquid-glass'] .hub-shell::after {
+  content: none;
+}
+
+:root[data-style='liquid-glass'] .topbar,
+:root[data-style='liquid-glass'] .group-card,
+:root[data-style='liquid-glass'] .shortcut-card,
+:root[data-style='liquid-glass'] .sidepanel {
+  isolation: isolate;
+  border-color: transparent;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--liquid-motion);
+}
+
+:root[data-style='liquid-glass'] .topbar {
+  width: min(1840px, calc(100% - 36px));
+  margin-top: 18px;
+  padding: 18px 22px;
+  overflow: hidden;
+  border-radius: 29px;
+}
+
+:root[data-style='liquid-glass'] .liquid-glass-effect,
+:root[data-style='liquid-glass'] .liquid-glass-tint,
+:root[data-style='liquid-glass'] .liquid-glass-shine {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+:root[data-style='liquid-glass'] .liquid-glass-effect {
+  z-index: 0;
+  backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px) url('#media-hub-liquid-glass');
+  -webkit-backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px) url('#media-hub-liquid-glass');
+  filter: url('#media-hub-liquid-glass');
+  isolation: isolate;
+}
+
+// The dashboard cards keep a transform from their entrance animation. That
+// creates a separate backdrop root, so an inner effect layer can no longer
+// sample the page wallpaper. Apply the refraction to the card itself instead.
+:root[data-style='liquid-glass'] .group-card,
+:root[data-style='liquid-glass'] .shortcut-card {
+  backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px) url('#media-hub-liquid-glass');
+  -webkit-backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px) url('#media-hub-liquid-glass');
+}
+
+:root[data-style='liquid-glass'] .group-card > .liquid-glass-effect,
+:root[data-style='liquid-glass'] .shortcut-card > .liquid-glass-effect {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  filter: none;
+}
+
+:root[data-style='liquid-glass'] .liquid-glass-tint {
+  z-index: 1;
+  background: var(--liquid-tint);
+  transition: background-color var(--liquid-motion);
+}
+
+:root[data-style='liquid-glass'] .liquid-glass-shine {
+  z-index: 2;
+  box-shadow:
+    inset 2px 2px 1px 0 var(--liquid-shine),
+    inset -1px -1px 1px 1px var(--liquid-shine);
+}
+
+:root[data-style='liquid-glass']
+  .topbar
+  > :not(.liquid-glass-effect, .liquid-glass-tint, .liquid-glass-shine),
+:root[data-style='liquid-glass']
+  .group-card
+  > :not(.liquid-glass-effect, .liquid-glass-tint, .liquid-glass-shine),
+:root[data-style='liquid-glass']
+  .shortcut-card
+  > :not(.liquid-glass-effect, .liquid-glass-tint, .liquid-glass-shine),
+:root[data-style='liquid-glass']
+  .sidepanel
+  > :not(.liquid-glass-effect, .liquid-glass-tint, .liquid-glass-shine) {
+  position: relative;
+  z-index: 4;
+}
+
+:root[data-style='liquid-glass'] .group-card::before,
+:root[data-style='liquid-glass'] .shortcut-card::before {
+  display: none;
+}
+
+:root[data-style='liquid-glass'] .group-card {
+  border-radius: 29px;
+}
+
+:root[data-style='liquid-glass'] .group-card:hover {
+  border-color: transparent;
+  border-radius: 34px;
+  box-shadow:
+    0 9px 10px rgba(0, 0, 0, 0.22),
+    0 0 26px rgba(0, 0, 0, 0.13),
+    0 14px 38px -28px var(--group-color);
+  transform: translateY(-2px) scale(1.004);
+}
+
+:root[data-style='liquid-glass'] .group-card:hover > .liquid-glass-tint,
+:root[data-style='liquid-glass'] .shortcut-card:hover > .liquid-glass-tint {
+  background: var(--liquid-tint-hover);
+}
+
+:root[data-style='liquid-glass'] .group-card.accent-background,
+:root[data-theme='light'][data-style='liquid-glass'] .group-card,
+:root[data-theme='light'][data-style='liquid-glass'] .group-card.accent-background {
+  background: transparent;
+}
+
+:root[data-style='liquid-glass'] .shortcut-card {
+  border-radius: 20px;
+}
+
+:root[data-style='liquid-glass'] .shortcut-card:hover {
+  border-color: transparent;
+  border-radius: 25px;
+  background: transparent;
+  box-shadow:
+    0 8px 9px rgba(0, 0, 0, 0.22),
+    0 0 24px rgba(0, 0, 0, 0.14),
+    0 0 22px -16px var(--shortcut-color);
+  transform: translateY(-3px) perspective(760px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y))
+    scale(1.035);
+}
+
+:root[data-style='liquid-glass'] .shortcut-card .shortcut-icon,
+:root[data-style='liquid-glass'] .shortcut-card > span:last-child {
+  transition: transform var(--liquid-motion);
+}
+
+:root[data-style='liquid-glass'] .shortcut-card:hover .shortcut-icon,
+:root[data-style='liquid-glass'] .shortcut-card:hover > span:last-child {
+  transform: scale(0.95);
+}
+
+:root[data-style='liquid-glass'] .brand-copy strong,
+:root[data-style='liquid-glass'] .brand-copy span,
+:root[data-style='liquid-glass'] .shortcut-card {
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.38);
+}
+
+:root[data-theme='light'][data-style='liquid-glass'] .brand-copy strong,
+:root[data-theme='light'][data-style='liquid-glass'] .brand-copy span,
+:root[data-theme='light'][data-style='liquid-glass'] .shortcut-card {
+  color: var(--text);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+:root[data-style='liquid-glass'] .search,
+:root[data-style='liquid-glass'] .icon-button,
+:root[data-style='liquid-glass'] .header-button,
+:root[data-style='liquid-glass'] .edit-toggle,
+:root[data-style='liquid-glass'] .keyboard-hint,
+:root[data-style='liquid-glass'] .keyboard-help,
+:root[data-style='liquid-glass'] .toast {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.11);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  box-shadow:
+    inset -2px -2px 2px rgba(0, 0, 0, 0.1),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.34);
+  transition: all var(--liquid-motion);
+}
+
+:root[data-style='liquid-glass'] .search:hover,
+:root[data-style='liquid-glass'] .search:focus-within,
+:root[data-style='liquid-glass'] .icon-button:hover,
+:root[data-style='liquid-glass'] .header-button:hover {
+  border-color: rgba(255, 255, 255, 0.46);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+:root[data-style='liquid-glass'] .theme-toggle,
+:root[data-style='liquid-glass'] .settings-toggle {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+:root[data-style='liquid-glass'] .sidepanel {
+  border-radius: 30px;
+  background: transparent;
+}
+
+:root[data-style='liquid-glass'] .sidepanel > .liquid-glass-tint {
+  background: rgba(9, 17, 24, 0.6);
+}
+
+:root[data-theme='light'][data-style='liquid-glass'] .sidepanel > .liquid-glass-tint {
+  background: rgba(255, 255, 255, 0.48);
+}
+
+:root[data-style='liquid-glass'] .panel-header,
+:root[data-style='liquid-glass'] .panel-footer {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+:root[data-style='liquid-glass'] .panel-footer,
+:root[data-style='liquid-glass'] .field input,
+:root[data-style='liquid-glass'] .field select,
+:root[data-style='liquid-glass'] .field textarea,
+:root[data-style='liquid-glass'] .hex-input,
+:root[data-style='liquid-glass'] .segment-control,
+:root[data-style='liquid-glass'] .data-card,
+:root[data-style='liquid-glass'] .style-cards > button,
+:root[data-style='liquid-glass'] .theme-cards > button {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.11);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.32),
+    inset -1px -1px 1px rgba(255, 255, 255, 0.16);
+}
+
+:root[data-style='liquid-glass'] .panel-backdrop,
+:root[data-style='liquid-glass'] .keyboard-help-backdrop {
+  background: rgba(2, 10, 16, 0.22);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}

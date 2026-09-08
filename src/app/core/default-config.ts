@@ -44,6 +44,8 @@ export function createDefaultConfig(): MediaHubConfig {
     updatedAt: new Date().toISOString(),
     settings: {
       theme: 'dark',
+      visualStyle: 'classic',
+      liquidGlassBackgroundImage: '',
       displayMode: 'standard',
       defaultOpenBehavior: 'same-tab',
       searchEngine: {

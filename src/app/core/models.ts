@@ -1,4 +1,5 @@
 export type Theme = 'dark' | 'light';
+export type VisualStyle = 'classic' | 'liquid-glass';
 export type OpenBehavior = 'inherit' | 'same-tab' | 'new-tab';
 export type GroupLayout = 'compact' | 'standard' | 'large';
 export type DisplayMode = 'standard' | 'tv';
@@ -40,6 +41,8 @@ export interface HubGroup {
 
 export interface GlobalSettings {
   theme: Theme;
+  visualStyle: VisualStyle;
+  liquidGlassBackgroundImage: string;
   displayMode: DisplayMode;
   defaultOpenBehavior: Exclude<OpenBehavior, 'inherit'>;
   searchEngine: {
