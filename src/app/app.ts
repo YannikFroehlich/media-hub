@@ -577,7 +577,7 @@ export class App {
   @HostListener('document:mousemove', ['$event'])
   protected handlePointerActivity(event: MouseEvent): void {
     this.armCursorIdleTimer();
-    this.updateTiltTarget(event);
+    this.updatePointerEffects(event);
   }
 
   @HostListener('document:focusin', ['$event'])
@@ -690,38 +690,75 @@ export class App {
     }
   }
 
+  private groupGlowTarget: HTMLElement | null = null;
   private tiltTarget: HTMLElement | null = null;
-  private pendingTiltEvent: MouseEvent | null = null;
+  private pendingTilt: { target: HTMLElement; px: number; py: number } | null = null;
   private tiltRafId: number | null = null;
 
-  // Only stash the event here; mousemove can fire far more often than the display
-  // refreshes, so reading layout (getBoundingClientRect) on every event thrashes
-  // the main thread. Do the actual read+write once per animation frame instead.
-  private updateTiltTarget(event: MouseEvent): void {
-    this.pendingTiltEvent = event;
-    if (this.tiltRafId !== null) return;
-    this.tiltRafId = requestAnimationFrame(() => {
-      this.tiltRafId = null;
-      if (this.pendingTiltEvent) this.applyTilt(this.pendingTiltEvent);
-    });
-  }
+  // Both glow layers follow the same pointer event. This keeps the larger group
+  // wash alive beneath shortcuts, so moving between both surfaces feels seamless.
+  private updatePointerEffects(event: MouseEvent): void {
+    const eventTarget = event.target as HTMLElement | null;
+    const groupTarget = eventTarget?.closest?.(
+      '.group-card:not(.cdk-drag-preview)',
+    ) as HTMLElement | null;
+    if (groupTarget !== this.groupGlowTarget) {
+      this.resetGroupGlow(this.groupGlowTarget);
+      this.groupGlowTarget = groupTarget;
+    }
+    if (groupTarget) {
+      this.updateGlowPosition(groupTarget, event, '--group-glow-x', '--group-glow-y');
+    }
 
-  private applyTilt(event: MouseEvent): void {
-    const target = (event.target as HTMLElement | null)?.closest?.(
+    const target = eventTarget?.closest?.(
       '.shortcut-card:not(.cdk-drag-preview)',
     ) as HTMLElement | null;
     if (target !== this.tiltTarget) {
       this.resetTilt(this.tiltTarget);
       this.tiltTarget = target;
     }
-    if (!target) return;
-    const rect = target.getBoundingClientRect();
-    const px = (event.clientX - rect.left) / rect.width;
-    const py = (event.clientY - rect.top) / rect.height;
-    target.style.setProperty('--tilt-x', `${((0.5 - py) * 14).toFixed(2)}deg`);
-    target.style.setProperty('--tilt-y', `${((px - 0.5) * 14).toFixed(2)}deg`);
-    target.style.setProperty('--glow-x', `${(px * 100).toFixed(1)}%`);
-    target.style.setProperty('--glow-y', `${(py * 100).toFixed(1)}%`);
+    if (!target) {
+      this.pendingTilt = null;
+      return;
+    }
+
+    const position = this.updateGlowPosition(target, event, '--glow-x', '--glow-y');
+    if (!position) return;
+    const { px, py } = position;
+    this.pendingTilt = { target, px, py };
+
+    if (this.tiltRafId !== null) return;
+    this.tiltRafId = requestAnimationFrame(() => {
+      this.tiltRafId = null;
+      this.applyTilt();
+    });
+  }
+
+  private applyTilt(): void {
+    const pending = this.pendingTilt;
+    if (!pending || pending.target !== this.tiltTarget) return;
+    pending.target.style.setProperty('--tilt-x', `${((0.5 - pending.py) * 14).toFixed(2)}deg`);
+    pending.target.style.setProperty('--tilt-y', `${((pending.px - 0.5) * 14).toFixed(2)}deg`);
+  }
+
+  private updateGlowPosition(
+    element: HTMLElement,
+    event: MouseEvent,
+    xProperty: string,
+    yProperty: string,
+  ): { px: number; py: number } | null {
+    const rect = element.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const px = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    const py = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+    element.style.setProperty(xProperty, `${(px * 100).toFixed(1)}%`);
+    element.style.setProperty(yProperty, `${(py * 100).toFixed(1)}%`);
+    return { px, py };
+  }
+
+  private resetGroupGlow(element: HTMLElement | null): void {
+    element?.style.removeProperty('--group-glow-x');
+    element?.style.removeProperty('--group-glow-y');
   }
 
   private resetTilt(element: HTMLElement | null): void {

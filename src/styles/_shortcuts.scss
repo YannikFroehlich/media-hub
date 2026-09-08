@@ -48,11 +48,10 @@
   -webkit-backdrop-filter: blur(var(--blur-sm));
   color: var(--text);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  /* Transform gets its own short, snappy transition so the cursor-tracking tilt
-     (updated once per animation frame, see App.applyTilt) doesn't inherit the
-     slower 160ms used for color/background settling. */
+  /* The base transition provides a soft return to rest after the pointer leaves.
+     While hovered, transform interpolation is disabled for direct tracking. */
   transition:
-    transform 110ms ease-out,
+    transform 180ms cubic-bezier(0.2, 0, 0, 1),
     border-color 160ms ease,
     background 160ms ease,
     box-shadow 160ms ease;
@@ -65,7 +64,7 @@
   animation-delay: calc(min(var(--stagger-index, 0), 10) * 45ms);
 }
 
-/* Glossy specular highlight that follows the cursor (see App.updateTiltTarget). */
+/* Glossy specular highlight that follows the cursor (see App.updatePointerEffects). */
 .shortcut-card::before {
   content: '';
   position: absolute;
@@ -77,7 +76,7 @@
     transparent 55%
   );
   opacity: 0;
-  transition: opacity 180ms ease;
+  transition: opacity 120ms ease-out;
   pointer-events: none;
 }
 
@@ -107,6 +106,11 @@
 .shortcut-card:hover {
   z-index: 1;
   will-change: transform;
+  transition:
+    transform 0ms linear,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
   border-color: color-mix(in srgb, var(--shortcut-color) 72%, var(--line));
   background:
     radial-gradient(

@@ -49,4 +49,44 @@ describe('App', () => {
     expect(compiled.querySelector('aside')?.getAttribute('aria-label')).toBe('Media Hub anpassen');
     expect(compiled.querySelector('.customize-button')).toBeNull();
   });
+
+  it('should move the shortcut and group glows together with the pointer', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const card = fixture.nativeElement.querySelector('.shortcut-card') as HTMLElement;
+    const group = card.closest('.group-card') as HTMLElement;
+    Object.defineProperty(group, 'getBoundingClientRect', {
+      value: () => ({
+        x: 0,
+        y: 0,
+        left: 0,
+        top: 0,
+        right: 400,
+        bottom: 200,
+        width: 400,
+        height: 200,
+        toJSON: () => ({}),
+      }),
+    });
+    Object.defineProperty(card, 'getBoundingClientRect', {
+      value: () => ({
+        x: 10,
+        y: 20,
+        left: 10,
+        top: 20,
+        right: 210,
+        bottom: 120,
+        width: 200,
+        height: 100,
+        toJSON: () => ({}),
+      }),
+    });
+
+    card.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 60, clientY: 95 }));
+
+    expect(card.style.getPropertyValue('--glow-x')).toBe('25.0%');
+    expect(card.style.getPropertyValue('--glow-y')).toBe('75.0%');
+    expect(group.style.getPropertyValue('--group-glow-x')).toBe('15.0%');
+    expect(group.style.getPropertyValue('--group-glow-y')).toBe('47.5%');
+  });
 });
