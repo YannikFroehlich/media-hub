@@ -19,7 +19,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { parseExport } from './core/config-schema';
+import { LIQUID_GLASS_BACKGROUND_DATA_LIMIT, parseExport } from './core/config-schema';
 import { MediaHubStore } from './core/media-hub.store';
 import {
   DisplayMode,
@@ -29,11 +29,18 @@ import {
   IconConfig,
   OpenBehavior,
   Shortcut,
+  VisualStyle,
 } from './core/models';
 import { UrlResolver } from './core/url-resolver';
 import { WebsiteIconResolver } from './core/website-icon-resolver';
 
 type PanelKind = 'shortcut' | 'group' | 'settings' | null;
+
+const BACKGROUND_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const BACKGROUND_SOURCE_SIZE_LIMIT = 15 * 1024 * 1024;
+const BACKGROUND_DIRECT_STORE_LIMIT = 900_000;
+const BACKGROUND_MAX_WIDTH = 1920;
+const BACKGROUND_MAX_HEIGHT = 1080;
 
 interface IconPreset {
   id: string;
@@ -65,11 +72,14 @@ export class App {
 
   @ViewChild('searchInput') private searchInput?: ElementRef<HTMLInputElement>;
   @ViewChild('importInput') private importInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('liquidGlassBackgroundInput')
+  private liquidGlassBackgroundInput?: ElementRef<HTMLInputElement>;
 
   protected readonly panel = signal<PanelKind>(null);
   protected readonly selectedGroupId = signal<string | null>(null);
   protected readonly selectedShortcutId = signal<string | null>(null);
   protected readonly importError = signal<string | null>(null);
+  protected readonly liquidGlassBackgroundPreview = signal<string | null>(null);
   protected readonly liveMessage = signal('');
   protected readonly cursorIdle = signal(false);
   protected readonly showKeyboardHelp = signal(false);
@@ -152,6 +162,8 @@ export class App {
 
   protected readonly settingsForm = this.fb.nonNullable.group({
     theme: ['dark' as 'dark' | 'light'],
+    visualStyle: ['classic' as VisualStyle],
+    liquidGlassBackgroundImage: [''],
     displayMode: ['standard' as DisplayMode],
     defaultOpenBehavior: ['same-tab' as 'same-tab' | 'new-tab'],
     searchName: ['', [Validators.required, Validators.maxLength(32)]],
@@ -253,6 +265,8 @@ export class App {
     const settings = this.store.settings();
     this.settingsForm.reset({
       theme: settings.theme,
+      visualStyle: settings.visualStyle,
+      liquidGlassBackgroundImage: settings.liquidGlassBackgroundImage,
       displayMode: settings.displayMode,
       defaultOpenBehavior: settings.defaultOpenBehavior,
       searchName: settings.searchEngine.name,
@@ -260,6 +274,9 @@ export class App {
       showSubtitle: settings.showSubtitle,
       showKeyboardHint: settings.showKeyboardHint,
     });
+    this.liquidGlassBackgroundPreview.set(
+      this.backgroundPreviewStyle(settings.liquidGlassBackgroundImage),
+    );
     this.importError.set(null);
     this.panel.set('settings');
   }
@@ -331,15 +348,69 @@ export class App {
       );
       return;
     }
-    this.store.updateSettings({
-      theme: value.theme,
-      displayMode: value.displayMode,
-      defaultOpenBehavior: value.defaultOpenBehavior,
-      searchEngine: { name: value.searchName.trim(), urlTemplate: value.searchTemplate.trim() },
-      showSubtitle: value.showSubtitle,
-      showKeyboardHint: value.showKeyboardHint,
-    });
+    try {
+      this.store.updateSettings({
+        theme: value.theme,
+        visualStyle: value.visualStyle,
+        liquidGlassBackgroundImage: value.liquidGlassBackgroundImage,
+        displayMode: value.displayMode,
+        defaultOpenBehavior: value.defaultOpenBehavior,
+        searchEngine: { name: value.searchName.trim(), urlTemplate: value.searchTemplate.trim() },
+        showSubtitle: value.showSubtitle,
+        showKeyboardHint: value.showKeyboardHint,
+      });
+    } catch {
+      this.importError.set(
+        'Das Hintergrundbild konnte nicht lokal gespeichert werden. Bitte wähle ein kleineres Bild.',
+      );
+      return;
+    }
     this.closePanel(true);
+  }
+
+  protected chooseLiquidGlassBackground(): void {
+    this.liquidGlassBackgroundInput?.nativeElement.click();
+  }
+
+  protected async selectLiquidGlassBackground(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+
+    if (!BACKGROUND_IMAGE_TYPES.has(file.type)) {
+      this.importError.set('Bitte wähle ein Bild im Format JPG, PNG oder WebP.');
+      return;
+    }
+    if (file.size > BACKGROUND_SOURCE_SIZE_LIMIT) {
+      this.importError.set('Das gewählte Bild darf höchstens 15 MB groß sein.');
+      return;
+    }
+
+    try {
+      const dataUrl =
+        file.size <= BACKGROUND_DIRECT_STORE_LIMIT
+          ? await this.readFileAsDataUrl(file)
+          : await this.compressBackgroundImage(file);
+      if (dataUrl.length > LIQUID_GLASS_BACKGROUND_DATA_LIMIT) {
+        throw new Error('Optimized image is too large');
+      }
+      this.settingsForm.controls.liquidGlassBackgroundImage.setValue(dataUrl);
+      this.liquidGlassBackgroundPreview.set(this.backgroundPreviewStyle(dataUrl));
+      this.settingsForm.markAsDirty();
+      this.importError.set(null);
+    } catch {
+      this.importError.set(
+        'Das Bild konnte nicht verarbeitet werden. Bitte versuche eine kleinere JPG-, PNG- oder WebP-Datei.',
+      );
+    }
+  }
+
+  protected resetLiquidGlassBackground(): void {
+    this.settingsForm.controls.liquidGlassBackgroundImage.setValue('');
+    this.liquidGlassBackgroundPreview.set(null);
+    this.settingsForm.markAsDirty();
+    this.importError.set(null);
   }
 
   protected deleteShortcut(): void {
@@ -648,6 +719,50 @@ export class App {
     return this.resolver.normalizeHttpUrl(value);
   }
 
+  private backgroundPreviewStyle(dataUrl: string): string | null {
+    return dataUrl
+      ? `linear-gradient(rgba(5, 14, 23, 0.1), rgba(5, 14, 23, 0.1)), url("${dataUrl}")`
+      : null;
+  }
+
+  private readFileAsDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error ?? new Error('Unable to read image'));
+      reader.onload = () => {
+        if (typeof reader.result === 'string') resolve(reader.result);
+        else reject(new Error('Unexpected image result'));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  private async compressBackgroundImage(file: File): Promise<string> {
+    const bitmap = await createImageBitmap(file);
+    try {
+      if (!bitmap.width || !bitmap.height) throw new Error('Invalid image dimensions');
+      const scale = Math.min(
+        1,
+        BACKGROUND_MAX_WIDTH / bitmap.width,
+        BACKGROUND_MAX_HEIGHT / bitmap.height,
+      );
+      const canvas = this.document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Canvas is unavailable');
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+      for (const quality of [0.82, 0.68, 0.55]) {
+        const dataUrl = canvas.toDataURL('image/webp', quality);
+        if (dataUrl.length <= LIQUID_GLASS_BACKGROUND_DATA_LIMIT) return dataUrl;
+      }
+      throw new Error('Compressed image is too large');
+    } finally {
+      bitmap.close();
+    }
+  }
+
   private navigate(url: string, behavior: 'same-tab' | 'new-tab'): void {
     if (behavior === 'new-tab') {
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -698,6 +813,11 @@ export class App {
   // Both glow layers follow the same pointer event. This keeps the larger group
   // wash alive beneath shortcuts, so moving between both surfaces feels seamless.
   private updatePointerEffects(event: MouseEvent): void {
+    if (this.store.settings().visualStyle === 'liquid-glass') {
+      this.resetPointerEffects();
+      return;
+    }
+
     const eventTarget = event.target as HTMLElement | null;
     const groupTarget = eventTarget?.closest?.(
       '.group-card:not(.cdk-drag-preview)',
@@ -759,6 +879,14 @@ export class App {
   private resetGroupGlow(element: HTMLElement | null): void {
     element?.style.removeProperty('--group-glow-x');
     element?.style.removeProperty('--group-glow-y');
+  }
+
+  private resetPointerEffects(): void {
+    this.resetGroupGlow(this.groupGlowTarget);
+    this.resetTilt(this.tiltTarget);
+    this.groupGlowTarget = null;
+    this.tiltTarget = null;
+    this.pendingTilt = null;
   }
 
   private resetTilt(element: HTMLElement | null): void {

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ExportEnvelope, MediaHubConfig } from './models';
 
 export const SHORTCUTS_PER_GROUP_LIMIT = 50;
+export const LIQUID_GLASS_BACKGROUND_DATA_LIMIT = 1_400_000;
 
 const colorSchema = z
   .string()
@@ -18,6 +19,13 @@ const shortcutIconSchema = z.discriminatedUnion('kind', [
   presetIconSchema,
   fontAwesomeIconSchema,
   z.object({ kind: z.literal('website') }),
+]);
+const liquidGlassBackgroundSchema = z.union([
+  z.literal(''),
+  z
+    .string()
+    .max(LIQUID_GLASS_BACKGROUND_DATA_LIMIT)
+    .regex(/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/),
 ]);
 
 const shortcutSchema = z.object({
@@ -51,6 +59,8 @@ export const mediaHubConfigSchema = z
     updatedAt: z.string(),
     settings: z.object({
       theme: z.enum(['dark', 'light']),
+      visualStyle: z.enum(['classic', 'liquid-glass']).default('classic'),
+      liquidGlassBackgroundImage: liquidGlassBackgroundSchema.default(''),
       displayMode: z.enum(['standard', 'tv']).default('standard'),
       defaultOpenBehavior: z.enum(['same-tab', 'new-tab']),
       searchEngine: z.object({

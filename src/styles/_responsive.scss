@@ -218,4 +218,43 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
+  .group-card:hover,
+  .shortcut-card:hover,
+  .shortcut-card:focus,
+  .shortcut-card:focus-visible {
+    transform: none;
+  }
+
+  // Liquid Glass is an explicit opt-in to its spring response, even when
+  // Windows reports reduced motion.
+  :root[data-style='liquid-glass'] .group-card,
+  :root[data-style='liquid-glass'] .shortcut-card,
+  :root[data-style='liquid-glass'] .shortcut-card .shortcut-icon,
+  :root[data-style='liquid-glass'] .shortcut-card > span:last-child {
+    transition-duration: 400ms !important;
+  }
+
+  :root[data-style='liquid-glass'] .group-card:hover {
+    transform: translateY(-2px) scale(1.004);
+  }
+
+  :root[data-style='liquid-glass'] .shortcut-card:hover {
+    transform: translateY(-3px) perspective(760px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y))
+      scale(1.035);
+  }
+}
+
+@media (any-hover: none) {
+  .group-card::before,
+  .shortcut-card::before {
+    display: none;
+  }
+
+  .group-card:hover,
+  .shortcut-card:hover,
+  .shortcut-card:focus,
+  .shortcut-card:focus-visible {
+    transform: none;
+  }
 }

@@ -24,8 +24,22 @@ export class MediaHubStore {
 
   constructor() {
     effect(() => {
-      document.documentElement.setAttribute('data-theme', this.settings().theme);
-      document.documentElement.setAttribute('data-display-mode', this.settings().displayMode);
+      const settings = this.settings();
+      const root = document.documentElement;
+      root.setAttribute('data-theme', settings.theme);
+      root.setAttribute('data-style', settings.visualStyle);
+      root.setAttribute('data-display-mode', settings.displayMode);
+
+      if (settings.liquidGlassBackgroundImage) {
+        root.setAttribute('data-liquid-background', 'custom');
+        root.style.setProperty(
+          '--liquid-background-image',
+          `url("${settings.liquidGlassBackgroundImage}")`,
+        );
+      } else {
+        root.setAttribute('data-liquid-background', 'default');
+        root.style.removeProperty('--liquid-background-image');
+      }
     });
   }
 
