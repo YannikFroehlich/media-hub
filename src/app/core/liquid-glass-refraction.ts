@@ -1,7 +1,6 @@
 /** Shape-based optics adapted from the local liquid-glass demo (index.html). */
 export interface GlassMaps {
   displacement: Uint8ClampedArray;
-  specular: Uint8ClampedArray;
   scale: number;
 }
 
@@ -11,18 +10,22 @@ export function createGlassMaps(width: number, height: number, cornerRadius: num
   const profile = refractionProfile(bezel);
   const scale = Math.max(...profile.map(Math.abs), 1);
   const displacement = new Uint8ClampedArray(width * height * 4);
-  const specular = new Uint8ClampedArray(displacement.length);
-  const lightX = Math.cos(Math.PI / 3);
-  const lightY = Math.sin(Math.PI / 3);
+
+  // Initialise the flat centre with a cheap linear pass. The optical calculation
+  // below then only visits the narrow perimeter where refraction can occur instead
+  // of evaluating hypot/powers for every interior pixel of a large panel.
+  for (let index = 0; index < displacement.length; index += 4) {
+    displacement[index] = 128;
+    displacement[index + 1] = 128;
+    displacement[index + 3] = 255;
+  }
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
+      if (x >= radius && x < width - radius && y >= radius && y < height - radius) {
+        continue;
+      }
       const index = (y * width + x) * 4;
-      // A neutral map leaves the flat centre of the glass undistorted.
-      displacement[index] = 128;
-      displacement[index + 1] = 128;
-      displacement[index + 3] = 255;
-
       const px = x + 0.5;
       const py = y + 0.5;
       const dx = px < radius ? px - radius : px > width - radius ? px - width + radius : 0;
@@ -41,19 +44,10 @@ export function createGlassMaps(width: number, height: number, cornerRadius: num
         displacement[index] = Math.round(128 - (dx / distance) * strength);
         displacement[index + 1] = Math.round(128 - (dy / distance) * strength);
       }
-
-      // The reference's directional highlight occupies only the very edge.
-      const edge = Math.sqrt(Math.max(0, 1 - (1 - fromEdge) ** 2));
-      const reflection = Math.abs((dx / distance) * lightX - (dy / distance) * lightY) * edge;
-      const color = Math.floor(255 * reflection);
-      specular[index] = color;
-      specular[index + 1] = color;
-      specular[index + 2] = color;
-      specular[index + 3] = Math.floor(color * reflection * coverage);
     }
   }
 
-  return { displacement, specular, scale };
+  return { displacement, scale };
 }
 
 function refractionProfile(bezel: number): Float64Array {

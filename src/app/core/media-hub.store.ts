@@ -29,6 +29,14 @@ export class MediaHubStore {
       root.setAttribute('data-theme', settings.theme);
       root.setAttribute('data-style', settings.visualStyle);
       root.setAttribute('data-display-mode', settings.displayMode);
+      root.style.setProperty(
+        '--liquid-group-blur-filter',
+        `blur(${settings.liquidGlassGroupBlur}px)`,
+      );
+      root.style.setProperty(
+        '--liquid-shortcut-blur-filter',
+        settings.liquidGlassShortcutBlur ? `blur(${settings.liquidGlassShortcutBlur}px)` : 'none',
+      );
 
       if (settings.liquidGlassBackgroundImage) {
         root.setAttribute('data-liquid-background', 'custom');

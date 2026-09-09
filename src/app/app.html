@@ -209,7 +209,6 @@
                     (click)="activateShortcut(group, shortcut, $event)"
                     (keydown)="keyboardMoveShortcut(group.id, shortcut.id, $event)"
                   >
-                    <span appLiquidGlass class="liquid-glass-effect" aria-hidden="true"></span>
                     <span class="liquid-glass-tint" aria-hidden="true"></span>
                     <span class="liquid-glass-shine" aria-hidden="true"></span>
 
@@ -249,7 +248,6 @@
                   data-focusable
                   (click)="openShortcutPanel(group.id, undefined, $event)"
                 >
-                  <span appLiquidGlass class="liquid-glass-effect" aria-hidden="true"></span>
                   <span class="liquid-glass-tint" aria-hidden="true"></span>
                   <span class="liquid-glass-shine" aria-hidden="true"></span>
                   <i class="fa-solid fa-plus" aria-hidden="true"></i>
@@ -358,7 +356,6 @@
                 class="shortcut-card preview-card"
                 [style.--shortcut-color]="shortcutForm.controls.color.value"
               >
-                <span appLiquidGlass class="liquid-glass-effect" aria-hidden="true"></span>
                 <span class="liquid-glass-tint" aria-hidden="true"></span>
                 <span class="liquid-glass-shine" aria-hidden="true"></span>
                 @if (shortcutForm.controls.useWebsiteIcon.value) {
@@ -805,6 +802,40 @@
                       (change)="selectLiquidGlassBackground($event)"
                     />
                   </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="picker-fieldset">
+                <legend>Glas-Unschärfe</legend>
+                <div class="liquid-blur-grid">
+                  <label class="liquid-blur-control">
+                    <span>
+                      <strong>Gruppen</strong>
+                      <output>{{ settingsForm.controls.liquidGlassGroupBlur.value }} px</output>
+                    </span>
+                    <input
+                      type="range"
+                      min="0"
+                      [max]="liquidGlassBlurMax"
+                      step="1"
+                      formControlName="liquidGlassGroupBlur"
+                    />
+                    <small>Unschärfe der großen Gruppenflächen</small>
+                  </label>
+                  <label class="liquid-blur-control">
+                    <span>
+                      <strong>Verknüpfungen</strong>
+                      <output>{{ settingsForm.controls.liquidGlassShortcutBlur.value }} px</output>
+                    </span>
+                    <input
+                      type="range"
+                      min="0"
+                      [max]="liquidGlassBlurMax"
+                      step="1"
+                      formControlName="liquidGlassShortcutBlur"
+                    />
+                    <small>Hohe Werte kosten bei vielen Kacheln mehr Leistung.</small>
+                  </label>
                 </div>
               </fieldset>
             }

@@ -210,6 +210,63 @@
   padding: 7px 10px;
 }
 
+.liquid-blur-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.liquid-blur-control {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.liquid-blur-control > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.liquid-blur-control strong {
+  font-size: 14px;
+}
+
+.liquid-blur-control output {
+  min-width: 43px;
+  padding: 3px 7px;
+  border-radius: 7px;
+  background: rgba(55, 135, 255, 0.14);
+  color: #69adff;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.liquid-blur-control input {
+  width: 100%;
+  accent-color: #4c9cff;
+  cursor: pointer;
+}
+
+.liquid-blur-control small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+@media (max-width: 520px) {
+  .liquid-blur-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .theme-cards {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

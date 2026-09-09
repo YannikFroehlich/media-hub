@@ -46,6 +46,8 @@ export function createDefaultConfig(): MediaHubConfig {
       theme: 'dark',
       visualStyle: 'classic',
       liquidGlassBackgroundImage: '',
+      liquidGlassGroupBlur: 3,
+      liquidGlassShortcutBlur: 0,
       displayMode: 'standard',
       defaultOpenBehavior: 'same-tab',
       searchEngine: {

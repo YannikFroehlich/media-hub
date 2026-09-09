@@ -6,7 +6,7 @@ function pixel(data: Uint8ClampedArray, width: number, x: number, y: number): nu
 }
 
 describe('liquid glass refraction', () => {
-  it('keeps the flat centre neutral and free of specular haze', () => {
+  it('keeps the flat centre neutral', () => {
     const maps = createGlassMaps(300, 200, 60);
     for (const [x, y] of [
       [60, 60],
@@ -14,7 +14,6 @@ describe('liquid glass refraction', () => {
       [239, 139],
     ]) {
       expect(pixel(maps.displacement, 300, x, y)).toEqual([128, 128, 0, 255]);
-      expect(pixel(maps.specular, 300, x, y)).toEqual([0, 0, 0, 0]);
     }
     expect(maps.scale).toBeGreaterThan(100);
     expect(Number.isFinite(maps.scale)).toBe(true);

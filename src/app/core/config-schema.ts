@@ -3,6 +3,7 @@ import { ExportEnvelope, MediaHubConfig } from './models';
 
 export const SHORTCUTS_PER_GROUP_LIMIT = 50;
 export const LIQUID_GLASS_BACKGROUND_DATA_LIMIT = 1_400_000;
+export const LIQUID_GLASS_BLUR_MAX = 20;
 
 const colorSchema = z
   .string()
@@ -61,6 +62,8 @@ export const mediaHubConfigSchema = z
       theme: z.enum(['dark', 'light']),
       visualStyle: z.enum(['classic', 'liquid-glass']).default('classic'),
       liquidGlassBackgroundImage: liquidGlassBackgroundSchema.default(''),
+      liquidGlassGroupBlur: z.number().int().min(0).max(LIQUID_GLASS_BLUR_MAX).default(3),
+      liquidGlassShortcutBlur: z.number().int().min(0).max(LIQUID_GLASS_BLUR_MAX).default(0),
       displayMode: z.enum(['standard', 'tv']).default('standard'),
       defaultOpenBehavior: z.enum(['same-tab', 'new-tab']),
       searchEngine: z.object({
