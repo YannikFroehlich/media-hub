@@ -105,13 +105,34 @@ describe('App', () => {
       compiled.querySelectorAll<HTMLButtonElement>('.style-cards > button'),
     );
     styleButtons.find((button) => button.textContent?.includes('Liquid Glass'))?.click();
+    fixture.detectChanges();
+
+    const groupBlur = compiled.querySelector<HTMLInputElement>(
+      'input[formControlName="liquidGlassGroupBlur"]',
+    );
+    const shortcutBlur = compiled.querySelector<HTMLInputElement>(
+      'input[formControlName="liquidGlassShortcutBlur"]',
+    );
+    if (groupBlur) groupBlur.value = '8';
+    groupBlur?.dispatchEvent(new Event('input', { bubbles: true }));
+    if (shortcutBlur) shortcutBlur.value = '4';
+    shortcutBlur?.dispatchEvent(new Event('input', { bubbles: true }));
     compiled.querySelector<HTMLButtonElement>('.settings-form button[type="submit"]')?.click();
     await fixture.whenStable();
 
     expect(document.documentElement.getAttribute('data-style')).toBe('liquid-glass');
-    expect(JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').settings.visualStyle).toBe(
-      'liquid-glass',
+    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').settings;
+    expect(savedSettings.visualStyle).toBe('liquid-glass');
+    expect(savedSettings.liquidGlassGroupBlur).toBe(8);
+    expect(savedSettings.liquidGlassShortcutBlur).toBe(4);
+    expect(document.documentElement.style.getPropertyValue('--liquid-group-blur-filter')).toBe(
+      'blur(8px)',
     );
+    expect(document.documentElement.style.getPropertyValue('--liquid-shortcut-blur-filter')).toBe(
+      'blur(4px)',
+    );
+    expect(compiled.querySelectorAll('.shortcut-card > [appLiquidGlass]')).toHaveLength(0);
+    expect(compiled.querySelectorAll('.group-card > [appLiquidGlass]')).not.toHaveLength(0);
 
     const card = compiled.querySelector('.shortcut-card') as HTMLElement;
     const group = card.closest('.group-card') as HTMLElement;

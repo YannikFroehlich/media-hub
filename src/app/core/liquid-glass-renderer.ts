@@ -3,19 +3,55 @@ import { Injectable, OnDestroy, inject } from '@angular/core';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+/**
+ * Unused filters kept alive for reuse. Generating one walks the surface pixels
+ * and PNG-encodes a map, so a window resize that passes back
+ * through a size — or a style toggle — would otherwise pay for it again.
+ */
+export const RETAINED_FILTER_LIMIT = 16;
+
 interface GlassFilter {
   id: string;
   element: SVGElement;
   users: number;
 }
 
+/**
+ * A geometry measurement queued for the next frame. `measure` may only read
+ * layout; the writes it wants applied go into the callback it returns.
+ */
+export type GlassMeasure = () => (() => void) | void;
+
 @Injectable({ providedIn: 'root' })
 export class LiquidGlassRenderer implements OnDestroy {
   private readonly document = inject(DOCUMENT);
   private readonly filters = new Map<string, GlassFilter>();
+  private readonly pending = new Set<GlassMeasure>();
   private svg?: SVGElement;
   private nextId = 0;
+  private frame = 0;
   private destroyed = false;
+
+  /**
+   * Batches every glass element's geometry read into one frame, all reads before
+   * any writes. Measuring and restyling one element at a time interleaves reads
+   * with writes and forces a style recalculation per element instead of one.
+   */
+  schedule(measure: GlassMeasure): void {
+    this.pending.add(measure);
+    if (this.frame) return;
+    this.frame = requestAnimationFrame(() => {
+      this.frame = 0;
+      const measures = [...this.pending];
+      this.pending.clear();
+      const writes = measures.map((task) => task());
+      for (const write of writes) write?.();
+    });
+  }
+
+  cancel(measure: GlassMeasure): void {
+    this.pending.delete(measure);
+  }
 
   async acquire(
     width: number,
@@ -53,7 +89,9 @@ export class LiquidGlassRenderer implements OnDestroy {
       const append = (name: string, attributes: Record<string, string>) =>
         element.appendChild(this.node(name, attributes));
 
-      append('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: '0.3', result: 'blurred' });
+      // Keep the runtime filter to the two primitives that create the actual
+      // refraction. Each additional primitive is another full-surface GPU pass on
+      // every frame; tint and edge shine are rendered by inexpensive CSS layers.
       append('feImage', {
         href: toImage(maps.displacement),
         x: '0',
@@ -62,44 +100,16 @@ export class LiquidGlassRenderer implements OnDestroy {
         height: String(height),
         result: 'displacement',
       });
-      // PNG channels are 8-bit: remap 128 to exactly 0.5 so the centre does not shift.
-      append('feComponentTransfer', { in: 'displacement', result: 'neutral-displacement' }).append(
-        this.node('feFuncR', { type: 'linear', intercept: String(-0.5 / 255) }),
-        this.node('feFuncG', { type: 'linear', intercept: String(-0.5 / 255) }),
-      );
+      // PNG channels are 8-bit, so the neutral centre is 128/255 rather than exactly
+      // 0.5. Correcting that with an feComponentTransfer costs a pass to buy back
+      // `scale * 0.002` px — a sub-pixel, uniform shift of the sampled backdrop.
       append('feDisplacementMap', {
-        in: 'blurred',
-        in2: 'neutral-displacement',
+        in: 'SourceGraphic',
+        in2: 'displacement',
         scale: String(maps.scale),
         xChannelSelector: 'R',
         yChannelSelector: 'G',
-        result: 'displaced',
       });
-      append('feColorMatrix', {
-        in: 'displaced',
-        type: 'saturate',
-        values: '4',
-        result: 'saturated',
-      });
-      append('feImage', {
-        href: toImage(maps.specular),
-        x: '0',
-        y: '0',
-        width: String(width),
-        height: String(height),
-        result: 'specular',
-      });
-      append('feComposite', {
-        in: 'saturated',
-        in2: 'specular',
-        operator: 'in',
-        result: 'reflection',
-      });
-      append('feComponentTransfer', { in: 'specular', result: 'shine' }).appendChild(
-        this.node('feFuncA', { type: 'linear', slope: '0.5' }),
-      );
-      append('feBlend', { in: 'reflection', in2: 'displaced', mode: 'normal', result: 'glass' });
-      append('feBlend', { in: 'shine', in2: 'glass', mode: 'normal' });
       this.definitions().appendChild(element);
       filter = { id, element, users: 0 };
       this.filters.set(key, filter);
@@ -107,13 +117,14 @@ export class LiquidGlassRenderer implements OnDestroy {
 
     const entry = filter;
     entry.users++;
+    // Re-inserting moves the key to the back of the Map's insertion order, so the
+    // eviction below drops whichever unused filter was acquired longest ago.
+    this.filters.delete(key);
+    this.filters.set(key, entry);
     return {
       url: `url("#${entry.id}")`,
       release: () => {
-        if (--entry.users === 0) {
-          entry.element.remove();
-          this.filters.delete(key);
-        }
+        if (--entry.users === 0) this.evictRetained();
       },
     };
   }
@@ -122,6 +133,20 @@ export class LiquidGlassRenderer implements OnDestroy {
     this.destroyed = true;
     this.svg?.remove();
     this.filters.clear();
+    this.pending.clear();
+    if (this.frame) cancelAnimationFrame(this.frame);
+    this.frame = 0;
+  }
+
+  private evictRetained(): void {
+    // Insertion order is acquisition order, so the surplus is at the front.
+    const retained = [...this.filters].filter(([, entry]) => !entry.users);
+    const surplus = retained.length - RETAINED_FILTER_LIMIT;
+    for (let i = 0; i < surplus; i++) {
+      const [key, entry] = retained[i];
+      entry.element.remove();
+      this.filters.delete(key);
+    }
   }
 
   private definitions(): SVGElement {

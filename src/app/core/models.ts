@@ -43,6 +43,8 @@ export interface GlobalSettings {
   theme: Theme;
   visualStyle: VisualStyle;
   liquidGlassBackgroundImage: string;
+  liquidGlassGroupBlur: number;
+  liquidGlassShortcutBlur: number;
   displayMode: DisplayMode;
   defaultOpenBehavior: Exclude<OpenBehavior, 'inherit'>;
   searchEngine: {

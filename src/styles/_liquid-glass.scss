@@ -18,6 +18,8 @@
   --shadow-lg: 0 30px 80px -20px rgba(0, 0, 0, 0.62);
   --liquid-tint: rgba(9, 17, 24, 0.16);
   --liquid-tint-hover: rgba(9, 17, 24, 0.1);
+  --liquid-card-tint: rgba(9, 17, 24, 0.44);
+  --liquid-card-tint-hover: rgba(9, 17, 24, 0.36);
   --liquid-motion: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -33,24 +35,39 @@
   --faint: #647783;
   --liquid-tint: rgba(255, 255, 255, 0.16);
   --liquid-tint-hover: rgba(255, 255, 255, 0.22);
+  --liquid-card-tint: rgba(255, 255, 255, 0.5);
+  --liquid-card-tint-hover: rgba(255, 255, 255, 0.58);
 }
 
 :root[data-style='liquid-glass'] .hub-shell {
   background-color: #07121d;
+}
+
+// The wallpaper lives on its own fixed, GPU-promoted layer rather than on the
+// shell as `background-attachment: fixed`. Fixed attachment repaints the whole
+// shell background at a new offset on every scroll frame, which invalidates the
+// backdrop of every glass surface above it and re-runs all their refraction
+// filters. As a separate composited layer it is painted once and simply stays.
+:root[data-style='liquid-glass'] .hub-shell::before {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  inset: 0;
   background-image: var(--liquid-background-image, url('/assets/liquid-glass/flowers.jpg'));
-  background-attachment: fixed;
   background-position: 0 0;
   background-repeat: repeat;
   background-size: 500px;
+  filter: none;
+  animation: none;
+  transform: translateZ(0);
 }
 
-:root[data-style='liquid-glass'][data-liquid-background='custom'] .hub-shell {
+:root[data-style='liquid-glass'][data-liquid-background='custom'] .hub-shell::before {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
 }
 
-:root[data-style='liquid-glass'] .hub-shell::before,
 :root[data-style='liquid-glass'] .hub-shell::after {
   content: none;
 }
@@ -94,6 +111,12 @@
   -webkit-backdrop-filter: var(--liquid-refraction, blur(3px));
 }
 
+:root[data-style='liquid-glass'] .group-card > .liquid-glass-effect {
+  backdrop-filter: var(--liquid-group-blur-filter, blur(3px)) var(--liquid-refraction, blur(0));
+  -webkit-backdrop-filter: var(--liquid-group-blur-filter, blur(3px))
+    var(--liquid-refraction, blur(0));
+}
+
 :root[data-style='liquid-glass'] .liquid-glass-tint {
   z-index: 1;
   background: var(--liquid-tint);
@@ -102,6 +125,12 @@
 
 :root[data-style='liquid-glass'] .liquid-glass-shine {
   z-index: 2;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.14),
+    rgba(255, 255, 255, 0.035) 24%,
+    transparent 46%
+  );
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.28),
     inset 0 -1px 1px rgba(255, 255, 255, 0.14);
@@ -130,8 +159,7 @@
   box-shadow: var(--shadow-sm);
 }
 
-:root[data-style='liquid-glass'] .group-card:hover > .liquid-glass-tint,
-:root[data-style='liquid-glass'] .shortcut-card:hover > .liquid-glass-tint {
+:root[data-style='liquid-glass'] .group-card:hover > .liquid-glass-tint {
   background: var(--liquid-tint-hover);
 }
 
@@ -144,6 +172,19 @@
 :root[data-style='liquid-glass'] .shortcut-card {
   border-radius: 20px;
   transform: none;
+  backdrop-filter: var(--liquid-shortcut-blur-filter, none);
+  -webkit-backdrop-filter: var(--liquid-shortcut-blur-filter, none);
+}
+
+// Shortcut tiles sit inside an already refracted group surface. A second
+// backdrop filter per tile multiplies GPU work, while an opaque tint preserves
+// the same visual separation using a normal composited layer.
+:root[data-style='liquid-glass'] .shortcut-card > .liquid-glass-tint {
+  background: var(--liquid-card-tint);
+}
+
+:root[data-style='liquid-glass'] .shortcut-card:hover > .liquid-glass-tint {
+  background: var(--liquid-card-tint-hover);
 }
 
 :root[data-style='liquid-glass'] .shortcut-card:hover {
@@ -203,23 +244,39 @@
   box-shadow:
     inset -2px -2px 2px rgba(0, 0, 0, 0.1),
     inset 1px 1px 1px rgba(255, 255, 255, 0.34);
-  transition: all var(--liquid-motion);
+  // Explicit properties, not `all`: `all` also transitions backdrop-filter, so
+  // hovering re-blurs the control at a new radius on every frame for 180ms.
+  transition:
+    border-color var(--liquid-motion),
+    background-color var(--liquid-motion),
+    box-shadow var(--liquid-motion);
+}
+
+:root[data-style='liquid-glass'] .search {
+  background: var(--liquid-card-tint);
+}
+
+// Controls the glass chrome above missed, still carrying the classic theme's 14-22px
+// radius. A nested backdrop-filter makes its parent's filtered output be rasterised
+// again to serve as this control's backdrop, and the wider the radius the more that
+// costs — for a blur the surface's own refraction already hides. 2px, like the rest
+// of the glass chrome, keeps the edge definition at a fraction of the work.
+:root[data-style='liquid-glass']
+  :is(.panel-close, .primary-button, .secondary-button, .danger-button, .empty-dashboard) {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 :root[data-style='liquid-glass'] .search:hover,
-:root[data-style='liquid-glass'] .search:focus-within,
+:root[data-style='liquid-glass'] .search:focus-within {
+  border-color: rgba(255, 255, 255, 0.46);
+  background: var(--liquid-card-tint-hover);
+}
+
 :root[data-style='liquid-glass'] .icon-button:hover,
 :root[data-style='liquid-glass'] .header-button:hover {
   border-color: rgba(255, 255, 255, 0.46);
   background: rgba(255, 255, 255, 0.2);
-}
-
-:root[data-style='liquid-glass'] .theme-toggle,
-:root[data-style='liquid-glass'] .settings-toggle {
-  border-color: transparent;
-  background: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
 }
 
 :root[data-style='liquid-glass'] .sidepanel {

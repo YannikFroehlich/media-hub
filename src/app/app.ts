@@ -19,7 +19,11 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { LIQUID_GLASS_BACKGROUND_DATA_LIMIT, parseExport } from './core/config-schema';
+import {
+  LIQUID_GLASS_BACKGROUND_DATA_LIMIT,
+  LIQUID_GLASS_BLUR_MAX,
+  parseExport,
+} from './core/config-schema';
 import { MediaHubStore } from './core/media-hub.store';
 import {
   DisplayMode,
@@ -66,6 +70,7 @@ interface IconPreset {
   styleUrl: './app.scss',
 })
 export class App {
+  protected readonly liquidGlassBlurMax = LIQUID_GLASS_BLUR_MAX;
   protected readonly store = inject(MediaHubStore);
   private readonly resolver = inject(UrlResolver);
   private readonly websiteIconResolver = inject(WebsiteIconResolver);
@@ -166,6 +171,8 @@ export class App {
     theme: ['dark' as 'dark' | 'light'],
     visualStyle: ['classic' as VisualStyle],
     liquidGlassBackgroundImage: [''],
+    liquidGlassGroupBlur: [3, [Validators.min(0), Validators.max(LIQUID_GLASS_BLUR_MAX)]],
+    liquidGlassShortcutBlur: [0, [Validators.min(0), Validators.max(LIQUID_GLASS_BLUR_MAX)]],
     displayMode: ['standard' as DisplayMode],
     defaultOpenBehavior: ['same-tab' as 'same-tab' | 'new-tab'],
     searchName: ['', [Validators.required, Validators.maxLength(32)]],
@@ -269,6 +276,8 @@ export class App {
       theme: settings.theme,
       visualStyle: settings.visualStyle,
       liquidGlassBackgroundImage: settings.liquidGlassBackgroundImage,
+      liquidGlassGroupBlur: settings.liquidGlassGroupBlur,
+      liquidGlassShortcutBlur: settings.liquidGlassShortcutBlur,
       displayMode: settings.displayMode,
       defaultOpenBehavior: settings.defaultOpenBehavior,
       searchName: settings.searchEngine.name,
@@ -355,6 +364,8 @@ export class App {
         theme: value.theme,
         visualStyle: value.visualStyle,
         liquidGlassBackgroundImage: value.liquidGlassBackgroundImage,
+        liquidGlassGroupBlur: value.liquidGlassGroupBlur,
+        liquidGlassShortcutBlur: value.liquidGlassShortcutBlur,
         displayMode: value.displayMode,
         defaultOpenBehavior: value.defaultOpenBehavior,
         searchEngine: { name: value.searchName.trim(), urlTemplate: value.searchTemplate.trim() },
