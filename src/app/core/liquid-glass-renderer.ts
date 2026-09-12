@@ -8,7 +8,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  * and PNG-encodes a map, so a window resize that passes back
  * through a size — or a style toggle — would otherwise pay for it again.
  */
-export const RETAINED_FILTER_LIMIT = 16;
+export const RETAINED_FILTER_LIMIT = 6;
 
 interface GlassFilter {
   id: string;

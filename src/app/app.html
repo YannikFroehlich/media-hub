@@ -19,9 +19,6 @@
       </span>
       <span class="brand-copy">
         <strong>Media Hub</strong>
-        @if (store.settings().showSubtitle) {
-          <span>Deine Inhalte. Dein Hub.</span>
-        }
       </span>
     </div>
 
@@ -131,7 +128,7 @@
             [style.--group-color]="group.color"
             [style.--stagger-index]="groupIdx"
           >
-            <span appLiquidGlass class="liquid-glass-effect" aria-hidden="true"></span>
+            <span class="liquid-glass-effect" aria-hidden="true"></span>
             <span class="liquid-glass-tint" aria-hidden="true"></span>
             <span class="liquid-glass-shine" aria-hidden="true"></span>
 
@@ -753,6 +750,23 @@
                     <small>Fließendes Glas mit Lichtbrechung</small>
                   </span>
                 </button>
+                <button
+                  type="button"
+                  [class.selected]="settingsForm.controls.visualStyle.value === 'minimalist'"
+                  [attr.aria-pressed]="settingsForm.controls.visualStyle.value === 'minimalist'"
+                  (click)="
+                    settingsForm.controls.visualStyle.setValue('minimalist');
+                    settingsForm.markAsDirty()
+                  "
+                >
+                  <span class="style-preview minimalist" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                  </span>
+                  <span class="style-card-copy">
+                    <strong>Minimalistisch</strong>
+                    <small>Klare Flächen, maximale Leistung</small>
+                  </span>
+                </button>
               </div>
             </fieldset>
 
@@ -917,10 +931,6 @@
 
             <fieldset class="picker-fieldset option-stack">
               <legend>Oberfläche</legend>
-              <label class="check-row">
-                <input type="checkbox" formControlName="showSubtitle" />
-                <span><i class="fa-solid fa-check"></i></span><strong>Untertitel anzeigen</strong>
-              </label>
               <label class="check-row">
                 <input type="checkbox" formControlName="showKeyboardHint" />
                 <span><i class="fa-solid fa-check"></i></span

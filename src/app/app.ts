@@ -372,6 +372,7 @@ export class App {
         showSubtitle: value.showSubtitle,
         showKeyboardHint: value.showKeyboardHint,
       });
+      this.refreshVisualEffects();
     } catch {
       this.importError.set(
         'Das Hintergrundbild konnte nicht lokal gespeichert werden. Bitte wähle ein kleineres Bild.',
@@ -578,6 +579,7 @@ export class App {
       )
         return;
       this.store.importConfig(parsed.config);
+      this.refreshVisualEffects();
       this.openSettings();
     } catch {
       this.importError.set(
@@ -589,6 +591,7 @@ export class App {
   protected resetHub(): void {
     if (!window.confirm('Media Hub wirklich auf die Startkonfiguration zurücksetzen?')) return;
     this.store.reset();
+    this.refreshVisualEffects();
     this.openSettings();
   }
 
@@ -681,6 +684,10 @@ export class App {
   private armCursorIdleTimer(): void {
     this.cursorIdle.set(false);
     if (this.idleTimer !== null) window.clearTimeout(this.idleTimer);
+    if (this.store.settings().visualStyle === 'minimalist') {
+      this.idleTimer = null;
+      return;
+    }
     this.idleTimer = window.setTimeout(() => this.cursorIdle.set(true), 3000);
   }
 
@@ -826,7 +833,7 @@ export class App {
   // Both glow layers follow the same pointer event. This keeps the larger group
   // wash alive beneath shortcuts, so moving between both surfaces feels seamless.
   private updatePointerEffects(event: MouseEvent): void {
-    if (this.store.settings().visualStyle === 'liquid-glass') {
+    if (this.store.settings().visualStyle !== 'classic') {
       this.resetPointerEffects();
       return;
     }
@@ -902,6 +909,12 @@ export class App {
     this.pendingTilt = null;
   }
 
+  private refreshVisualEffects(): void {
+    this.armCursorIdleTimer();
+    if (this.store.settings().visualStyle !== 'classic') this.resetPointerEffects();
+    this.updateFocusGlider(this.document.activeElement as HTMLElement | null);
+  }
+
   private resetTilt(element: HTMLElement | null): void {
     element?.style.removeProperty('--tilt-x');
     element?.style.removeProperty('--tilt-y');
@@ -913,7 +926,11 @@ export class App {
     // The search pill already has its own deliberate, understated focus treatment
     // (see `.search input:focus-visible` / `.search:focus-within` in styles.scss) —
     // the glider's glow would just re-add the thick ring that styling exists to avoid.
-    if (!target?.matches?.('[data-focusable]') || target.closest('.search')) {
+    if (
+      this.store.settings().visualStyle === 'minimalist' ||
+      !target?.matches?.('[data-focusable]') ||
+      target.closest('.search')
+    ) {
       this.focusGlider.update((state) => ({ ...state, visible: false }));
       return;
     }

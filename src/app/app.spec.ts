@@ -132,7 +132,36 @@ describe('App', () => {
       'blur(4px)',
     );
     expect(compiled.querySelectorAll('.shortcut-card > [appLiquidGlass]')).toHaveLength(0);
-    expect(compiled.querySelectorAll('.group-card > [appLiquidGlass]')).not.toHaveLength(0);
+    expect(compiled.querySelectorAll('.group-card > [appLiquidGlass]')).toHaveLength(0);
+    expect(compiled.querySelectorAll('.topbar > [appLiquidGlass]')).toHaveLength(1);
+
+    const card = compiled.querySelector('.shortcut-card') as HTMLElement;
+    const group = card.closest('.group-card') as HTMLElement;
+    mockPointerRects(card, group);
+    card.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 60, clientY: 95 }));
+
+    expect(card.style.getPropertyValue('--glow-x')).toBe('');
+    expect(card.style.getPropertyValue('--tilt-x')).toBe('');
+    expect(group.style.getPropertyValue('--group-glow-x')).toBe('');
+  });
+
+  it('should save and apply the minimalist visual style without pointer effects', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('.settings-toggle')?.click();
+    fixture.detectChanges();
+
+    const styleButtons = Array.from(
+      compiled.querySelectorAll<HTMLButtonElement>('.style-cards > button'),
+    );
+    styleButtons.find((button) => button.textContent?.includes('Minimalistisch'))?.click();
+    compiled.querySelector<HTMLButtonElement>('.settings-form button[type="submit"]')?.click();
+    await fixture.whenStable();
+
+    expect(document.documentElement.getAttribute('data-style')).toBe('minimalist');
+    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').settings;
+    expect(savedSettings.visualStyle).toBe('minimalist');
 
     const card = compiled.querySelector('.shortcut-card') as HTMLElement;
     const group = card.closest('.group-card') as HTMLElement;
