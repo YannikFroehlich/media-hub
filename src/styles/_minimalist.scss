@@ -1,0 +1,158 @@
+:root[data-style='minimalist'] {
+  --bg: #0b111a;
+  --bg-deep: #0b111a;
+  --surface: #141d29;
+  --surface-strong: #111925;
+  --surface-soft: #172231;
+  --surface-hover: #1e2b3c;
+  --line: #263548;
+  --line-strong: #34465d;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow: none;
+  --blur-sm: 0px;
+  --blur-md: 0px;
+  --blur-lg: 0px;
+  --radius-xl: 16px;
+  --radius-lg: 12px;
+  --radius-md: 10px;
+}
+
+:root[data-theme='light'][data-style='minimalist'] {
+  --bg: #f2f4f7;
+  --bg-deep: #f2f4f7;
+  --surface: #ffffff;
+  --surface-strong: #ffffff;
+  --surface-soft: #f7f8fa;
+  --surface-hover: #edf1f5;
+  --line: #dce2e9;
+  --line-strong: #c7d0db;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow: none;
+}
+
+// Performance mode: keep painting predictable and avoid continuous compositor work.
+:root[data-style='minimalist'] *,
+:root[data-style='minimalist'] *::before,
+:root[data-style='minimalist'] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+:root[data-style='minimalist'] .hub-shell {
+  background: var(--bg);
+}
+
+:root[data-style='minimalist'] .hub-shell::before,
+:root[data-style='minimalist'] .hub-shell::after,
+:root[data-style='minimalist'] .group-card::before,
+:root[data-style='minimalist'] .shortcut-card::before,
+:root[data-style='minimalist'] .focus-glider {
+  display: none;
+}
+
+:root[data-style='minimalist']
+  :is(
+    .search,
+    .group-card,
+    .shortcut-card,
+    .empty-dashboard,
+    .icon-button,
+    .header-button,
+    .edit-toggle,
+    .panel-close,
+    .secondary-button,
+    .primary-button,
+    .danger-button,
+    .sidepanel,
+    .panel-backdrop,
+    .keyboard-hint,
+    .keyboard-help-backdrop
+  ) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+:root[data-style='minimalist'] .group-card,
+:root[data-theme='light'][data-style='minimalist'] .group-card,
+:root[data-style='minimalist'] .group-card.accent-background,
+:root[data-theme='light'][data-style='minimalist'] .group-card.accent-background {
+  border-color: color-mix(in srgb, var(--group-color) 32%, var(--line));
+  background: var(--surface);
+}
+
+:root[data-style='minimalist'] .group-card:hover,
+:root[data-theme='light'][data-style='minimalist'] .group-card:hover {
+  border-color: color-mix(in srgb, var(--group-color) 58%, var(--line-strong));
+  box-shadow: none;
+  transform: none;
+}
+
+:root[data-style='minimalist'] .shortcut-card,
+:root[data-theme='light'][data-style='minimalist'] .shortcut-card {
+  border-color: var(--line);
+  background: var(--surface-soft);
+  box-shadow: none;
+}
+
+:root[data-style='minimalist'] .shortcut-card:hover,
+:root[data-theme='light'][data-style='minimalist'] .shortcut-card:hover {
+  border-color: var(--shortcut-color);
+  background: var(--surface-hover);
+  box-shadow: none;
+  transform: none;
+}
+
+:root[data-style='minimalist'] .shortcut-icon,
+:root[data-style='minimalist'] .brand-mark img,
+:root[data-style='minimalist'] .shortcut-card:focus-visible .shortcut-icon {
+  filter: none;
+}
+
+:root[data-style='minimalist'] .search,
+:root[data-style='minimalist'] .keyboard-hint,
+:root[data-theme='light'][data-style='minimalist'] .keyboard-hint {
+  background: var(--surface-strong);
+}
+
+:root[data-style='minimalist'] .sidepanel {
+  background: var(--surface-strong);
+}
+
+:root[data-style='minimalist'] .panel-backdrop,
+:root[data-style='minimalist'] .keyboard-help-backdrop {
+  background: rgba(0, 0, 0, 0.42);
+}
+
+:root[data-style='minimalist'] .primary-button,
+:root[data-style='minimalist'] .primary-button:hover {
+  border-color: var(--primary);
+  background: var(--primary);
+  box-shadow: none;
+  transform: none;
+}
+
+:root[data-style='minimalist']
+  :is(
+    button,
+    input,
+    select,
+    textarea,
+    [tabindex],
+    [data-focusable],
+    .shortcut-card,
+    .icon-button,
+    .header-button,
+    .panel-close
+  ):focus-visible {
+  border-color: var(--focus) !important;
+  box-shadow: 0 0 0 2px var(--focus) !important;
+}
+
+:root[data-style='minimalist'] .search input:focus-visible {
+  box-shadow: none !important;
+}

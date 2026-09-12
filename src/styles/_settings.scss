@@ -145,6 +145,40 @@
   backdrop-filter: blur(3px) saturate(1.35);
 }
 
+.style-preview.minimalist {
+  align-items: center;
+  background: #0f1722;
+}
+
+.style-preview.minimalist::before {
+  top: 10px;
+  left: 10px;
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: #4c9cff;
+  filter: none;
+}
+
+.style-preview.minimalist::after {
+  display: none;
+}
+
+.style-preview.minimalist > span {
+  height: 30px;
+  border-color: #29384b;
+  border-radius: 5px;
+  background: #182332;
+}
+
+.style-preview.minimalist > span:nth-child(2) {
+  border-top-color: #a855f7;
+}
+
+.style-preview.minimalist > span:nth-child(3) {
+  border-top-color: #14b8a6;
+}
+
 .style-card-copy {
   display: flex;
   min-width: 0;
