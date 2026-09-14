@@ -275,7 +275,7 @@
                       @if (shortcut.icon.kind === 'website') {
                         <span class="shortcut-icon website-icon" aria-hidden="true">
                           <i class="fa-solid fa-globe favicon-fallback"></i>
-                          @if (websiteIconUrl(shortcut.url); as websiteIcon) {
+                          @if (dashboardIconUrl(shortcut.url); as websiteIcon) {
                             <img
                               [src]="websiteIcon"
                               alt=""
