@@ -1,0 +1,62 @@
+// High-contrast mode: stronger borders, near-opaque surfaces, no soft glow/blur — legible
+// from a distance regardless of the chosen visual style or theme. Orthogonal to both, so it
+// overrides their tokens rather than branching on them; imported last to win the cascade.
+
+:root[data-contrast='high'] {
+  --line: rgba(210, 224, 248, 0.55);
+  --line-strong: rgba(225, 235, 252, 0.78);
+  --muted: #dce1ec;
+  --faint: #b7bfcf;
+  --surface: rgba(9, 13, 22, 0.94);
+  --surface-strong: rgba(9, 13, 22, 0.98);
+  --surface-soft: rgba(9, 13, 22, 0.88);
+  --surface-hover: rgba(20, 27, 40, 0.96);
+}
+
+:root[data-theme='light'][data-contrast='high'] {
+  --line: rgba(15, 23, 38, 0.5);
+  --line-strong: rgba(10, 16, 28, 0.72);
+  --muted: #26304a;
+  --faint: #47526b;
+  --surface: rgba(255, 255, 255, 0.96);
+  --surface-strong: rgba(255, 255, 255, 0.99);
+  --surface-soft: rgba(255, 255, 255, 0.92);
+  --surface-hover: rgba(255, 255, 255, 0.98);
+}
+
+// The two tile types paint their own gradient background instead of reading --surface,
+// so boosting the tokens above doesn't reach them — flatten those directly.
+:root[data-contrast='high'] .group-card,
+:root[data-contrast='high'] .shortcut-card {
+  background: var(--surface);
+  border-color: var(--line-strong);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+:root[data-contrast='high'] .group-card::before,
+:root[data-contrast='high'] .shortcut-card::before {
+  display: none;
+}
+
+:root[data-contrast='high'] .shortcut-card.is-disabled {
+  opacity: 0.72;
+}
+
+// Liquid-glass style paints its surface via separate tint/shine/blur overlay layers rather
+// than the card's own background — neutralize those too so the opaque fill above isn't
+// undercut by a glossy highlight or an extra blur pass sitting on top of it.
+:root[data-contrast='high'] :is(.liquid-glass-effect, .liquid-glass-shine) {
+  display: none;
+}
+
+:root[data-contrast='high'] .liquid-glass-tint {
+  background: var(--surface);
+}
+
+// Decorative glow filters soften icon edges — sharpen for legibility.
+:root[data-contrast='high'] .shortcut-icon,
+:root[data-contrast='high'] .brand-mark img {
+  filter: none;
+}

@@ -74,4 +74,14 @@ describe('parseConfig', () => {
     expect(parsed.settings.autoTheme).toBe(false);
     expect(parsed.settings.screensaverEnabled).toBe(true);
   });
+
+  it('adds a highContrast default to an existing saved configuration', () => {
+    const existingConfig = createDefaultConfig() as unknown as {
+      settings: Record<string, unknown>;
+    };
+    delete existingConfig.settings['highContrast'];
+
+    const parsed = parseConfig(existingConfig);
+    expect(parsed.settings.highContrast).toBe(false);
+  });
 });

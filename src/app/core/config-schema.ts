@@ -80,6 +80,7 @@ export const mediaHubConfigSchema = z
       showSubtitle: z.boolean(),
       showKeyboardHint: z.boolean(),
       autoTheme: z.boolean().default(false),
+      highContrast: z.boolean().default(false),
       screensaverEnabled: z.boolean().default(true),
       weatherEnabled: z.boolean().default(false),
       weatherLocation: z.string().default(''),

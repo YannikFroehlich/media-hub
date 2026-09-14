@@ -54,6 +54,7 @@ export interface GlobalSettings {
   showSubtitle: boolean;
   showKeyboardHint: boolean;
   autoTheme: boolean;
+  highContrast: boolean;
   screensaverEnabled: boolean;
   weatherEnabled: boolean;
   weatherLocation: string;
