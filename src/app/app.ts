@@ -48,6 +48,7 @@ const BACKGROUND_SOURCE_SIZE_LIMIT = 15 * 1024 * 1024;
 const BACKGROUND_DIRECT_STORE_LIMIT = 900_000;
 const BACKGROUND_MAX_WIDTH = 1920;
 const BACKGROUND_MAX_HEIGHT = 1080;
+const SCREENSAVER_IDLE_MS = 5 * 60 * 1000;
 
 interface IconPreset {
   id: string;
@@ -93,6 +94,7 @@ export class App {
   protected readonly liveMessage = signal('');
   protected readonly cursorIdle = signal(false);
   protected readonly showKeyboardHelp = signal(false);
+  protected readonly screensaverActive = signal(false);
   protected readonly weather = signal<WeatherSnapshot | null>(null);
   protected readonly clock = signal(new Date());
   protected readonly clockLabel = computed(() =>
@@ -188,6 +190,7 @@ export class App {
     showSubtitle: [true],
     showKeyboardHint: [true],
     autoTheme: [false],
+    screensaverEnabled: [true],
     weatherEnabled: [false],
     weatherLocation: [''],
   });
@@ -310,6 +313,7 @@ export class App {
       showSubtitle: settings.showSubtitle,
       showKeyboardHint: settings.showKeyboardHint,
       autoTheme: settings.autoTheme,
+      screensaverEnabled: settings.screensaverEnabled,
       weatherEnabled: settings.weatherEnabled,
       weatherLocation: settings.weatherLocation,
     });
@@ -414,6 +418,7 @@ export class App {
         showSubtitle: value.showSubtitle,
         showKeyboardHint: value.showKeyboardHint,
         autoTheme: value.autoTheme,
+        screensaverEnabled: value.screensaverEnabled,
         weatherEnabled: value.weatherEnabled,
         weatherLocation,
         weatherLat,
@@ -421,6 +426,7 @@ export class App {
       });
       this.refreshVisualEffects();
       this.refreshWeather();
+      this.armCursorIdleTimer();
     } catch {
       this.importError.set(
         'Das Hintergrundbild konnte nicht lokal gespeichert werden. Bitte wähle ein kleineres Bild.',
@@ -645,6 +651,11 @@ export class App {
 
   @HostListener('document:keydown', ['$event'])
   protected handleGlobalKeyboard(event: KeyboardEvent): void {
+    if (this.screensaverActive()) {
+      event.preventDefault();
+      this.armCursorIdleTimer();
+      return;
+    }
     const target = event.target as HTMLElement | null;
     const isTyping = target?.matches('input, textarea, select, [contenteditable="true"]');
     const isSearchFocused = target === this.searchInput?.nativeElement;
@@ -728,15 +739,30 @@ export class App {
   }
 
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
+  private screensaverTimer: ReturnType<typeof setTimeout> | null = null;
 
-  private armCursorIdleTimer(): void {
+  protected armCursorIdleTimer(): void {
     this.cursorIdle.set(false);
     if (this.idleTimer !== null) window.clearTimeout(this.idleTimer);
     if (this.store.settings().visualStyle === 'minimalist') {
       this.idleTimer = null;
+    } else {
+      this.idleTimer = window.setTimeout(() => this.cursorIdle.set(true), 3000);
+    }
+    this.armScreensaverTimer();
+  }
+
+  private armScreensaverTimer(): void {
+    this.screensaverActive.set(false);
+    if (this.screensaverTimer !== null) window.clearTimeout(this.screensaverTimer);
+    if (!this.store.settings().screensaverEnabled) {
+      this.screensaverTimer = null;
       return;
     }
-    this.idleTimer = window.setTimeout(() => this.cursorIdle.set(true), 3000);
+    this.screensaverTimer = window.setTimeout(
+      () => this.screensaverActive.set(true),
+      SCREENSAVER_IDLE_MS,
+    );
   }
 
   private lastTrigger: HTMLElement | null = null;

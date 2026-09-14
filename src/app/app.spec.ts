@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
+import { MediaHubStore } from './core/media-hub.store';
 
 function mediaQueryList(media: string, matches: boolean): MediaQueryList {
   return {
@@ -51,12 +52,44 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
 
   it('should create the app', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
+  });
+
+  it('shows the screensaver after the idle period and hides it again on activity', () => {
+    vi.useFakeTimers();
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    vi.advanceTimersByTime(5 * 60 * 1000);
+    fixture.detectChanges();
+    expect(compiled.querySelector('.screensaver')).toBeTruthy();
+
+    document.dispatchEvent(new MouseEvent('mousemove'));
+    fixture.detectChanges();
+    expect(compiled.querySelector('.screensaver')).toBeFalsy();
+  });
+
+  it('never shows the screensaver when disabled in settings', () => {
+    vi.useFakeTimers();
+    const store = TestBed.inject(MediaHubStore);
+    store.updateSettings({ ...store.settings(), screensaverEnabled: false });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    vi.advanceTimersByTime(5 * 60 * 1000);
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.screensaver')).toBeFalsy();
   });
 
   it('should render the Media Hub dashboard', async () => {

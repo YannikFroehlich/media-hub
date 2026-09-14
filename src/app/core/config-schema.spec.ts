@@ -62,4 +62,16 @@ describe('parseConfig', () => {
     expect(parsed.settings.weatherLat).toBeNull();
     expect(parsed.settings.weatherLon).toBeNull();
   });
+
+  it('adds autoTheme and screensaver defaults to an existing saved configuration', () => {
+    const existingConfig = createDefaultConfig() as unknown as {
+      settings: Record<string, unknown>;
+    };
+    delete existingConfig.settings['autoTheme'];
+    delete existingConfig.settings['screensaverEnabled'];
+
+    const parsed = parseConfig(existingConfig);
+    expect(parsed.settings.autoTheme).toBe(false);
+    expect(parsed.settings.screensaverEnabled).toBe(true);
+  });
 });
