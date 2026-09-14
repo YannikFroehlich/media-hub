@@ -94,6 +94,10 @@ export class App {
   protected readonly cursorIdle = signal(false);
   protected readonly showKeyboardHelp = signal(false);
   protected readonly weather = signal<WeatherSnapshot | null>(null);
+  protected readonly clock = signal(new Date());
+  protected readonly clockLabel = computed(() =>
+    this.clock().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+  );
   protected readonly focusGlider = signal<{
     x: number;
     y: number;
@@ -201,6 +205,7 @@ export class App {
     this.armCursorIdleTimer();
     this.refreshWeather();
     window.setInterval(() => this.refreshWeather(), 30 * 60 * 1000);
+    window.setInterval(() => this.clock.set(new Date()), 15_000);
   }
 
   private async refreshWeather(): Promise<void> {
