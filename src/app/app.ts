@@ -234,9 +234,24 @@ export class App {
   constructor() {
     this.armCursorIdleTimer();
     this.refreshWeather();
+    this.refreshSunTimes();
     window.setInterval(() => this.refreshWeather(), 30 * 60 * 1000);
+    window.setInterval(() => this.refreshSunTimes(), 30 * 60 * 1000);
     effect(() => (this.store.editMode() ? this.armLinkCheck() : this.disarmLinkCheck()));
     effect(() => this.resolveWebsiteIcons());
+  }
+
+  // Independent of the weather widget: auto-theme needs sunrise/sunset even if
+  // "Wetter in der Kopfzeile anzeigen" is off, as long as a location is set.
+  private async refreshSunTimes(): Promise<void> {
+    const settings = this.store.settings();
+    if (!settings.autoTheme || settings.weatherLat === null || settings.weatherLon === null) {
+      this.store.setSunTimes(null);
+      return;
+    }
+    this.store.setSunTimes(
+      await this.weatherService.getSunTimes(settings.weatherLat, settings.weatherLon),
+    );
   }
 
   private async refreshWeather(): Promise<void> {
@@ -428,7 +443,7 @@ export class App {
     let weatherLocation = settings.weatherLocation;
     let weatherLat = settings.weatherLat;
     let weatherLon = settings.weatherLon;
-    if (value.weatherEnabled && value.weatherLocation.trim()) {
+    if ((value.weatherEnabled || value.autoTheme) && value.weatherLocation.trim()) {
       const geocoded = await this.weatherService.geocode(value.weatherLocation);
       if (!geocoded) {
         this.importError.set('Standort konnte nicht gefunden werden.');
@@ -459,6 +474,7 @@ export class App {
       });
       this.refreshVisualEffects();
       this.refreshWeather();
+      this.refreshSunTimes();
       this.armCursorIdleTimer();
     } catch {
       this.importError.set(

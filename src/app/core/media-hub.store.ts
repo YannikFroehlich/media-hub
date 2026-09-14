@@ -4,8 +4,9 @@ import { ConfigRepository } from './config-repository';
 import { createDefaultConfig } from './default-config';
 import { HubGroup, MediaHubConfig, Shortcut, Theme } from './models';
 
-const AUTO_THEME_DAY_START_HOUR = 7;
-const AUTO_THEME_DAY_END_HOUR = 20;
+// Fallback for when no location (and therefore no sunrise/sunset) is available.
+const AUTO_THEME_FALLBACK_DAY_START_HOUR = 7;
+const AUTO_THEME_FALLBACK_DAY_END_HOUR = 20;
 
 @Injectable({ providedIn: 'root' })
 export class MediaHubStore {
@@ -19,6 +20,8 @@ export class MediaHubStore {
       : null,
   );
   private readonly clockTickState = signal(Date.now());
+  /** Today's sunrise/sunset (epoch ms), when a location is available. Fed by app.ts. */
+  private readonly sunTimesState = signal<{ sunrise: number; sunset: number } | null>(null);
 
   readonly config = this.configState.asReadonly();
   readonly groups = computed(() => this.configState().groups);
@@ -30,8 +33,13 @@ export class MediaHubStore {
   readonly effectiveTheme = computed<Theme>(() => {
     const settings = this.settings();
     if (!settings.autoTheme) return settings.theme;
-    const hour = new Date(this.clockTick()).getHours();
-    return hour >= AUTO_THEME_DAY_START_HOUR && hour < AUTO_THEME_DAY_END_HOUR ? 'light' : 'dark';
+    const now = this.clockTick();
+    const sunTimes = this.sunTimesState();
+    if (sunTimes) return now >= sunTimes.sunrise && now < sunTimes.sunset ? 'light' : 'dark';
+    const hour = new Date(now).getHours();
+    return hour >= AUTO_THEME_FALLBACK_DAY_START_HOUR && hour < AUTO_THEME_FALLBACK_DAY_END_HOUR
+      ? 'light'
+      : 'dark';
   });
 
   constructor() {
@@ -63,6 +71,10 @@ export class MediaHubStore {
         root.style.removeProperty('--liquid-background-image');
       }
     });
+  }
+
+  setSunTimes(sunTimes: { sunrise: number; sunset: number } | null): void {
+    this.sunTimesState.set(sunTimes);
   }
 
   toggleEditMode(): void {
