@@ -20,12 +20,13 @@ npm run build                 # production build (enforces Angular budgets)
 npm run serve:prod            # serve dist/media-hub/browser at http://127.0.0.1:4173
 npm run electron:dev          # build + launch the Windows tray app locally
 npm run electron:pack         # build + package a portable Windows .exe (release/)
+npm run electron:smoke        # launch the packaged .exe headlessly and verify it boots
 ```
 
-- Tests use Angular's `@angular/build:unit-test` builder with Vitest and jsdom. There is no separate lint script or `ng lint`.
+- Tests use Angular's `@angular/build:unit-test` builder with Vitest and jsdom. There is no separate lint script or `ng lint`. The one exception is `scripts/windows/server.mjs`, covered by `scripts/windows/server.test.mjs` via Node's built-in test runner (`node --test scripts/windows/server.test.mjs`) since that script lives outside `src/` and isn't part of the Angular/Vitest project.
 - To run a single spec file: `ng test -- src/app/core/url-resolver.spec.ts` (or open Vitest watch mode with `npm test` and filter interactively).
 - Format before submitting broad changes: `npx prettier --write <files>` (100-char print width, single quotes, Angular parser for `*.html`, configured in `.prettierrc`).
-- `scripts/windows/server.mjs` is a small dependency-free static file server (`/health` endpoint, path-traversal guard, SPA fallback) exposing `startServer`/`stopServer`. It's used two ways: directly via `npm run serve:prod` for a local production preview, and as an importable module consumed by the Electron tray app in `electron/main.mjs`.
+- `scripts/windows/server.mjs` is a small dependency-free static file server (`/health` endpoint, path-traversal guard, SPA fallback) exposing `startServer`/`stopServer`. It's used two ways: directly via `npm run serve:prod` for a local production preview, and as an importable module consumed by the Electron tray app in `electron/main.mjs`. Cache-control is asset-aware, not blanket: hashed build files (`main-*.js`, `styles-*.css`, …) get a year-long immutable cache, but fixed-name entry points listed in `NEVER_CACHE_LONG` (`index.html`, `ngsw.json`, `ngsw-worker.js`, `manifest.webmanifest`) always get `no-cache` — required for the service worker's update detection (and even initial registration) to work at all. Keep any new fixed-name entry point in that set.
 - The Windows deployment path is an Electron tray application (`electron/main.mjs`), not PowerShell scripts. It has no visible window — a tray icon offers "Dashboard öffnen" (opens the system default browser at the served URL), an autostart checkbox backed by `app.setLoginItemSettings`, and "Beenden" (stops the embedded server gracefully, then quits). Packaging config lives in `electron-builder.yml` (portable, no-admin `.exe` target). These are user-facing deployment tools, not part of the normal dev loop.
 
 ## Architecture
@@ -33,12 +34,14 @@ npm run electron:pack         # build + package a portable Windows .exe (release
 **Single-component app.** There is effectively one Angular component, `App` (`src/app/app.ts`, `app.html`, `app.scss`), that renders the entire dashboard: search bar, group/shortcut grid, edit-mode drag-and-drop, and all side panels (add/edit shortcut, add/edit group, settings). It is intentionally not decomposed into child components — forms, keyboard handling, drag-and-drop, and rendering all live here. When making UI changes, expect to work in this one large file/template pair rather than hunting for sub-components.
 
 **State flows one way through `MediaHubStore`** (`src/app/core/media-hub.store.ts`), a signal-based store (`providedIn: 'root'`):
+
 - `configState` is the single source of truth (`MediaHubConfig`: settings + groups + shortcuts). All mutations go through `commit()`, which stamps `updatedAt`, persists via `ConfigRepository`, and updates the signal.
 - `groups`, `settings`, `editMode`, `toast` are derived/exposed as readonly signals/computed values.
-- An `effect()` in the constructor syncs `settings().theme` to the `data-theme` attribute on `<html>` for CSS theming.
+- `effectiveTheme` is a computed that returns `settings().theme` normally, or — when `settings().autoTheme` is on — derives light/dark from the current hour (7–20 = light) via an internal `clockTick` signal ticking every 60s. An `effect()` in the constructor syncs `effectiveTheme()` (not the raw setting) to the `data-theme` attribute on `<html>`, along with `visualStyle`/`displayMode`/liquid-glass CSS vars, for CSS theming.
 - Every mutating method (`addGroup`, `upsertShortcut`, `reorderGroups`, etc.) also calls `notify()` to surface a transient toast message (auto-clears after ~3.2s) and drives the ARIA live region.
 
 **Persistence and validation** (`src/app/core/`):
+
 - `config-repository.ts` reads/writes `localStorage` under `media-hub.config`, keeping a `media-hub.config.backup` copy on every save. On load, if the primary value fails schema validation it falls back to the backup, then to `createDefaultConfig()` — surfacing a "recovered" flag the store turns into a toast.
 - `config-schema.ts` defines the Zod schemas (`mediaHubConfigSchema`, `exportEnvelopeSchema`) that are the actual contract for what a valid config/export file looks like — this is the place to change when the data model evolves, and both `ConfigRepository.save()` and JSON import (`parseExport`) re-validate through it. Duplicate group/shortcut IDs are rejected via `superRefine`.
 - `models.ts` holds the plain TypeScript types (`MediaHubConfig`, `HubGroup`, `Shortcut`, `IconConfig`, `ExportEnvelope`, etc.) — keep these in sync with the Zod schema by hand, they are not derived from it.
@@ -51,10 +54,17 @@ npm run electron:pack         # build + package a portable Windows .exe (release
 **Everything client-side, security-conscious by design:** no backend, no user HTML/SVG injection, colors/icons are constrained enums or regex-validated hex/Font Awesome classes, and URLs are always funneled through `UrlResolver`. Treat any new user-controlled input the same way — validate through Zod in `config-schema.ts` and never bypass `UrlResolver` for anything that becomes an `href`/`window.location`/`window.open` target.
 
 **Editing UX conventions worth knowing:**
+
 - Edit mode (toggled with `E`) enables drag-and-drop reordering (`@angular/cdk/drag-drop`) for both groups and shortcuts, plus keyboard reordering via arrow keys on the drag handles.
-- `/` focuses the search bar; `Esc` closes open side panels (with an unsaved-changes confirm via `window.confirm` if the active form is dirty).
+- `/` focuses the search bar; `Esc` closes open side panels (with an unsaved-changes confirm via `window.confirm` if the active form is dirty), the keyboard-help overlay, and the weather forecast popover.
 - Arrow-key spatial navigation (`spatialNavigate` in `app.ts`) moves focus between `[data-focusable]` elements based on geometric position, independent of DOM order — needed for the grid layout's non-linear tab order.
 - Side panels (shortcut/group/settings) share one `panel` signal (`PanelKind`) and one focus-return mechanism (`lastTrigger`) rather than being separate components/routes.
+- Typing in the search bar live-filters the dashboard via `visibleGroups` (a computed in `app.ts`), matching group or shortcut names. It's intentionally bypassed whenever `editMode()` is true, returning the full, unfiltered `store.groups()` — that's what keeps `cdkDrag`/`cdkDropList` index-based reordering correct. Never let a filtered/derived array reach the drag-and-drop bindings.
+- A single `armCursorIdleTimer()` in `app.ts` is the one place "the user is active" gets handled: on every call it resets the 3s cursor-hide timer _and_ re-arms a 5-minute screensaver timer (`screensaverActive`, a full-screen clock/weather overlay, dismissed by any click/keydown/mousemove). Add new activity-driven behavior here rather than introducing a parallel timer.
+
+**Weather** (`src/app/core/weather.service.ts`, `WeatherService`): wraps Open-Meteo's free, keyless geocoding + forecast endpoints with plain `fetch` (no `HttpClient` anywhere in the app). A city name is geocoded once when settings are saved (`weatherLat`/`weatherLon` persisted in `GlobalSettings`); `app.ts` refreshes the current-plus-5-day forecast periodically and on save. Weather data is intentionally _not_ covered by the service worker — see PWA below.
+
+**PWA / offline app shell:** scaffolded via `ng add @angular/pwa` — `ngsw-config.json`, `public/manifest.webmanifest`, `public/icons/`, and `provideServiceWorker(...)` in `app.config.ts` (disabled via `isDevMode()`, so exercise it through `npm run serve:prod`/the packaged Electron app, not `npm start`). It precaches the app shell (JS/CSS/HTML) for offline use; it deliberately does not cache the Open-Meteo weather responses, which stay live-network-only. See the `scripts/windows/server.mjs` cache-control note above — it's the other half of making the service worker actually work.
 
 ## Testing conventions
 
