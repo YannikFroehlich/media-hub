@@ -18,13 +18,15 @@ export class MediaHubStore {
       ? 'Die gespeicherte Konfiguration wurde sicher wiederhergestellt.'
       : null,
   );
-  private readonly clockTick = signal(Date.now());
+  private readonly clockTickState = signal(Date.now());
 
   readonly config = this.configState.asReadonly();
   readonly groups = computed(() => this.configState().groups);
   readonly settings = computed(() => this.configState().settings);
   readonly editMode = this.editModeState.asReadonly();
   readonly toast = this.toastState.asReadonly();
+  /** Ticks every 60s. Shared clock source for effectiveTheme and app.ts's header clock. */
+  readonly clockTick = this.clockTickState.asReadonly();
   readonly effectiveTheme = computed<Theme>(() => {
     const settings = this.settings();
     if (!settings.autoTheme) return settings.theme;
@@ -33,7 +35,7 @@ export class MediaHubStore {
   });
 
   constructor() {
-    window.setInterval(() => this.clockTick.set(Date.now()), 60_000);
+    window.setInterval(() => this.clockTickState.set(Date.now()), 60_000);
 
     effect(() => {
       const settings = this.settings();
