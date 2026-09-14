@@ -942,7 +942,10 @@
               <label class="check-row">
                 <input type="checkbox" formControlName="autoTheme" />
                 <span><i class="fa-solid fa-check"></i></span
-                ><strong>Automatisch nach Tageszeit wechseln (7–20 Uhr hell)</strong>
+                ><strong
+                  >Automatisch nach Tageszeit wechseln (Sonnenauf-/-untergang bei hinterlegtem
+                  Standort, sonst 7–20 Uhr hell)</strong
+                >
               </label>
               <div class="theme-cards">
                 <button
@@ -1036,6 +1039,7 @@
               <label class="field">
                 <span>Standort</span>
                 <input formControlName="weatherLocation" placeholder="Berlin" />
+                <small>Wird auch für den Sonnenauf-/-untergang beim Farbschema verwendet.</small>
               </label>
             </fieldset>
 

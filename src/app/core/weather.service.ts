@@ -77,6 +77,24 @@ export class WeatherService {
     }
   }
 
+  // Lightweight, dedicated call (no weather codes/temps) so auto-theme can ask for sun times
+  // without depending on the weather widget being enabled.
+  async getSunTimes(lat: number, lon: number): Promise<{ sunrise: number; sunset: number } | null> {
+    try {
+      const response = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=sunrise,sunset&forecast_days=1&timezone=auto`,
+      );
+      if (!response.ok) return null;
+      const data = await response.json();
+      const sunrise = data?.daily?.sunrise?.[0];
+      const sunset = data?.daily?.sunset?.[0];
+      if (typeof sunrise !== 'string' || typeof sunset !== 'string') return null;
+      return { sunrise: new Date(sunrise).getTime(), sunset: new Date(sunset).getTime() };
+    } catch {
+      return null;
+    }
+  }
+
   private parseDaily(daily: unknown): WeatherDay[] {
     const d = daily as
       | {

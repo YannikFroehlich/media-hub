@@ -99,4 +99,22 @@ describe('WeatherService', () => {
       },
     ]);
   });
+
+  it('fetches today\'s sunrise and sunset as epoch ms', async () => {
+    mockFetchOnce({
+      daily: { time: ['2026-06-21'], sunrise: ['2026-06-21T05:12'], sunset: ['2026-06-21T21:34'] },
+    });
+
+    const result = await service.getSunTimes(52.5, 13.4);
+
+    expect(result).toEqual({
+      sunrise: new Date('2026-06-21T05:12').getTime(),
+      sunset: new Date('2026-06-21T21:34').getTime(),
+    });
+  });
+
+  it('returns null when the sun-times request fails', async () => {
+    mockFetchOnce({}, false);
+    expect(await service.getSunTimes(52.5, 13.4)).toBeNull();
+  });
 });

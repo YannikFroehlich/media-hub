@@ -122,5 +122,36 @@ describe('MediaHubStore', () => {
 
       expect(nightStore.effectiveTheme()).toBe('dark');
     });
+
+    it('prefers sunrise/sunset over the fixed window once sun times are set', () => {
+      vi.useFakeTimers();
+      // 6:30 local — inside the fixed 7-20 fallback window's "night" side, but after today's
+      // sunrise, so a sun-times-aware evaluation should already call it daytime.
+      vi.setSystemTime(new Date(2026, 5, 21, 6, 30));
+      const sunStore = TestBed.runInInjectionContext(() => new MediaHubStore());
+      sunStore.updateSettings({ ...sunStore.settings(), autoTheme: true, theme: 'dark' });
+
+      sunStore.setSunTimes({
+        sunrise: new Date(2026, 5, 21, 5, 0).getTime(),
+        sunset: new Date(2026, 5, 21, 21, 0).getTime(),
+      });
+
+      expect(sunStore.effectiveTheme()).toBe('light');
+    });
+
+    it('falls back to the fixed window once sun times are cleared', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 5, 21, 6, 30));
+      const sunStore = TestBed.runInInjectionContext(() => new MediaHubStore());
+      sunStore.updateSettings({ ...sunStore.settings(), autoTheme: true, theme: 'dark' });
+      sunStore.setSunTimes({
+        sunrise: new Date(2026, 5, 21, 5, 0).getTime(),
+        sunset: new Date(2026, 5, 21, 21, 0).getTime(),
+      });
+
+      sunStore.setSunTimes(null);
+
+      expect(sunStore.effectiveTheme()).toBe('dark');
+    });
   });
 });
