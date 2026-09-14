@@ -36,6 +36,7 @@
         autocomplete="off"
         aria-label="Suchen oder URL eingeben"
         placeholder="Suchen oder URL eingeben"
+        (input)="searchQuery.set(searchInput.value)"
       />
       <kbd>/</kbd>
     </form>
@@ -152,160 +153,170 @@
 
   <main class="dashboard-wrap">
     @if (store.groups().length) {
-      <div
-        class="dashboard"
-        cdkDropList
-        cdkDropListGroup
-        cdkDropListOrientation="mixed"
-        [cdkDropListData]="store.groups()"
-        (cdkDropListDropped)="dropGroup($event)"
-      >
-        @for (group of store.groups(); track group.id; let groupIdx = $index) {
-          <section
-            class="group-card"
-            cdkDrag
-            [cdkDragData]="group"
-            [cdkDragDisabled]="!store.editMode()"
-            [class.layout-compact]="group.layout === 'compact'"
-            [class.layout-large]="group.layout === 'large'"
-            [class.accent-background]="group.options.useAccentBackground"
-            [style.--group-color]="group.color"
-            [style.--stagger-index]="groupIdx"
-          >
-            <span class="liquid-glass-effect" aria-hidden="true"></span>
-            <span class="liquid-glass-tint" aria-hidden="true"></span>
-            <span class="liquid-glass-shine" aria-hidden="true"></span>
-
-            <div class="group-placeholder" *cdkDragPlaceholder></div>
-            <header class="group-header">
-              @if (store.editMode()) {
-                <button
-                  class="drag-handle"
-                  type="button"
-                  cdkDragHandle
-                  data-focusable
-                  aria-label="Gruppe mit Pfeiltasten verschieben"
-                  (keydown)="keyboardMoveGroup(group.id, $event)"
-                >
-                  <i class="fa-solid fa-grip-vertical" aria-hidden="true"></i>
-                </button>
-              }
-              @if (group.options.showTitle) {
-                <h2>
-                  <i [class]="iconClass(group.icon)" aria-hidden="true"></i>
-                  <span>{{ group.name }}</span>
-                </h2>
-              }
-              @if (group.description) {
-                <p class="group-description">{{ group.description }}</p>
-              }
-              @if (store.editMode()) {
-                <div class="group-actions">
-                  <button
-                    class="icon-button"
-                    type="button"
-                    data-focusable
-                    aria-label="Gruppe bearbeiten"
-                    (click)="openGroupPanel(group, $event)"
-                  >
-                    <i class="fa-solid fa-pencil" aria-hidden="true"></i>
-                  </button>
-                  <button
-                    class="icon-button danger"
-                    type="button"
-                    data-focusable
-                    aria-label="Gruppe löschen"
-                    (click)="selectedGroupId.set(group.id); deleteGroup()"
-                  >
-                    <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
-                  </button>
-                </div>
-              }
-            </header>
-
-            <div
-              class="shortcut-strip"
-              cdkDropList
-              cdkDropListOrientation="horizontal"
-              [cdkDropListData]="group"
-              [cdkDropListDisabled]="!store.editMode() || !group.options.allowShortcutReordering"
-              (cdkDropListDropped)="dropShortcut($event)"
+      @if (visibleGroups().length) {
+        <div
+          class="dashboard"
+          cdkDropList
+          cdkDropListGroup
+          cdkDropListOrientation="mixed"
+          [cdkDropListData]="visibleGroups()"
+          (cdkDropListDropped)="dropGroup($event)"
+        >
+          @for (group of visibleGroups(); track group.id; let groupIdx = $index) {
+            <section
+              class="group-card"
+              cdkDrag
+              [cdkDragData]="group"
+              [cdkDragDisabled]="!store.editMode()"
+              [class.layout-compact]="group.layout === 'compact'"
+              [class.layout-large]="group.layout === 'large'"
+              [class.accent-background]="group.options.useAccentBackground"
+              [style.--group-color]="group.color"
+              [style.--stagger-index]="groupIdx"
             >
-              @for (shortcut of group.shortcuts; track shortcut.id; let shortcutIdx = $index) {
-                @if (shortcut.enabled || store.editMode()) {
+              <span class="liquid-glass-effect" aria-hidden="true"></span>
+              <span class="liquid-glass-tint" aria-hidden="true"></span>
+              <span class="liquid-glass-shine" aria-hidden="true"></span>
+
+              <div class="group-placeholder" *cdkDragPlaceholder></div>
+              <header class="group-header">
+                @if (store.editMode()) {
                   <button
-                    class="shortcut-card"
+                    class="drag-handle"
                     type="button"
-                    cdkDrag
-                    [cdkDragData]="shortcut"
-                    [cdkDragDisabled]="!store.editMode() || !group.options.allowShortcutReordering"
-                    [class.is-disabled]="!shortcut.enabled"
-                    [style.--shortcut-color]="shortcut.color"
-                    [style.--stagger-index]="shortcutIdx"
+                    cdkDragHandle
                     data-focusable
-                    [attr.title]="shortcut.name"
-                    [attr.aria-label]="
-                      store.editMode() ? shortcut.name + ' bearbeiten' : shortcut.name + ' öffnen'
-                    "
-                    (click)="activateShortcut(group, shortcut, $event)"
-                    (keydown)="keyboardMoveShortcut(group.id, shortcut.id, $event)"
+                    aria-label="Gruppe mit Pfeiltasten verschieben"
+                    (keydown)="keyboardMoveGroup(group.id, $event)"
+                  >
+                    <i class="fa-solid fa-grip-vertical" aria-hidden="true"></i>
+                  </button>
+                }
+                @if (group.options.showTitle) {
+                  <h2>
+                    <i [class]="iconClass(group.icon)" aria-hidden="true"></i>
+                    <span>{{ group.name }}</span>
+                  </h2>
+                }
+                @if (group.description) {
+                  <p class="group-description">{{ group.description }}</p>
+                }
+                @if (store.editMode()) {
+                  <div class="group-actions">
+                    <button
+                      class="icon-button"
+                      type="button"
+                      data-focusable
+                      aria-label="Gruppe bearbeiten"
+                      (click)="openGroupPanel(group, $event)"
+                    >
+                      <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      class="icon-button danger"
+                      type="button"
+                      data-focusable
+                      aria-label="Gruppe löschen"
+                      (click)="selectedGroupId.set(group.id); deleteGroup()"
+                    >
+                      <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                }
+              </header>
+
+              <div
+                class="shortcut-strip"
+                cdkDropList
+                cdkDropListOrientation="horizontal"
+                [cdkDropListData]="group"
+                [cdkDropListDisabled]="!store.editMode() || !group.options.allowShortcutReordering"
+                (cdkDropListDropped)="dropShortcut($event)"
+              >
+                @for (shortcut of group.shortcuts; track shortcut.id; let shortcutIdx = $index) {
+                  @if (shortcut.enabled || store.editMode()) {
+                    <button
+                      class="shortcut-card"
+                      type="button"
+                      cdkDrag
+                      [cdkDragData]="shortcut"
+                      [cdkDragDisabled]="
+                        !store.editMode() || !group.options.allowShortcutReordering
+                      "
+                      [class.is-disabled]="!shortcut.enabled"
+                      [style.--shortcut-color]="shortcut.color"
+                      [style.--stagger-index]="shortcutIdx"
+                      data-focusable
+                      [attr.title]="shortcut.name"
+                      [attr.aria-label]="
+                        store.editMode() ? shortcut.name + ' bearbeiten' : shortcut.name + ' öffnen'
+                      "
+                      (click)="activateShortcut(group, shortcut, $event)"
+                      (keydown)="keyboardMoveShortcut(group.id, shortcut.id, $event)"
+                    >
+                      <span class="liquid-glass-tint" aria-hidden="true"></span>
+                      <span class="liquid-glass-shine" aria-hidden="true"></span>
+
+                      @if (store.editMode()) {
+                        <span class="card-menu" aria-hidden="true"
+                          ><i class="fa-solid fa-ellipsis-vertical"></i
+                        ></span>
+                      }
+                      @if (shortcut.icon.kind === 'website') {
+                        <span class="shortcut-icon website-icon" aria-hidden="true">
+                          <i class="fa-solid fa-globe favicon-fallback"></i>
+                          @if (websiteIconUrl(shortcut.url); as websiteIcon) {
+                            <img
+                              [src]="websiteIcon"
+                              alt=""
+                              (load)="handleWebsiteIconLoad($event)"
+                              (error)="handleWebsiteIconError($event)"
+                            />
+                          }
+                        </span>
+                      } @else {
+                        <i
+                          class="shortcut-icon"
+                          [class]="'shortcut-icon ' + iconClass(shortcut.icon)"
+                          aria-hidden="true"
+                        ></i>
+                      }
+                      <span>{{ shortcut.name }}</span>
+                    </button>
+                  }
+                }
+
+                @if (store.editMode()) {
+                  <button
+                    class="shortcut-card add-card"
+                    type="button"
+                    data-focusable
+                    (click)="openShortcutPanel(group.id, undefined, $event)"
                   >
                     <span class="liquid-glass-tint" aria-hidden="true"></span>
                     <span class="liquid-glass-shine" aria-hidden="true"></span>
-
-                    @if (store.editMode()) {
-                      <span class="card-menu" aria-hidden="true"
-                        ><i class="fa-solid fa-ellipsis-vertical"></i
-                      ></span>
-                    }
-                    @if (shortcut.icon.kind === 'website') {
-                      <span class="shortcut-icon website-icon" aria-hidden="true">
-                        <i class="fa-solid fa-globe favicon-fallback"></i>
-                        @if (websiteIconUrl(shortcut.url); as websiteIcon) {
-                          <img
-                            [src]="websiteIcon"
-                            alt=""
-                            (load)="handleWebsiteIconLoad($event)"
-                            (error)="handleWebsiteIconError($event)"
-                          />
-                        }
-                      </span>
-                    } @else {
-                      <i
-                        class="shortcut-icon"
-                        [class]="'shortcut-icon ' + iconClass(shortcut.icon)"
-                        aria-hidden="true"
-                      ></i>
-                    }
-                    <span>{{ shortcut.name }}</span>
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    <span>Verknüpfung<br />hinzufügen</span>
                   </button>
                 }
-              }
-
-              @if (store.editMode()) {
-                <button
-                  class="shortcut-card add-card"
-                  type="button"
-                  data-focusable
-                  (click)="openShortcutPanel(group.id, undefined, $event)"
-                >
-                  <span class="liquid-glass-tint" aria-hidden="true"></span>
-                  <span class="liquid-glass-shine" aria-hidden="true"></span>
-                  <i class="fa-solid fa-plus" aria-hidden="true"></i>
-                  <span>Verknüpfung<br />hinzufügen</span>
-                </button>
-              }
-            </div>
-
-            @if (store.editMode() && group.options.allowShortcutReordering) {
-              <div class="reorder-hint" aria-hidden="true">
-                <i class="fa-solid fa-up-down-left-right"></i>
-                <span>Ziehen, um neu anzuordnen</span>
               </div>
-            }
-          </section>
-        }
-      </div>
+
+              @if (store.editMode() && group.options.allowShortcutReordering) {
+                <div class="reorder-hint" aria-hidden="true">
+                  <i class="fa-solid fa-up-down-left-right"></i>
+                  <span>Ziehen, um neu anzuordnen</span>
+                </div>
+              }
+            </section>
+          }
+        </div>
+      } @else {
+        <section class="empty-dashboard">
+          <span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+          <h1>Keine Treffer für „{{ searchQuery() }}“</h1>
+          <p>Versuch es mit einem anderen Suchbegriff.</p>
+        </section>
+      }
     } @else {
       <section class="empty-dashboard">
         <span><i class="fa-regular fa-folder-open" aria-hidden="true"></i></span>
