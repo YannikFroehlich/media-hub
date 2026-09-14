@@ -51,6 +51,7 @@ export class MediaHubStore {
       root.setAttribute('data-theme', this.effectiveTheme());
       root.setAttribute('data-style', settings.visualStyle);
       root.setAttribute('data-display-mode', settings.displayMode);
+      root.setAttribute('data-contrast', settings.highContrast ? 'high' : 'normal');
       root.style.setProperty(
         '--liquid-group-blur-filter',
         `blur(${settings.liquidGlassGroupBlur}px)`,
