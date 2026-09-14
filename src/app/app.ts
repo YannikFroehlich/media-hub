@@ -95,6 +95,7 @@ export class App {
   protected readonly cursorIdle = signal(false);
   protected readonly showKeyboardHelp = signal(false);
   protected readonly screensaverActive = signal(false);
+  protected readonly weatherDetailsOpen = signal(false);
   protected readonly weather = signal<WeatherSnapshot | null>(null);
   protected readonly clock = signal(new Date());
   protected readonly clockLabel = computed(() =>
@@ -659,11 +660,15 @@ export class App {
     const target = event.target as HTMLElement | null;
     const isTyping = target?.matches('input, textarea, select, [contenteditable="true"]');
     const isSearchFocused = target === this.searchInput?.nativeElement;
-    // Escape should close either an open panel or the keyboard help overlay
-    if (event.key === 'Escape' && (this.panel() || this.showKeyboardHelp())) {
+    // Escape should close either an open panel, the keyboard help overlay, or the weather popover
+    if (
+      event.key === 'Escape' &&
+      (this.panel() || this.showKeyboardHelp() || this.weatherDetailsOpen())
+    ) {
       event.preventDefault();
       if (this.panel()) this.closePanel();
       if (this.showKeyboardHelp()) this.closeKeyboardHelp();
+      if (this.weatherDetailsOpen()) this.weatherDetailsOpen.set(false);
       return;
     }
 
@@ -724,6 +729,17 @@ export class App {
   protected handlePointerActivity(event: MouseEvent): void {
     this.armCursorIdleTimer();
     this.updatePointerEffects(event);
+  }
+
+  @HostListener('document:click', ['$event'])
+  protected handleGlobalClick(event: MouseEvent): void {
+    if (!this.weatherDetailsOpen()) return;
+    const target = event.target as HTMLElement | null;
+    if (!target?.closest('.weather-widget')) this.weatherDetailsOpen.set(false);
+  }
+
+  protected toggleWeatherDetails(): void {
+    this.weatherDetailsOpen.update((value) => !value);
   }
 
   @HostListener('document:focusin', ['$event'])

@@ -179,6 +179,59 @@
   flex: 0 0 auto;
 }
 
+.weather-widget {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.weather-popover {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 260px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  animation: fade-in 150ms ease-out both;
+}
+
+.weather-popover-current {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 16px;
+}
+
+.weather-days {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.weather-days li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.weather-day-label {
+  width: 28px;
+  color: var(--text);
+  font-weight: 600;
+}
+
 .theme-toggle,
 .settings-toggle {
   width: 42px;

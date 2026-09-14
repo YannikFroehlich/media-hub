@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
-import { WeatherSnapshot } from './models';
+import { WeatherDay, WeatherSnapshot } from './models';
 
 export interface GeocodeResult {
   name: string;
   lat: number;
   lon: number;
 }
+
+const UNKNOWN_CONDITION = { icon: 'fa-solid fa-cloud', label: 'Unbekannt' };
+const FORECAST_DAYS = 5;
+const WEEKDAY_LABELS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
 const WEATHER_CODE_MAP: Record<number, { icon: string; label: string }> = {
   0: { icon: 'fa-solid fa-sun', label: 'Klar' },
@@ -56,19 +60,38 @@ export class WeatherService {
   async getForecast(lat: number, lon: number): Promise<WeatherSnapshot | null> {
     try {
       const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`,
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=${FORECAST_DAYS}&timezone=auto`,
       );
       if (!response.ok) return null;
       const data = await response.json();
       const current = data?.current;
       if (typeof current?.temperature_2m !== 'number') return null;
-      const condition = WEATHER_CODE_MAP[current.weather_code] ?? {
-        icon: 'fa-solid fa-cloud',
-        label: 'Unbekannt',
+      const condition = WEATHER_CODE_MAP[current.weather_code] ?? UNKNOWN_CONDITION;
+      return {
+        temperatureC: Math.round(current.temperature_2m),
+        ...condition,
+        daily: this.parseDaily(data?.daily),
       };
-      return { temperatureC: Math.round(current.temperature_2m), ...condition };
     } catch {
       return null;
     }
+  }
+
+  private parseDaily(daily: unknown): WeatherDay[] {
+    const d = daily as
+      | {
+          time?: string[];
+          weather_code?: number[];
+          temperature_2m_max?: number[];
+          temperature_2m_min?: number[];
+        }
+      | undefined;
+    if (!d?.time) return [];
+    return d.time.map((date, index) => ({
+      weekday: WEEKDAY_LABELS[new Date(date).getUTCDay()],
+      maxC: Math.round(d.temperature_2m_max?.[index] ?? 0),
+      minC: Math.round(d.temperature_2m_min?.[index] ?? 0),
+      ...(WEATHER_CODE_MAP[d.weather_code?.[index] ?? -1] ?? UNKNOWN_CONDITION),
+    }));
   }
 }

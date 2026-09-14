@@ -61,10 +61,19 @@ export interface GlobalSettings {
   weatherLon: number | null;
 }
 
+export interface WeatherDay {
+  weekday: string;
+  maxC: number;
+  minC: number;
+  icon: string;
+  label: string;
+}
+
 export interface WeatherSnapshot {
   temperatureC: number;
   icon: string;
   label: string;
+  daily: WeatherDay[];
 }
 
 export interface MediaHubConfig {
