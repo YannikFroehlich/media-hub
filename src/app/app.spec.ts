@@ -320,6 +320,59 @@ describe('App', () => {
     expect(group.style.getPropertyValue('--group-glow-x')).toBe('');
   });
 
+  it('blocks saving with an error when weather is enabled but no location is set', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('.settings-toggle')?.click();
+    fixture.detectChanges();
+
+    compiled.querySelector<HTMLInputElement>('input[formControlName="weatherEnabled"]')?.click();
+    compiled.querySelector<HTMLButtonElement>('.settings-form button[type="submit"]')?.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('.form-message.error')?.textContent).toContain('Standort');
+    expect(compiled.querySelector('aside')).toBeTruthy();
+    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').settings;
+    expect(savedSettings?.weatherEnabled).not.toBe(true);
+  });
+
+  it('geocodes and shows the weather widget once a location is provided', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            results: [{ name: 'Berlin', country: 'Deutschland', latitude: 52.5, longitude: 13.4 }],
+            current: { temperature_2m: 18, weather_code: 0 },
+          }),
+      }),
+    );
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('.settings-toggle')?.click();
+    fixture.detectChanges();
+
+    compiled.querySelector<HTMLInputElement>('input[formControlName="weatherEnabled"]')?.click();
+    const location = compiled.querySelector<HTMLInputElement>(
+      'input[formControlName="weatherLocation"]',
+    );
+    if (location) location.value = 'Berlin';
+    location?.dispatchEvent(new Event('input', { bubbles: true }));
+    compiled.querySelector<HTMLButtonElement>('.settings-form button[type="submit"]')?.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('.form-message.error')).toBeNull();
+    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').settings;
+    expect(savedSettings.weatherEnabled).toBe(true);
+    expect(savedSettings.weatherLat).toBe(52.5);
+    expect(compiled.querySelector('.weather-widget')).toBeTruthy();
+  });
+
   it('should save and apply a custom liquid glass background image', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
