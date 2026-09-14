@@ -2,7 +2,10 @@ import { computed, effect, Injectable, signal } from '@angular/core';
 import { SHORTCUTS_PER_GROUP_LIMIT } from './config-schema';
 import { ConfigRepository } from './config-repository';
 import { createDefaultConfig } from './default-config';
-import { HubGroup, MediaHubConfig, Shortcut } from './models';
+import { HubGroup, MediaHubConfig, Shortcut, Theme } from './models';
+
+const AUTO_THEME_DAY_START_HOUR = 7;
+const AUTO_THEME_DAY_END_HOUR = 20;
 
 @Injectable({ providedIn: 'root' })
 export class MediaHubStore {
@@ -15,18 +18,27 @@ export class MediaHubStore {
       ? 'Die gespeicherte Konfiguration wurde sicher wiederhergestellt.'
       : null,
   );
+  private readonly clockTick = signal(Date.now());
 
   readonly config = this.configState.asReadonly();
   readonly groups = computed(() => this.configState().groups);
   readonly settings = computed(() => this.configState().settings);
   readonly editMode = this.editModeState.asReadonly();
   readonly toast = this.toastState.asReadonly();
+  readonly effectiveTheme = computed<Theme>(() => {
+    const settings = this.settings();
+    if (!settings.autoTheme) return settings.theme;
+    const hour = new Date(this.clockTick()).getHours();
+    return hour >= AUTO_THEME_DAY_START_HOUR && hour < AUTO_THEME_DAY_END_HOUR ? 'light' : 'dark';
+  });
 
   constructor() {
+    window.setInterval(() => this.clockTick.set(Date.now()), 60_000);
+
     effect(() => {
       const settings = this.settings();
       const root = document.documentElement;
-      root.setAttribute('data-theme', settings.theme);
+      root.setAttribute('data-theme', this.effectiveTheme());
       root.setAttribute('data-style', settings.visualStyle);
       root.setAttribute('data-display-mode', settings.displayMode);
       root.style.setProperty(

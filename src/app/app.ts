@@ -187,6 +187,7 @@ export class App {
     searchTemplate: ['', Validators.required],
     showSubtitle: [true],
     showKeyboardHint: [true],
+    autoTheme: [false],
     weatherEnabled: [false],
     weatherLocation: [''],
   });
@@ -308,6 +309,7 @@ export class App {
       searchTemplate: settings.searchEngine.urlTemplate,
       showSubtitle: settings.showSubtitle,
       showKeyboardHint: settings.showKeyboardHint,
+      autoTheme: settings.autoTheme,
       weatherEnabled: settings.weatherEnabled,
       weatherLocation: settings.weatherLocation,
     });
@@ -411,6 +413,7 @@ export class App {
         searchEngine: { name: value.searchName.trim(), urlTemplate: value.searchTemplate.trim() },
         showSubtitle: value.showSubtitle,
         showKeyboardHint: value.showKeyboardHint,
+        autoTheme: value.autoTheme,
         weatherEnabled: value.weatherEnabled,
         weatherLocation,
         weatherLat,

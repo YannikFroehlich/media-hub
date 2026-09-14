@@ -56,6 +56,7 @@ export function createDefaultConfig(): MediaHubConfig {
       },
       showSubtitle: true,
       showKeyboardHint: true,
+      autoTheme: false,
       weatherEnabled: false,
       weatherLocation: '',
       weatherLat: null,

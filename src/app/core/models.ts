@@ -53,6 +53,7 @@ export interface GlobalSettings {
   };
   showSubtitle: boolean;
   showKeyboardHint: boolean;
+  autoTheme: boolean;
   weatherEnabled: boolean;
   weatherLocation: string;
   weatherLat: number | null;
