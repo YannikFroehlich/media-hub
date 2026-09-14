@@ -320,7 +320,17 @@ describe('App', () => {
     expect(group.style.getPropertyValue('--group-glow-x')).toBe('');
   });
 
-  it('blocks saving with an error when weather is enabled but no location is set', async () => {
+  it('defaults to Berlin when weather/auto-theme is enabled without a location', async () => {
+    const geocodeFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          results: [{ name: 'Berlin', country: 'Deutschland', latitude: 52.5, longitude: 13.4 }],
+          current: { temperature_2m: 18, weather_code: 0 },
+        }),
+    });
+    vi.stubGlobal('fetch', geocodeFetch);
+
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
@@ -332,10 +342,12 @@ describe('App', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(compiled.querySelector('.form-message.error')?.textContent).toContain('Standort');
-    expect(compiled.querySelector('aside')).toBeTruthy();
+    expect(compiled.querySelector('.form-message.error')).toBeNull();
+    expect(geocodeFetch.mock.calls[0][0]).toContain(encodeURIComponent('Berlin'));
     const savedSettings = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').settings;
-    expect(savedSettings?.weatherEnabled).not.toBe(true);
+    expect(savedSettings.weatherEnabled).toBe(true);
+    expect(savedSettings.weatherLocation).toBe('Berlin, Deutschland');
+    expect(compiled.querySelector('.weather-widget')).toBeTruthy();
   });
 
   it('geocodes and shows the weather widget once a location is provided', async () => {
