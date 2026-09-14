@@ -991,6 +991,15 @@
               </label>
             </fieldset>
 
+            <fieldset class="picker-fieldset option-stack">
+              <legend>Bildschirmschoner</legend>
+              <label class="check-row">
+                <input type="checkbox" formControlName="screensaverEnabled" />
+                <span><i class="fa-solid fa-check"></i></span
+                ><strong>Nach 5 Minuten Inaktivität Uhr &amp; Wetter anzeigen</strong>
+              </label>
+            </fieldset>
+
             <section class="data-card">
               <div>
                 <i class="fa-solid fa-shield-halved"></i>
@@ -1051,4 +1060,16 @@
     </div>
   }
   <div class="visually-hidden" aria-live="polite">{{ liveMessage() }}</div>
+
+  @if (screensaverActive()) {
+    <div class="screensaver" (click)="armCursorIdleTimer()" aria-hidden="true">
+      <span class="screensaver-clock">{{ clockLabel() }}</span>
+      @if (weather(); as w) {
+        <span class="screensaver-weather">
+          <i [class]="w.icon" aria-hidden="true"></i>
+          {{ w.temperatureC }}°
+        </span>
+      }
+    </div>
+  }
 </div>
