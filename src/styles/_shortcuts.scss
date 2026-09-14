@@ -211,6 +211,18 @@
   filter: grayscale(0.7);
 }
 
+.link-broken-badge {
+  position: absolute;
+  top: 9px;
+  left: 10px;
+  color: #ff9418;
+  font-size: 15px;
+}
+
+.shortcut-card.link-broken {
+  border-color: color-mix(in srgb, #ff9418 55%, var(--line));
+}
+
 .shortcut-card.cdk-drag-preview {
   opacity: 0.94;
   border-color: var(--shortcut-color);

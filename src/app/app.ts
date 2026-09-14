@@ -14,6 +14,7 @@ import {
   HostListener,
   ViewChild,
   computed,
+  effect,
   inject,
   signal,
   ChangeDetectionStrategy,
@@ -49,6 +50,8 @@ const BACKGROUND_DIRECT_STORE_LIMIT = 900_000;
 const BACKGROUND_MAX_WIDTH = 1920;
 const BACKGROUND_MAX_HEIGHT = 1080;
 const SCREENSAVER_IDLE_MS = 5 * 60 * 1000;
+const LINK_CHECK_INTERVAL_MS = 5 * 60 * 1000;
+const LINK_CHECK_TIMEOUT_MS = 6000;
 
 interface IconPreset {
   id: string;
@@ -112,6 +115,8 @@ export class App {
       .filter((group) => group.shortcuts.length > 0);
   });
   protected readonly weather = signal<WeatherSnapshot | null>(null);
+  /** Shortcut IDs whose URL failed the last reachability check. Only populated in edit mode. */
+  protected readonly brokenLinks = signal<ReadonlySet<string>>(new Set());
   protected readonly clockLabel = computed(() =>
     new Date(this.store.clockTick()).toLocaleTimeString('de-DE', {
       hour: '2-digit',
@@ -227,6 +232,7 @@ export class App {
     this.armCursorIdleTimer();
     this.refreshWeather();
     window.setInterval(() => this.refreshWeather(), 30 * 60 * 1000);
+    effect(() => (this.store.editMode() ? this.armLinkCheck() : this.disarmLinkCheck()));
   }
 
   private async refreshWeather(): Promise<void> {
@@ -795,6 +801,52 @@ export class App {
       () => this.screensaverActive.set(true),
       SCREENSAVER_IDLE_MS,
     );
+  }
+
+  private linkCheckTimer: ReturnType<typeof setInterval> | null = null;
+
+  private armLinkCheck(): void {
+    if (this.linkCheckTimer !== null) return;
+    this.checkLinks();
+    this.linkCheckTimer = window.setInterval(() => this.checkLinks(), LINK_CHECK_INTERVAL_MS);
+  }
+
+  private disarmLinkCheck(): void {
+    if (this.linkCheckTimer !== null) window.clearInterval(this.linkCheckTimer);
+    this.linkCheckTimer = null;
+    this.brokenLinks.set(new Set());
+  }
+
+  private async checkLinks(): Promise<void> {
+    const shortcuts = this.store.groups().flatMap((group) => group.shortcuts);
+    const broken = await Promise.all(
+      shortcuts.map(async (shortcut) => {
+        const url = this.resolver.safeHttpUrl(shortcut.url);
+        if (url && (await this.isReachable(url))) return null;
+        return url ? shortcut.id : null;
+      }),
+    );
+    this.brokenLinks.set(new Set(broken.filter((id): id is string => id !== null)));
+  }
+
+  // A cross-origin HEAD request only yields an opaque response (no readable status), so this
+  // can only detect network-level failures (DNS, connection refused, timeout) — not a real 404.
+  private async isReachable(url: string): Promise<boolean> {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), LINK_CHECK_TIMEOUT_MS);
+    try {
+      await fetch(url, {
+        method: 'HEAD',
+        mode: 'no-cors',
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      return true;
+    } catch {
+      return false;
+    } finally {
+      window.clearTimeout(timeout);
+    }
   }
 
   private lastTrigger: HTMLElement | null = null;
