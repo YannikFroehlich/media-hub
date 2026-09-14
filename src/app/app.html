@@ -56,22 +56,24 @@
         </div>
       }
 
-      <button
-        class="icon-button theme-toggle"
-        type="button"
-        data-focusable
-        (click)="toggleTheme()"
-        [attr.aria-label]="
-          store.settings().theme === 'dark'
-            ? 'Helles Design aktivieren'
-            : 'Dunkles Design aktivieren'
-        "
-      >
-        <i
-          [class]="store.settings().theme === 'dark' ? 'fa-regular fa-moon' : 'fa-regular fa-sun'"
-          aria-hidden="true"
-        ></i>
-      </button>
+      @if (!store.settings().autoTheme) {
+        <button
+          class="icon-button theme-toggle"
+          type="button"
+          data-focusable
+          (click)="toggleTheme()"
+          [attr.aria-label]="
+            store.effectiveTheme() === 'dark'
+              ? 'Helles Design aktivieren'
+              : 'Dunkles Design aktivieren'
+          "
+        >
+          <i
+            [class]="store.effectiveTheme() === 'dark' ? 'fa-regular fa-moon' : 'fa-regular fa-sun'"
+            aria-hidden="true"
+          ></i>
+        </button>
+      }
 
       <button
         class="icon-button settings-toggle"
@@ -889,6 +891,11 @@
 
             <fieldset class="picker-fieldset">
               <legend>Farbschema</legend>
+              <label class="check-row">
+                <input type="checkbox" formControlName="autoTheme" />
+                <span><i class="fa-solid fa-check"></i></span
+                ><strong>Automatisch nach Tageszeit wechseln (7–20 Uhr hell)</strong>
+              </label>
               <div class="theme-cards">
                 <button
                   type="button"

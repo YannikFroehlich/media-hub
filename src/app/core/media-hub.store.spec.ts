@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { afterEach, vi } from 'vitest';
 import { SHORTCUTS_PER_GROUP_LIMIT } from './config-schema';
 import { createDefaultConfig } from './default-config';
 import { MediaHubStore } from './media-hub.store';
@@ -88,6 +89,38 @@ describe('MediaHubStore', () => {
       expect(shortcutIds(store, 'streaming')).toContain('movies');
       expect(shortcutIds(store, 'video')).toHaveLength(SHORTCUTS_PER_GROUP_LIMIT);
       expect(store.toast()).toContain('ist voll');
+    });
+  });
+
+  describe('effectiveTheme', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('uses the manually selected theme when autoTheme is disabled', () => {
+      store.updateSettings({ ...store.settings(), autoTheme: false, theme: 'light' });
+
+      expect(store.effectiveTheme()).toBe('light');
+    });
+
+    it('resolves to light during the daytime window when autoTheme is enabled', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 0, 1, 12, 0));
+      const dayStore = TestBed.runInInjectionContext(() => new MediaHubStore());
+
+      dayStore.updateSettings({ ...dayStore.settings(), autoTheme: true, theme: 'dark' });
+
+      expect(dayStore.effectiveTheme()).toBe('light');
+    });
+
+    it('resolves to dark outside the daytime window when autoTheme is enabled', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 0, 1, 2, 0));
+      const nightStore = TestBed.runInInjectionContext(() => new MediaHubStore());
+
+      nightStore.updateSettings({ ...nightStore.settings(), autoTheme: true, theme: 'light' });
+
+      expect(nightStore.effectiveTheme()).toBe('dark');
     });
   });
 });
