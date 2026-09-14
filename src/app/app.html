@@ -41,6 +41,16 @@
     </form>
 
     <div class="header-actions">
+      @if (weather(); as w) {
+        <div
+          class="weather-chip"
+          aria-label="Aktuelles Wetter: {{ w.label }}, {{ w.temperatureC }} Grad"
+        >
+          <i [class]="w.icon" aria-hidden="true"></i>
+          <span>{{ w.temperatureC }}°</span>
+        </div>
+      }
+
       <button
         class="icon-button theme-toggle"
         type="button"
@@ -308,14 +318,34 @@
       </header>
       <div class="keyboard-help-content">
         <dl>
-          <div class="kb-row"><dt><kbd>/</kbd></dt><dd>Fokus auf die Suche</dd></div>
-          <div class="kb-row"><dt><kbd>E</kbd></dt><dd>Bearbeitungsmodus umschalten</dd></div>
-          <div class="kb-row"><dt><kbd>?</kbd></dt><dd>Diese Hilfe anzeigen</dd></div>
-          <div class="kb-row"><dt><kbd>Esc</kbd></dt><dd>Panel oder Hilfe schließen</dd></div>
-          <div class="kb-row"><dt><kbd>Pfeiltasten</kbd></dt><dd>Navigation zwischen Kacheln</dd></div>
-          <div class="kb-row"><dt><kbd>Enter</kbd></dt><dd>Ausgewählte Aktion / Shortcut ausführen</dd></div>
+          <div class="kb-row">
+            <dt><kbd>/</kbd></dt>
+            <dd>Fokus auf die Suche</dd>
+          </div>
+          <div class="kb-row">
+            <dt><kbd>E</kbd></dt>
+            <dd>Bearbeitungsmodus umschalten</dd>
+          </div>
+          <div class="kb-row">
+            <dt><kbd>?</kbd></dt>
+            <dd>Diese Hilfe anzeigen</dd>
+          </div>
+          <div class="kb-row">
+            <dt><kbd>Esc</kbd></dt>
+            <dd>Panel oder Hilfe schließen</dd>
+          </div>
+          <div class="kb-row">
+            <dt><kbd>Pfeiltasten</kbd></dt>
+            <dd>Navigation zwischen Kacheln</dd>
+          </div>
+          <div class="kb-row">
+            <dt><kbd>Enter</kbd></dt>
+            <dd>Ausgewählte Aktion / Shortcut ausführen</dd>
+          </div>
         </dl>
-        <p class="kb-note">Weitere Kürzel: Drücke <kbd>/</kbd> für die Suche, <kbd>E</kbd> für Editiermodus.</p>
+        <p class="kb-note">
+          Weitere Kürzel: Drücke <kbd>/</kbd> für die Suche, <kbd>E</kbd> für Editiermodus.
+        </p>
       </div>
     </section>
   }
@@ -734,9 +764,7 @@
                 <button
                   type="button"
                   [class.selected]="settingsForm.controls.visualStyle.value === 'liquid-glass'"
-                  [attr.aria-pressed]="
-                    settingsForm.controls.visualStyle.value === 'liquid-glass'
-                  "
+                  [attr.aria-pressed]="settingsForm.controls.visualStyle.value === 'liquid-glass'"
                   (click)="
                     settingsForm.controls.visualStyle.setValue('liquid-glass');
                     settingsForm.markAsDirty()
@@ -935,6 +963,19 @@
                 <input type="checkbox" formControlName="showKeyboardHint" />
                 <span><i class="fa-solid fa-check"></i></span
                 ><strong>Tastaturhilfe im Editiermodus</strong>
+              </label>
+            </fieldset>
+
+            <fieldset class="picker-fieldset option-stack">
+              <legend>Wetter</legend>
+              <label class="check-row">
+                <input type="checkbox" formControlName="weatherEnabled" />
+                <span><i class="fa-solid fa-check"></i></span
+                ><strong>Wetter in der Kopfzeile anzeigen</strong>
+              </label>
+              <label class="field">
+                <span>Standort</span>
+                <input formControlName="weatherLocation" placeholder="Berlin" />
               </label>
             </fieldset>
 

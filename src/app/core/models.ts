@@ -53,6 +53,16 @@ export interface GlobalSettings {
   };
   showSubtitle: boolean;
   showKeyboardHint: boolean;
+  weatherEnabled: boolean;
+  weatherLocation: string;
+  weatherLat: number | null;
+  weatherLon: number | null;
+}
+
+export interface WeatherSnapshot {
+  temperatureC: number;
+  icon: string;
+  label: string;
 }
 
 export interface MediaHubConfig {

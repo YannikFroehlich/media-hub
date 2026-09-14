@@ -56,6 +56,10 @@ export function createDefaultConfig(): MediaHubConfig {
       },
       showSubtitle: true,
       showKeyboardHint: true,
+      weatherEnabled: false,
+      weatherLocation: '',
+      weatherLat: null,
+      weatherLon: null,
     },
     groups: [
       group('streaming', 'Streaming', 'streaming', '#18b9ff', [

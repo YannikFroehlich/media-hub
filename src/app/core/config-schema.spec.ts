@@ -46,4 +46,20 @@ describe('parseConfig', () => {
 
     expect(() => parseConfig(config)).toThrow();
   });
+
+  it('adds weather defaults to an existing saved configuration', () => {
+    const existingConfig = createDefaultConfig() as unknown as {
+      settings: Record<string, unknown>;
+    };
+    delete existingConfig.settings['weatherEnabled'];
+    delete existingConfig.settings['weatherLocation'];
+    delete existingConfig.settings['weatherLat'];
+    delete existingConfig.settings['weatherLon'];
+
+    const parsed = parseConfig(existingConfig);
+    expect(parsed.settings.weatherEnabled).toBe(false);
+    expect(parsed.settings.weatherLocation).toBe('');
+    expect(parsed.settings.weatherLat).toBeNull();
+    expect(parsed.settings.weatherLon).toBeNull();
+  });
 });

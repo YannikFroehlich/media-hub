@@ -34,8 +34,10 @@ import {
   OpenBehavior,
   Shortcut,
   VisualStyle,
+  WeatherSnapshot,
 } from './core/models';
 import { UrlResolver } from './core/url-resolver';
+import { WeatherService } from './core/weather.service';
 import { WebsiteIconResolver } from './core/website-icon-resolver';
 import { LiquidGlassDirective } from './liquid-glass.directive';
 
@@ -74,6 +76,7 @@ export class App {
   protected readonly store = inject(MediaHubStore);
   private readonly resolver = inject(UrlResolver);
   private readonly websiteIconResolver = inject(WebsiteIconResolver);
+  private readonly weatherService = inject(WeatherService);
   private readonly fb = inject(FormBuilder);
   private readonly document = inject(DOCUMENT);
 
@@ -90,6 +93,7 @@ export class App {
   protected readonly liveMessage = signal('');
   protected readonly cursorIdle = signal(false);
   protected readonly showKeyboardHelp = signal(false);
+  protected readonly weather = signal<WeatherSnapshot | null>(null);
   protected readonly focusGlider = signal<{
     x: number;
     y: number;
@@ -179,6 +183,8 @@ export class App {
     searchTemplate: ['', Validators.required],
     showSubtitle: [true],
     showKeyboardHint: [true],
+    weatherEnabled: [false],
+    weatherLocation: [''],
   });
 
   protected readonly panelTitle = computed(() => {
@@ -193,6 +199,19 @@ export class App {
 
   constructor() {
     this.armCursorIdleTimer();
+    this.refreshWeather();
+    window.setInterval(() => this.refreshWeather(), 30 * 60 * 1000);
+  }
+
+  private async refreshWeather(): Promise<void> {
+    const settings = this.store.settings();
+    if (!settings.weatherEnabled || settings.weatherLat === null || settings.weatherLon === null) {
+      this.weather.set(null);
+      return;
+    }
+    this.weather.set(
+      await this.weatherService.getForecast(settings.weatherLat, settings.weatherLon),
+    );
   }
 
   protected iconClass(icon: IconConfig): string {
@@ -284,6 +303,8 @@ export class App {
       searchTemplate: settings.searchEngine.urlTemplate,
       showSubtitle: settings.showSubtitle,
       showKeyboardHint: settings.showKeyboardHint,
+      weatherEnabled: settings.weatherEnabled,
+      weatherLocation: settings.weatherLocation,
     });
     this.liquidGlassBackgroundPreview.set(
       this.backgroundPreviewStyle(settings.liquidGlassBackgroundImage),
@@ -347,7 +368,7 @@ export class App {
     this.closePanel(true);
   }
 
-  protected saveSettings(): void {
+  protected async saveSettings(): Promise<void> {
     this.settingsForm.markAllAsTouched();
     if (this.settingsForm.invalid) return;
     const value = this.settingsForm.getRawValue();
@@ -358,6 +379,20 @@ export class App {
         'Die Suchvorlage benötigt genau einen {query}-Platzhalter und eine HTTP(S)-Adresse.',
       );
       return;
+    }
+    const settings = this.store.settings();
+    let weatherLocation = settings.weatherLocation;
+    let weatherLat = settings.weatherLat;
+    let weatherLon = settings.weatherLon;
+    if (value.weatherEnabled && value.weatherLocation.trim()) {
+      const geocoded = await this.weatherService.geocode(value.weatherLocation);
+      if (!geocoded) {
+        this.importError.set('Standort konnte nicht gefunden werden.');
+        return;
+      }
+      weatherLocation = geocoded.name;
+      weatherLat = geocoded.lat;
+      weatherLon = geocoded.lon;
     }
     try {
       this.store.updateSettings({
@@ -371,8 +406,13 @@ export class App {
         searchEngine: { name: value.searchName.trim(), urlTemplate: value.searchTemplate.trim() },
         showSubtitle: value.showSubtitle,
         showKeyboardHint: value.showKeyboardHint,
+        weatherEnabled: value.weatherEnabled,
+        weatherLocation,
+        weatherLat,
+        weatherLon,
       });
       this.refreshVisualEffects();
+      this.refreshWeather();
     } catch {
       this.importError.set(
         'Das Hintergrundbild konnte nicht lokal gespeichert werden. Bitte wähle ein kleineres Bild.',
