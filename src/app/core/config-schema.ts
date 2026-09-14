@@ -61,6 +61,7 @@ export const mediaHubConfigSchema = z
     settings: z.object({
       theme: z.enum(['dark', 'light']),
       visualStyle: z.enum(['classic', 'liquid-glass', 'minimalist']).default('classic'),
+      classicPointerEffects: z.boolean().default(true),
       liquidGlassBackgroundImage: liquidGlassBackgroundSchema.default(''),
       liquidGlassGroupBlur: z.number().int().min(0).max(LIQUID_GLASS_BLUR_MAX).default(3),
       liquidGlassShortcutBlur: z.number().int().min(0).max(LIQUID_GLASS_BLUR_MAX).default(0),

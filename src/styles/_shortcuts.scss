@@ -92,6 +92,11 @@
   opacity: 1;
 }
 
+// Disable only the cursor-tracking layers; ordinary hover and keyboard focus remain.
+:root[data-style='classic'][data-pointer-effects='off'] :is(.group-card, .shortcut-card)::before {
+  display: none;
+}
+
 :root[data-theme='light'] .shortcut-card {
   background:
     radial-gradient(

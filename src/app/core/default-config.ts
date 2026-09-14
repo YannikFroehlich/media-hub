@@ -45,6 +45,7 @@ export function createDefaultConfig(): MediaHubConfig {
     settings: {
       theme: 'dark',
       visualStyle: 'classic',
+      classicPointerEffects: true,
       liquidGlassBackgroundImage: '',
       liquidGlassGroupBlur: 3,
       liquidGlassShortcutBlur: 0,

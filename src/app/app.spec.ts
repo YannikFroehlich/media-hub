@@ -64,6 +64,23 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
+  it('hides the fixed focus glow when the dashboard scrolls without moving focus', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const shortcut = compiled.querySelector<HTMLButtonElement>('.shortcut-card')!;
+    shortcut.focus();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('.focus-glider.is-visible')).toBeTruthy();
+
+    compiled.querySelector('.dashboard-wrap')!.dispatchEvent(new Event('scroll'));
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('.focus-glider.is-visible')).toBeNull();
+    expect(document.activeElement).toBe(shortcut);
+  });
+
   it('shows the screensaver after the idle period and hides it again on activity', () => {
     vi.useFakeTimers();
     const fixture = TestBed.createComponent(App);
@@ -436,6 +453,70 @@ describe('App', () => {
     expect(card.style.getPropertyValue('--glow-y')).toBe('75.0%');
     expect(group.style.getPropertyValue('--group-glow-x')).toBe('15.0%');
     expect(group.style.getPropertyValue('--group-glow-y')).toBe('47.5%');
+  });
+
+  it('saves the classic pointer-effect toggle while keeping keyboard focus available', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const card = compiled.querySelector<HTMLButtonElement>('.shortcut-card')!;
+    const group = card.closest('.group-card') as HTMLElement;
+    mockPointerRects(card, group);
+    const movePointer = () =>
+      card.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 60, clientY: 95 }));
+
+    movePointer();
+    expect(card.style.getPropertyValue('--glow-x')).toBe('25.0%');
+
+    compiled.querySelector<HTMLButtonElement>('.settings-toggle')!.click();
+    fixture.detectChanges();
+    const toggle = compiled.querySelector<HTMLInputElement>(
+      'input[formControlName="classicPointerEffects"]',
+    )!;
+    expect(toggle.checked).toBe(true);
+    toggle.click();
+    compiled.querySelector<HTMLButtonElement>('.settings-form button[type="submit"]')!.click();
+    await fixture.whenStable();
+
+    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config')!).settings;
+    expect(savedSettings.classicPointerEffects).toBe(false);
+    expect(savedSettings.visualStyle).toBe('classic');
+    expect(document.documentElement.getAttribute('data-pointer-effects')).toBe('off');
+    expect(card.style.getPropertyValue('--glow-x')).toBe('');
+    expect(group.style.getPropertyValue('--group-glow-x')).toBe('');
+
+    movePointer();
+    expect(card.style.getPropertyValue('--glow-x')).toBe('');
+    expect(card.style.getPropertyValue('--tilt-x')).toBe('');
+    expect(group.style.getPropertyValue('--group-glow-x')).toBe('');
+
+    card.focus();
+    fixture.detectChanges();
+    expect(document.activeElement).toBe(card);
+    expect(compiled.querySelector('.focus-glider.is-visible')).toBeTruthy();
+
+    compiled.querySelector<HTMLButtonElement>('.settings-toggle')!.click();
+    fixture.detectChanges();
+    const styleButtons = Array.from(
+      compiled.querySelectorAll<HTMLButtonElement>('.style-cards > button'),
+    );
+    styleButtons.find((button) => button.textContent?.includes('Liquid Glass'))!.click();
+    fixture.detectChanges();
+    expect(compiled.querySelector('input[formControlName="classicPointerEffects"]')).toBeNull();
+    styleButtons.find((button) => button.textContent?.includes('Klassisch'))!.click();
+    fixture.detectChanges();
+    const reopenedToggle = compiled.querySelector<HTMLInputElement>(
+      'input[formControlName="classicPointerEffects"]',
+    )!;
+    expect(reopenedToggle.checked).toBe(false);
+    reopenedToggle.click();
+    compiled.querySelector<HTMLButtonElement>('.settings-form button[type="submit"]')!.click();
+    await fixture.whenStable();
+
+    movePointer();
+    expect(document.documentElement.getAttribute('data-pointer-effects')).toBe('on');
+    expect(card.style.getPropertyValue('--glow-x')).toBe('25.0%');
+    expect(group.style.getPropertyValue('--group-glow-x')).toBe('15.0%');
   });
 
   it('should keep the pointer glow when reduced motion is preferred', async () => {

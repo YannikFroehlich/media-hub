@@ -1,6 +1,5 @@
 @media (max-width: 1440px) {
   .topbar {
-    grid-template-columns: minmax(245px, 0.7fr) minmax(330px, 1.35fr) auto;
     padding-inline: 34px;
   }
 
@@ -27,17 +26,9 @@
 }
 
 @media (max-width: 1180px) {
-  .topbar {
-    grid-template-columns: 1fr auto;
-  }
-
   .search {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
-  .header-actions {
-    justify-content: flex-end;
+    order: 1;
+    flex-basis: 100%;
   }
 
   .dashboard-wrap {
@@ -46,10 +37,6 @@
 }
 
 @media (max-width: 1050px) {
-  .hub-shell {
-    overflow: visible;
-  }
-
   .dashboard {
     grid-template-columns: 1fr;
   }
@@ -61,31 +48,31 @@
   .keyboard-hint {
     display: none;
   }
-
-  .dashboard-wrap {
-    padding-bottom: 130px;
-  }
 }
 
 @media (max-width: 760px) {
+  .hub-shell {
+    height: auto;
+    min-height: 100dvh;
+  }
+
   .topbar {
-    grid-template-columns: 1fr;
     gap: 16px;
     padding: 22px 18px 18px;
   }
 
   .brand {
+    flex-basis: 100%;
     justify-content: center;
   }
 
   .search {
-    grid-column: auto;
-    grid-row: auto;
+    order: 0;
     height: 58px;
   }
 
   .header-actions {
-    flex-wrap: wrap;
+    flex-basis: 100%;
     justify-content: center;
   }
 
@@ -99,7 +86,9 @@
   }
 
   .dashboard-wrap {
-    padding: 8px 18px 126px;
+    flex: none;
+    overflow: visible;
+    padding: 8px 18px 28px;
   }
 
   .group-card {

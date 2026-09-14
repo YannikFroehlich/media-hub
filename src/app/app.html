@@ -151,7 +151,7 @@
     </div>
   </header>
 
-  <main class="dashboard-wrap">
+  <main class="dashboard-wrap" (scroll)="handleDashboardScroll()">
     @if (store.groups().length) {
       @if (visibleGroups().length) {
         <div
@@ -852,6 +852,21 @@
                 </button>
               </div>
             </fieldset>
+
+            @if (settingsForm.controls.visualStyle.value === 'classic') {
+              <fieldset class="picker-fieldset option-stack">
+                <legend>Klassische Effekte</legend>
+                <label class="check-row">
+                  <input type="checkbox" formControlName="classicPointerEffects" />
+                  <span><i class="fa-solid fa-check"></i></span>
+                  <strong>Mausfolgender Hover-Effekt</strong>
+                </label>
+                <small>
+                  Lichtschein und Neigung der Kacheln folgen der Maus. Ausgeschaltet bleiben die
+                  normalen Hover- und Fokusmarkierungen erhalten.
+                </small>
+              </fieldset>
+            }
 
             @if (settingsForm.controls.visualStyle.value === 'liquid-glass') {
               <fieldset class="picker-fieldset liquid-background-fieldset">

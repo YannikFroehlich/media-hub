@@ -206,6 +206,7 @@ export class App {
   protected readonly settingsForm = this.fb.nonNullable.group({
     theme: ['dark' as 'dark' | 'light'],
     visualStyle: ['classic' as VisualStyle],
+    classicPointerEffects: [true],
     liquidGlassBackgroundImage: [''],
     liquidGlassGroupBlur: [3, [Validators.min(0), Validators.max(LIQUID_GLASS_BLUR_MAX)]],
     liquidGlassShortcutBlur: [0, [Validators.min(0), Validators.max(LIQUID_GLASS_BLUR_MAX)]],
@@ -352,6 +353,7 @@ export class App {
     this.settingsForm.reset({
       theme: settings.theme,
       visualStyle: settings.visualStyle,
+      classicPointerEffects: settings.classicPointerEffects,
       liquidGlassBackgroundImage: settings.liquidGlassBackgroundImage,
       liquidGlassGroupBlur: settings.liquidGlassGroupBlur,
       liquidGlassShortcutBlur: settings.liquidGlassShortcutBlur,
@@ -460,6 +462,7 @@ export class App {
       this.store.updateSettings({
         theme: value.theme,
         visualStyle: value.visualStyle,
+        classicPointerEffects: value.classicPointerEffects,
         liquidGlassBackgroundImage: value.liquidGlassBackgroundImage,
         liquidGlassGroupBlur: value.liquidGlassGroupBlur,
         liquidGlassShortcutBlur: value.liquidGlassShortcutBlur,
@@ -806,6 +809,11 @@ export class App {
     }
   }
 
+  protected handleDashboardScroll(): void {
+    // The fixed glow must not remain at a tile's old position after scrolling.
+    this.focusGlider.update((state) => ({ ...state, visible: false }));
+  }
+
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
   private screensaverTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -1038,7 +1046,8 @@ export class App {
   // Both glow layers follow the same pointer event. This keeps the larger group
   // wash alive beneath shortcuts, so moving between both surfaces feels seamless.
   private updatePointerEffects(event: MouseEvent): void {
-    if (this.store.settings().visualStyle !== 'classic') {
+    const settings = this.store.settings();
+    if (settings.visualStyle !== 'classic' || !settings.classicPointerEffects) {
       this.resetPointerEffects();
       return;
     }
@@ -1107,6 +1116,10 @@ export class App {
   }
 
   private resetPointerEffects(): void {
+    if (this.tiltRafId !== null) {
+      cancelAnimationFrame(this.tiltRafId);
+      this.tiltRafId = null;
+    }
     this.resetGroupGlow(this.groupGlowTarget);
     this.resetTilt(this.tiltTarget);
     this.groupGlowTarget = null;
@@ -1116,7 +1129,10 @@ export class App {
 
   private refreshVisualEffects(): void {
     this.armCursorIdleTimer();
-    if (this.store.settings().visualStyle !== 'classic') this.resetPointerEffects();
+    const settings = this.store.settings();
+    if (settings.visualStyle !== 'classic' || !settings.classicPointerEffects) {
+      this.resetPointerEffects();
+    }
     this.updateFocusGlider(this.document.activeElement as HTMLElement | null);
   }
 
