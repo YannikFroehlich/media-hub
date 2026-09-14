@@ -48,7 +48,12 @@ describe('WeatherService', () => {
 
     const result = await service.getForecast(52.5, 13.4);
 
-    expect(result).toEqual({ temperatureC: 18, icon: 'fa-solid fa-bolt', label: 'Gewitter' });
+    expect(result).toEqual({
+      temperatureC: 18,
+      icon: 'fa-solid fa-bolt',
+      label: 'Gewitter',
+      daily: [],
+    });
   });
 
   it('falls back to an unknown-condition icon for an unmapped weather code', async () => {
@@ -56,12 +61,42 @@ describe('WeatherService', () => {
 
     const result = await service.getForecast(52.5, 13.4);
 
-    expect(result).toEqual({ temperatureC: 10, icon: 'fa-solid fa-cloud', label: 'Unbekannt' });
+    expect(result).toEqual({
+      temperatureC: 10,
+      icon: 'fa-solid fa-cloud',
+      label: 'Unbekannt',
+      daily: [],
+    });
   });
 
   it('returns null when the forecast request fails', async () => {
     mockFetchOnce({}, false);
 
     expect(await service.getForecast(52.5, 13.4)).toBeNull();
+  });
+
+  it('parses the multi-day forecast into localized weekday entries', async () => {
+    mockFetchOnce({
+      current: { temperature_2m: 18.4, weather_code: 0 },
+      daily: {
+        time: ['2026-09-14', '2026-09-15'],
+        weather_code: [0, 61],
+        temperature_2m_max: [22.6, 17.2],
+        temperature_2m_min: [12.1, 9.8],
+      },
+    });
+
+    const result = await service.getForecast(52.5, 13.4);
+
+    expect(result?.daily).toEqual([
+      { weekday: 'Mo', maxC: 23, minC: 12, icon: 'fa-solid fa-sun', label: 'Klar' },
+      {
+        weekday: 'Di',
+        maxC: 17,
+        minC: 10,
+        icon: 'fa-solid fa-cloud-rain',
+        label: 'Leichter Regen',
+      },
+    ]);
   });
 });

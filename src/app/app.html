@@ -47,12 +47,39 @@
       </div>
 
       @if (weather(); as w) {
-        <div
-          class="info-chip"
-          aria-label="Aktuelles Wetter: {{ w.label }}, {{ w.temperatureC }} Grad"
-        >
-          <i [class]="w.icon" aria-hidden="true"></i>
-          <span>{{ w.temperatureC }}°</span>
+        <div class="weather-widget">
+          <button
+            type="button"
+            class="info-chip"
+            data-focusable
+            (click)="toggleWeatherDetails()"
+            [attr.aria-expanded]="weatherDetailsOpen()"
+            aria-label="Aktuelles Wetter: {{ w.label }}, {{
+              w.temperatureC
+            }} Grad. Mehrtagesvorschau {{ weatherDetailsOpen() ? 'schließen' : 'öffnen' }}."
+          >
+            <i [class]="w.icon" aria-hidden="true"></i>
+            <span>{{ w.temperatureC }}°</span>
+          </button>
+
+          @if (weatherDetailsOpen()) {
+            <div class="weather-popover" role="dialog" aria-label="Mehrtagesvorschau">
+              <div class="weather-popover-current">
+                <i [class]="w.icon" aria-hidden="true"></i>
+                <strong>{{ w.temperatureC }}°</strong>
+                <span>{{ w.label }}</span>
+              </div>
+              <ul class="weather-days">
+                @for (day of w.daily; track $index) {
+                  <li>
+                    <span class="weather-day-label">{{ day.weekday }}</span>
+                    <i [class]="day.icon" aria-hidden="true"></i>
+                    <span class="weather-day-range">{{ day.maxC }}° / {{ day.minC }}°</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
         </div>
       }
 
