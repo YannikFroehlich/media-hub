@@ -3,6 +3,22 @@ import { parseConfig } from './config-schema';
 import { createDefaultConfig } from './default-config';
 
 describe('parseConfig', () => {
+  it('keeps pointer effects enabled for configurations saved before the option existed', () => {
+    const existingConfig = createDefaultConfig() as unknown as {
+      settings: Record<string, unknown>;
+    };
+    delete existingConfig.settings['classicPointerEffects'];
+
+    expect(parseConfig(existingConfig).settings.classicPointerEffects).toBe(true);
+  });
+
+  it('preserves disabled pointer effects when loading a saved configuration', () => {
+    const config = createDefaultConfig();
+    config.settings.classicPointerEffects = false;
+
+    expect(parseConfig(config).settings.classicPointerEffects).toBe(false);
+  });
+
   it('adds the classic visual style to an existing saved configuration', () => {
     const existingConfig = createDefaultConfig() as unknown as {
       settings: Record<string, unknown>;

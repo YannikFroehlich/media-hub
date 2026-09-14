@@ -42,6 +42,7 @@ export interface HubGroup {
 export interface GlobalSettings {
   theme: Theme;
   visualStyle: VisualStyle;
+  classicPointerEffects: boolean;
   liquidGlassBackgroundImage: string;
   liquidGlassGroupBlur: number;
   liquidGlassShortcutBlur: number;

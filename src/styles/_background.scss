@@ -1,6 +1,10 @@
 .hub-shell {
   position: relative;
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  // Keep the desktop chrome in the viewport; the dashboard owns content scrolling.
+  height: 100dvh;
+  min-height: 0;
   isolation: isolate;
   background: linear-gradient(165deg, var(--bg-deep), var(--bg) 55%, var(--bg-deep));
   overflow: hidden;
