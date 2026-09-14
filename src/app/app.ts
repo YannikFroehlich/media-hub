@@ -446,14 +446,8 @@ export class App {
     let weatherLat = settings.weatherLat;
     let weatherLon = settings.weatherLon;
     const needsLocation = value.weatherEnabled || value.autoTheme;
-    if (needsLocation && !value.weatherLocation.trim()) {
-      this.importError.set(
-        'Bitte gib einen Standort ein — er wird für Wetter und/oder den automatischen Tag-Nacht-Wechsel benötigt.',
-      );
-      return;
-    }
     if (needsLocation) {
-      const geocoded = await this.weatherService.geocode(value.weatherLocation);
+      const geocoded = await this.weatherService.geocode(value.weatherLocation.trim() || 'Berlin');
       if (!geocoded) {
         this.importError.set('Standort konnte nicht gefunden werden.');
         return;
