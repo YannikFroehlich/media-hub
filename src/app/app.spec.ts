@@ -47,6 +47,7 @@ function mockPointerRects(card: HTMLElement, group: HTMLElement): void {
 describe('App', () => {
   beforeEach(async () => {
     localStorage.clear();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(undefined));
     await TestBed.configureTestingModule({
       imports: [App],
     }).compileComponents();
@@ -156,6 +157,34 @@ describe('App', () => {
     fixture.detectChanges();
 
     expect(compiled.querySelectorAll('.group-card')).toHaveLength(4);
+  });
+
+  it('marks only the unreachable shortcut as broken while in edit mode', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) =>
+        String(url).includes('youtube.com')
+          ? Promise.reject(new Error('offline'))
+          : Promise.resolve(undefined),
+      ),
+    );
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    TestBed.inject(MediaHubStore).toggleEditMode();
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.link-broken-badge')).toBeTruthy();
+    });
+
+    const cards = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.shortcut-card'),
+    );
+    const youtubeCard = cards.find((card) => card.textContent?.includes('YouTube'));
+    const browserCard = cards.find((card) => card.textContent?.includes('Browser'));
+    expect(youtubeCard?.classList.contains('link-broken')).toBe(true);
+    expect(browserCard?.classList.contains('link-broken')).toBe(false);
   });
 
   it('should focus the search input when the visible search field is clicked', async () => {

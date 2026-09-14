@@ -244,6 +244,7 @@
                         !store.editMode() || !group.options.allowShortcutReordering
                       "
                       [class.is-disabled]="!shortcut.enabled"
+                      [class.link-broken]="store.editMode() && brokenLinks().has(shortcut.id)"
                       [style.--shortcut-color]="shortcut.color"
                       [style.--stagger-index]="shortcutIdx"
                       data-focusable
@@ -261,6 +262,15 @@
                         <span class="card-menu" aria-hidden="true"
                           ><i class="fa-solid fa-ellipsis-vertical"></i
                         ></span>
+                      }
+                      @if (store.editMode() && brokenLinks().has(shortcut.id)) {
+                        <span
+                          class="link-broken-badge"
+                          title="Adresse zuletzt nicht erreichbar"
+                          aria-hidden="true"
+                        >
+                          <i class="fa-solid fa-triangle-exclamation"></i>
+                        </span>
                       }
                       @if (shortcut.icon.kind === 'website') {
                         <span class="shortcut-icon website-icon" aria-hidden="true">
