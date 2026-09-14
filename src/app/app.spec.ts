@@ -100,6 +100,64 @@ describe('App', () => {
     expect(compiled.querySelectorAll('.group-card').length).toBe(4);
   });
 
+  it('filters shortcuts to matches as the search query changes', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const input = compiled.querySelector<HTMLInputElement>('.search input')!;
+
+    input.value = 'youtube';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const cards = compiled.querySelectorAll('.shortcut-card');
+    expect(cards).toHaveLength(1);
+    expect(cards[0].textContent).toContain('YouTube');
+    expect(compiled.querySelectorAll('.group-card')).toHaveLength(1);
+  });
+
+  it('shows a group in full when the group name itself matches the query', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const input = compiled.querySelector<HTMLInputElement>('.search input')!;
+
+    input.value = 'streaming';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(compiled.querySelectorAll('.group-card')).toHaveLength(1);
+    expect(compiled.querySelectorAll('.shortcut-card')).toHaveLength(4);
+  });
+
+  it('shows a no-results state when the query matches nothing', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const input = compiled.querySelector<HTMLInputElement>('.search input')!;
+
+    input.value = 'asdkjhasd';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(compiled.querySelectorAll('.group-card')).toHaveLength(0);
+    expect(compiled.querySelector('.empty-dashboard h1')?.textContent).toContain('Keine Treffer');
+  });
+
+  it('ignores the search filter while edit mode is active', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const input = compiled.querySelector<HTMLInputElement>('.search input')!;
+
+    input.value = 'youtube';
+    input.dispatchEvent(new Event('input'));
+    TestBed.inject(MediaHubStore).toggleEditMode();
+    fixture.detectChanges();
+
+    expect(compiled.querySelectorAll('.group-card')).toHaveLength(4);
+  });
+
   it('should focus the search input when the visible search field is clicked', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();

@@ -96,6 +96,21 @@ export class App {
   protected readonly showKeyboardHelp = signal(false);
   protected readonly screensaverActive = signal(false);
   protected readonly weatherDetailsOpen = signal(false);
+  protected readonly searchQuery = signal('');
+  protected readonly visibleGroups = computed(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    if (!query || this.store.editMode()) return this.store.groups();
+    return this.store
+      .groups()
+      .map((group) => {
+        const groupMatches = group.name.toLowerCase().includes(query);
+        const shortcuts = groupMatches
+          ? group.shortcuts
+          : group.shortcuts.filter((shortcut) => shortcut.name.toLowerCase().includes(query));
+        return { ...group, shortcuts };
+      })
+      .filter((group) => group.shortcuts.length > 0);
+  });
   protected readonly weather = signal<WeatherSnapshot | null>(null);
   protected readonly clock = signal(new Date());
   protected readonly clockLabel = computed(() =>
