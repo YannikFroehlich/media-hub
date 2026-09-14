@@ -79,6 +79,10 @@ export const mediaHubConfigSchema = z
       }),
       showSubtitle: z.boolean(),
       showKeyboardHint: z.boolean(),
+      weatherEnabled: z.boolean().default(false),
+      weatherLocation: z.string().default(''),
+      weatherLat: z.number().nullable().default(null),
+      weatherLon: z.number().nullable().default(null),
     }),
     groups: z.array(groupSchema).max(30),
   })
