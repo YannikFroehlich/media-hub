@@ -1,7 +1,18 @@
 import { createServer } from 'node:http';
 import { readFile, stat, writeFile, unlink } from 'node:fs/promises';
-import { extname, join, normalize, resolve, sep } from 'node:path';
+import { basename, extname, join, normalize, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
+
+// These files have a fixed name (no content hash), so their content can change between
+// deployments while the URL stays the same — they must always be revalidated. In particular,
+// the Angular service worker relies on fetching a fresh ngsw.json/ngsw-worker.js to detect
+// updates; long-term caching them breaks both initial registration and update detection.
+const NEVER_CACHE_LONG = new Set([
+  'index.html',
+  'ngsw.json',
+  'ngsw-worker.js',
+  'manifest.webmanifest',
+]);
 
 const mimeTypes = {
   '.css': 'text/css; charset=utf-8',
@@ -56,7 +67,10 @@ export async function startServer({ root, port = 4173, host = '127.0.0.1', pidFi
       const body = await readFile(filePath);
       response.writeHead(200, {
         'content-type': mimeTypes[extname(filePath)] ?? 'application/octet-stream',
-        'cache-control': filePath.endsWith('index.html') ? 'no-cache' : 'public, max-age=31536000, immutable',
+        'cache-control': NEVER_CACHE_LONG.has(basename(filePath))
+          ? 'no-cache'
+          : 'public, max-age=31536000, immutable',
+        'content-length': body.length,
         'x-content-type-options': 'nosniff',
         'referrer-policy': 'no-referrer',
       });
@@ -79,7 +93,7 @@ export async function startServer({ root, port = 4173, host = '127.0.0.1', pidFi
   server.on('error', (error) => console.error(error));
 
   if (pidFile) await writeFile(pidFile, String(process.pid), 'utf8');
-  return { server, root: resolvedRoot, port, host, pidFile };
+  return { server, root: resolvedRoot, port: server.address().port, host, pidFile };
 }
 
 export function stopServer(instance) {
