@@ -41,9 +41,14 @@
     </form>
 
     <div class="header-actions">
+      <div class="info-chip" aria-label="Aktuelle Uhrzeit: {{ clockLabel() }}">
+        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+        <span>{{ clockLabel() }}</span>
+      </div>
+
       @if (weather(); as w) {
         <div
-          class="weather-chip"
+          class="info-chip"
           aria-label="Aktuelles Wetter: {{ w.label }}, {{ w.temperatureC }} Grad"
         >
           <i [class]="w.icon" aria-hidden="true"></i>
