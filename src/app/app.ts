@@ -118,6 +118,9 @@ export class App {
       .filter((group) => group.shortcuts.length > 0);
   });
   protected readonly weather = signal<WeatherSnapshot | null>(null);
+  protected readonly headerWeather = computed(() =>
+    this.store.settings().weatherEnabled ? this.weather() : null,
+  );
   /** Shortcut IDs whose URL failed the last reachability check. Only populated in edit mode. */
   protected readonly brokenLinks = signal<ReadonlySet<string>>(new Set());
   /** Favicon proxy URL -> locally cached object URL, once resolved (see resolveWebsiteIcons). */
@@ -261,7 +264,11 @@ export class App {
 
   private async refreshWeather(): Promise<void> {
     const settings = this.store.settings();
-    if (!settings.weatherEnabled || settings.weatherLat === null || settings.weatherLon === null) {
+    if (
+      (!settings.weatherEnabled && !settings.screensaverEnabled) ||
+      settings.weatherLat === null ||
+      settings.weatherLon === null
+    ) {
       this.weather.set(null);
       return;
     }

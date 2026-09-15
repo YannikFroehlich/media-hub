@@ -6,8 +6,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: safe center;
   gap: 18px;
+  padding: clamp(20px, 3vw, 40px);
+  overflow-y: auto;
   background: var(--bg);
   cursor: pointer;
   opacity: 0;
@@ -34,10 +36,70 @@
 
 .screensaver-weather {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 14px;
-  font-size: clamp(24px, 3vw, 36px);
+  gap: 12px;
+  width: min(760px, 100%);
   color: var(--muted);
+}
+
+.screensaver-weather-current {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: clamp(24px, 3vw, 36px);
+  color: var(--text);
+  text-align: center;
+}
+
+.screensaver-weather-current span {
+  color: var(--muted);
+}
+
+.screensaver-weather-location {
+  max-width: 100%;
+  font-size: clamp(17px, 2vw, 22px);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.screensaver-forecast {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: 10px;
+  width: 100%;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.screensaver-forecast li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  text-align: center;
+}
+
+.screensaver-forecast li i {
+  font-size: 22px;
+}
+
+.screensaver-day-label {
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.screensaver-day-range {
+  font-size: 16px;
+  white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {
