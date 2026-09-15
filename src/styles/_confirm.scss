@@ -13,7 +13,10 @@
   z-index: 85;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%);
+  // The `translate` property (not `transform: translate(...)`) for centering: the
+  // panel-in animation below sets its own `transform` keyframes, which would otherwise
+  // silently replace rather than compose with a `transform`-based centering offset.
+  translate: -50% -50%;
   display: flex;
   flex-direction: column;
   gap: 16px;
