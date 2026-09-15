@@ -86,14 +86,17 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
+    const screensaver = compiled.querySelector('.screensaver')!;
+
+    expect(screensaver.classList.contains('is-visible')).toBe(false);
 
     vi.advanceTimersByTime(5 * 60 * 1000);
     fixture.detectChanges();
-    expect(compiled.querySelector('.screensaver')).toBeTruthy();
+    expect(screensaver.classList.contains('is-visible')).toBe(true);
 
     document.dispatchEvent(new MouseEvent('mousemove'));
     fixture.detectChanges();
-    expect(compiled.querySelector('.screensaver')).toBeFalsy();
+    expect(screensaver.classList.contains('is-visible')).toBe(false);
   });
 
   it('never shows the screensaver when disabled in settings', () => {
@@ -107,7 +110,8 @@ describe('App', () => {
     vi.advanceTimersByTime(5 * 60 * 1000);
     fixture.detectChanges();
 
-    expect((fixture.nativeElement as HTMLElement).querySelector('.screensaver')).toBeFalsy();
+    const screensaver = (fixture.nativeElement as HTMLElement).querySelector('.screensaver')!;
+    expect(screensaver.classList.contains('is-visible')).toBe(false);
   });
 
   it('should render the Media Hub dashboard', async () => {
