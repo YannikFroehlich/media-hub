@@ -1,0 +1,50 @@
+/* Inline confirmation dialog (replaces window.confirm) */
+.confirm-backdrop {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  background: rgba(0, 4, 12, 0.32);
+  backdrop-filter: blur(1px);
+  animation: fade-in 180ms ease-out both;
+}
+
+.confirm-dialog {
+  position: fixed;
+  z-index: 85;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(420px, calc(100vw - 48px));
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  box-shadow: var(--shadow-lg);
+  padding: 20px;
+  animation: panel-in 180ms cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
+.confirm-dialog p {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.confirm-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 14px;
+}

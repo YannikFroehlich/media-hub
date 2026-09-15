@@ -99,6 +99,7 @@ export class App {
   protected readonly liveMessage = signal('');
   protected readonly cursorIdle = signal(false);
   protected readonly showKeyboardHelp = signal(false);
+  protected readonly confirmState = signal<{ message: string; confirmLabel: string } | null>(null);
   protected readonly screensaverActive = signal(false);
   protected readonly weatherDetailsOpen = signal(false);
   protected readonly searchQuery = signal('');
@@ -378,9 +379,32 @@ export class App {
     this.panel.set('settings');
   }
 
-  protected closePanel(force = false): void {
+  private confirmResolve: ((result: boolean) => void) | null = null;
+  private confirmTrigger: HTMLElement | null = null;
+
+  private requestConfirm(message: string, confirmLabel = 'Bestätigen'): Promise<boolean> {
+    this.confirmTrigger = this.document.activeElement as HTMLElement | null;
+    return new Promise((resolve) => {
+      this.confirmResolve = resolve;
+      this.confirmState.set({ message, confirmLabel });
+    });
+  }
+
+  protected resolveConfirm(result: boolean): void {
+    this.confirmState.set(null);
+    this.confirmResolve?.(result);
+    this.confirmResolve = null;
+    window.setTimeout(() => this.confirmTrigger?.focus());
+  }
+
+  protected async closePanel(force = false): Promise<void> {
     const form = this.activeForm();
-    if (!force && form?.dirty && !window.confirm('Ungespeicherte Änderungen verwerfen?')) return;
+    if (
+      !force &&
+      form?.dirty &&
+      !(await this.requestConfirm('Ungespeicherte Änderungen verwerfen?', 'Verwerfen'))
+    )
+      return;
     this.panel.set(null);
     this.importError.set(null);
     window.setTimeout(() => this.lastTrigger?.focus());
@@ -539,21 +563,25 @@ export class App {
     this.importError.set(null);
   }
 
-  protected deleteShortcut(): void {
+  protected async deleteShortcut(): Promise<void> {
     const groupId = this.selectedGroupId();
     const shortcutId = this.selectedShortcutId();
-    if (!groupId || !shortcutId || !window.confirm('Diese Verknüpfung wirklich löschen?')) return;
+    if (!groupId || !shortcutId) return;
+    if (!(await this.requestConfirm('Diese Verknüpfung wirklich löschen?', 'Löschen'))) return;
     this.store.deleteShortcut(groupId, shortcutId);
     this.closePanel(true);
   }
 
-  protected deleteGroup(): void {
+  protected async deleteGroup(): Promise<void> {
     const group = this.store.groups().find((item) => item.id === this.selectedGroupId());
     if (!group) return;
     const detail = group.shortcuts.length
       ? ` Dabei werden auch ${group.shortcuts.length} Verknüpfung${group.shortcuts.length === 1 ? '' : 'en'} entfernt.`
       : '';
-    if (!window.confirm(`Gruppe „${group.name}“ wirklich löschen?${detail}`)) return;
+    if (
+      !(await this.requestConfirm(`Gruppe „${group.name}“ wirklich löschen?${detail}`, 'Löschen'))
+    )
+      return;
     this.store.deleteGroup(group.id);
     this.closePanel(true);
   }
@@ -685,9 +713,10 @@ export class App {
     try {
       const parsed = parseExport(JSON.parse(await file.text()));
       if (
-        !window.confirm(
+        !(await this.requestConfirm(
           `Die aktuelle Konfiguration durch ${parsed.config.profiles.length} importierte Profile ersetzen?`,
-        )
+          'Ersetzen',
+        ))
       )
         return;
       this.store.importConfig(parsed.config);
@@ -700,8 +729,14 @@ export class App {
     }
   }
 
-  protected resetHub(): void {
-    if (!window.confirm('Media Hub wirklich auf die Startkonfiguration zurücksetzen?')) return;
+  protected async resetHub(): Promise<void> {
+    if (
+      !(await this.requestConfirm(
+        'Media Hub wirklich auf die Startkonfiguration zurücksetzen?',
+        'Zurücksetzen',
+      ))
+    )
+      return;
     this.store.reset();
     this.refreshVisualEffects();
     this.openSettings();
@@ -716,9 +751,13 @@ export class App {
     this.store.addProfile(profile);
   }
 
-  protected activateProfile(id: string): void {
+  protected async activateProfile(id: string): Promise<void> {
     if (id === this.store.activeProfileId()) return;
-    if (this.activeForm()?.dirty && !window.confirm('Ungespeicherte Änderungen verwerfen?')) return;
+    if (
+      this.activeForm()?.dirty &&
+      !(await this.requestConfirm('Ungespeicherte Änderungen verwerfen?', 'Verwerfen'))
+    )
+      return;
     this.store.switchProfile(id);
     this.refreshVisualEffects();
     this.refreshWeather();
@@ -730,8 +769,8 @@ export class App {
     this.store.renameProfile(id, name);
   }
 
-  protected deleteProfile(id: string, name: string): void {
-    if (!window.confirm(`Profil „${name}“ wirklich löschen?`)) return;
+  protected async deleteProfile(id: string, name: string): Promise<void> {
+    if (!(await this.requestConfirm(`Profil „${name}“ wirklich löschen?`, 'Löschen'))) return;
     this.store.deleteProfile(id);
     this.refreshVisualEffects();
     this.refreshWeather();
@@ -741,6 +780,13 @@ export class App {
 
   @HostListener('document:keydown', ['$event'])
   protected handleGlobalKeyboard(event: KeyboardEvent): void {
+    if (this.confirmState()) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.resolveConfirm(false);
+      }
+      return;
+    }
     if (this.screensaverActive()) {
       event.preventDefault();
       this.armCursorIdleTimer();
