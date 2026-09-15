@@ -23,8 +23,10 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
   LIQUID_GLASS_BACKGROUND_DATA_LIMIT,
   LIQUID_GLASS_BLUR_MAX,
+  PROFILE_LIMIT,
   parseExport,
 } from './core/config-schema';
+import { createDefaultProfile } from './core/default-config';
 import { MediaHubStore } from './core/media-hub.store';
 import {
   DisplayMode,
@@ -684,7 +686,7 @@ export class App {
       const parsed = parseExport(JSON.parse(await file.text()));
       if (
         !window.confirm(
-          `Die aktuelle Konfiguration durch ${parsed.config.groups.length} importierte Gruppen ersetzen?`,
+          `Die aktuelle Konfiguration durch ${parsed.config.profiles.length} importierte Profile ersetzen?`,
         )
       )
         return;
@@ -702,6 +704,38 @@ export class App {
     if (!window.confirm('Media Hub wirklich auf die Startkonfiguration zurücksetzen?')) return;
     this.store.reset();
     this.refreshVisualEffects();
+    this.openSettings();
+  }
+
+  protected readonly profileLimit = PROFILE_LIMIT;
+
+  protected addProfile(): void {
+    const profiles = this.store.profiles();
+    if (profiles.length >= this.profileLimit) return;
+    const profile = createDefaultProfile(crypto.randomUUID(), `Profil ${profiles.length + 1}`);
+    this.store.addProfile(profile);
+  }
+
+  protected activateProfile(id: string): void {
+    if (id === this.store.activeProfileId()) return;
+    if (this.activeForm()?.dirty && !window.confirm('Ungespeicherte Änderungen verwerfen?')) return;
+    this.store.switchProfile(id);
+    this.refreshVisualEffects();
+    this.refreshWeather();
+    this.refreshSunTimes();
+    this.openSettings();
+  }
+
+  protected renameProfile(id: string, name: string): void {
+    this.store.renameProfile(id, name);
+  }
+
+  protected deleteProfile(id: string, name: string): void {
+    if (!window.confirm(`Profil „${name}“ wirklich löschen?`)) return;
+    this.store.deleteProfile(id);
+    this.refreshVisualEffects();
+    this.refreshWeather();
+    this.refreshSunTimes();
     this.openSettings();
   }
 

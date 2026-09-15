@@ -341,6 +341,41 @@
   color: #f1a61a;
 }
 
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-row input {
+  flex: 1;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: rgba(20, 33, 51, 0.66);
+  color: var(--text);
+}
+
+:root[data-theme='light'] .profile-row input {
+  background: rgba(246, 250, 254, 0.92);
+}
+
+.profile-row input:focus {
+  border-color: #4e9dff;
+  box-shadow: 0 0 0 3px rgba(55, 165, 255, 0.1);
+}
+
+.profile-active-badge {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(58, 133, 255, 0.18);
+  color: #66adff;
+  font-size: 12px;
+  font-weight: 620;
+  white-space: nowrap;
+}
+
 .data-card {
   display: flex;
   flex-direction: column;

@@ -78,11 +78,18 @@ export interface WeatherSnapshot {
   daily: WeatherDay[];
 }
 
-export interface MediaHubConfig {
-  schemaVersion: 1;
-  updatedAt: string;
+export interface Profile {
+  id: string;
+  name: string;
   settings: GlobalSettings;
   groups: HubGroup[];
+}
+
+export interface MediaHubConfig {
+  schemaVersion: 2;
+  updatedAt: string;
+  activeProfileId: string;
+  profiles: Profile[];
 }
 
 export interface ExportEnvelope {

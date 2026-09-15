@@ -1,4 +1,4 @@
-import { HubGroup, MediaHubConfig, Shortcut } from './models';
+import { HubGroup, MediaHubConfig, Profile, Shortcut } from './models';
 
 const preset = (id: string) => ({ kind: 'preset' as const, id });
 
@@ -38,10 +38,8 @@ const group = (
   shortcuts,
 });
 
-export function createDefaultConfig(): MediaHubConfig {
+function createDefaultProfileContent(): Pick<Profile, 'settings' | 'groups'> {
   return {
-    schemaVersion: 1,
-    updatedAt: new Date().toISOString(),
     settings: {
       theme: 'dark',
       visualStyle: 'classic',
@@ -103,5 +101,18 @@ export function createDefaultConfig(): MediaHubConfig {
         shortcut('Einstellungen', '#settings', 'settings', '#ff9318', 'settings'),
       ]),
     ],
+  };
+}
+
+export function createDefaultProfile(id: string, name: string): Profile {
+  return { id, name, ...createDefaultProfileContent() };
+}
+
+export function createDefaultConfig(): MediaHubConfig {
+  return {
+    schemaVersion: 2,
+    updatedAt: new Date().toISOString(),
+    activeProfileId: 'default',
+    profiles: [createDefaultProfile('default', 'Standard')],
   };
 }

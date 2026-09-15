@@ -205,7 +205,10 @@ describe('App', () => {
   });
 
   it('caches a website-icon shortcut and swaps the tile to the cached copy', async () => {
-    const cache = { match: vi.fn().mockResolvedValue(undefined), put: vi.fn().mockResolvedValue(undefined) };
+    const cache = {
+      match: vi.fn().mockResolvedValue(undefined),
+      put: vi.fn().mockResolvedValue(undefined),
+    };
     vi.stubGlobal('caches', { open: vi.fn().mockResolvedValue(cache) });
     vi.stubGlobal(
       'fetch',
@@ -258,6 +261,51 @@ describe('App', () => {
     expect(compiled.querySelector('.customize-button')).toBeNull();
   });
 
+  it('should add, rename, activate and delete a dashboard profile', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('.settings-toggle')?.click();
+    fixture.detectChanges();
+
+    const findButtonByText = (root: ParentNode, text: string) =>
+      Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
+        button.textContent?.includes(text),
+      );
+
+    findButtonByText(compiled, 'Profil hinzufügen')?.click();
+    fixture.detectChanges();
+
+    let rows = compiled.querySelectorAll<HTMLElement>('.profile-row');
+    expect(rows).toHaveLength(2);
+
+    const nameInput = rows[1].querySelector<HTMLInputElement>('input');
+    expect(nameInput?.value).toBe('Profil 2');
+    nameInput!.value = 'Wohnzimmer';
+    nameInput?.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+
+    let saved = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}');
+    expect(saved.profiles[1].name).toBe('Wohnzimmer');
+
+    rows = compiled.querySelectorAll<HTMLElement>('.profile-row');
+    findButtonByText(rows[1], 'Aktivieren')?.click();
+    fixture.detectChanges();
+
+    saved = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}');
+    expect(saved.activeProfileId).toBe(saved.profiles[1].id);
+    expect(compiled.querySelectorAll('.group-card')).toHaveLength(4);
+
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    rows = compiled.querySelectorAll<HTMLElement>('.profile-row');
+    rows[0].querySelector<HTMLButtonElement>('.icon-button.danger')?.click();
+    fixture.detectChanges();
+
+    saved = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}');
+    expect(saved.profiles).toHaveLength(1);
+    expect(saved.profiles[0].name).toBe('Wohnzimmer');
+  });
+
   it('should save and apply the liquid glass visual style', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
@@ -285,7 +333,8 @@ describe('App', () => {
     await fixture.whenStable();
 
     expect(document.documentElement.getAttribute('data-style')).toBe('liquid-glass');
-    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').settings;
+    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').profiles[0]
+      .settings;
     expect(savedSettings.visualStyle).toBe('liquid-glass');
     expect(savedSettings.liquidGlassGroupBlur).toBe(8);
     expect(savedSettings.liquidGlassShortcutBlur).toBe(4);
@@ -324,7 +373,8 @@ describe('App', () => {
     await fixture.whenStable();
 
     expect(document.documentElement.getAttribute('data-style')).toBe('minimalist');
-    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').settings;
+    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').profiles[0]
+      .settings;
     expect(savedSettings.visualStyle).toBe('minimalist');
 
     const card = compiled.querySelector('.shortcut-card') as HTMLElement;
@@ -361,7 +411,8 @@ describe('App', () => {
 
     expect(compiled.querySelector('.form-message.error')).toBeNull();
     expect(geocodeFetch.mock.calls[0][0]).toContain(encodeURIComponent('Berlin'));
-    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').settings;
+    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').profiles[0]
+      .settings;
     expect(savedSettings.weatherEnabled).toBe(true);
     expect(savedSettings.weatherLocation).toBe('Berlin, Deutschland');
     expect(compiled.querySelector('.weather-widget')).toBeTruthy();
@@ -396,7 +447,8 @@ describe('App', () => {
     fixture.detectChanges();
 
     expect(compiled.querySelector('.form-message.error')).toBeNull();
-    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').settings;
+    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}').profiles[0]
+      .settings;
     expect(savedSettings.weatherEnabled).toBe(true);
     expect(savedSettings.weatherLat).toBe(52.5);
     expect(compiled.querySelector('.weather-widget')).toBeTruthy();
@@ -433,7 +485,9 @@ describe('App', () => {
     await fixture.whenStable();
 
     const saved = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}');
-    expect(saved.settings.liquidGlassBackgroundImage).toMatch(/^data:image\/png;base64,/);
+    expect(saved.profiles[0].settings.liquidGlassBackgroundImage).toMatch(
+      /^data:image\/png;base64,/,
+    );
     expect(document.documentElement.getAttribute('data-liquid-background')).toBe('custom');
     expect(document.documentElement.style.getPropertyValue('--liquid-background-image')).toContain(
       'data:image/png;base64',
@@ -478,7 +532,8 @@ describe('App', () => {
     compiled.querySelector<HTMLButtonElement>('.settings-form button[type="submit"]')!.click();
     await fixture.whenStable();
 
-    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config')!).settings;
+    const savedSettings = JSON.parse(localStorage.getItem('media-hub.config')!).profiles[0]
+      .settings;
     expect(savedSettings.classicPointerEffects).toBe(false);
     expect(savedSettings.visualStyle).toBe('classic');
     expect(document.documentElement.getAttribute('data-pointer-effects')).toBe('off');

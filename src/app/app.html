@@ -796,6 +796,55 @@
               </div>
             </section>
 
+            <fieldset class="picker-fieldset option-stack">
+              <legend>Profile</legend>
+              <small
+                >Mehrere unabhängige Dashboards mit eigenen Gruppen und eigenem
+                Erscheinungsbild.</small
+              >
+              @for (profile of store.profiles(); track profile.id) {
+                <div class="profile-row">
+                  <input
+                    type="text"
+                    maxlength="48"
+                    [value]="profile.name"
+                    [attr.aria-label]="'Profil ' + profile.name + ' umbenennen'"
+                    (keydown.enter)="$event.preventDefault()"
+                    (change)="renameProfile(profile.id, $any($event.target).value)"
+                  />
+                  @if (profile.id === store.activeProfileId()) {
+                    <span class="profile-active-badge">Aktiv</span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="secondary-button"
+                      (click)="activateProfile(profile.id)"
+                    >
+                      Aktivieren
+                    </button>
+                  }
+                  @if (store.profiles().length > 1) {
+                    <button
+                      type="button"
+                      class="icon-button danger"
+                      aria-label="Profil löschen"
+                      (click)="deleteProfile(profile.id, profile.name)"
+                    >
+                      <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                    </button>
+                  }
+                </div>
+              }
+              <button
+                type="button"
+                class="secondary-button"
+                [disabled]="store.profiles().length >= profileLimit"
+                (click)="addProfile()"
+              >
+                <i class="fa-solid fa-plus"></i> Profil hinzufügen
+              </button>
+            </fieldset>
+
             <fieldset class="picker-fieldset">
               <legend>Oberflächenstil</legend>
               <div class="style-cards">
@@ -1016,8 +1065,7 @@
               <legend>Barrierefreiheit</legend>
               <label class="check-row">
                 <input type="checkbox" formControlName="highContrast" />
-                <span><i class="fa-solid fa-check"></i></span
-                ><strong>Kontrastreicher Modus</strong>
+                <span><i class="fa-solid fa-check"></i></span><strong>Kontrastreicher Modus</strong>
               </label>
               <small
                 >Kräftigere Ränder, blickdichte Kacheln und kein Weichzeichnen — besser lesbar aus
