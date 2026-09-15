@@ -296,9 +296,14 @@ describe('App', () => {
     expect(saved.activeProfileId).toBe(saved.profiles[1].id);
     expect(compiled.querySelectorAll('.group-card')).toHaveLength(4);
 
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     rows = compiled.querySelectorAll<HTMLElement>('.profile-row');
     rows[0].querySelector<HTMLButtonElement>('.icon-button.danger')?.click();
+    fixture.detectChanges();
+
+    const confirmDialog = compiled.querySelector<HTMLElement>('.confirm-dialog');
+    expect(confirmDialog).not.toBeNull();
+    findButtonByText(confirmDialog!, 'Löschen')?.click();
+    await fixture.whenStable();
     fixture.detectChanges();
 
     saved = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}');
