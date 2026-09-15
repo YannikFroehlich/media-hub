@@ -1,8 +1,8 @@
 import { computed, effect, Injectable, signal } from '@angular/core';
-import { SHORTCUTS_PER_GROUP_LIMIT } from './config-schema';
+import { PROFILE_LIMIT, SHORTCUTS_PER_GROUP_LIMIT } from './config-schema';
 import { ConfigRepository } from './config-repository';
 import { createDefaultConfig } from './default-config';
-import { HubGroup, MediaHubConfig, Shortcut, Theme } from './models';
+import { GlobalSettings, HubGroup, MediaHubConfig, Profile, Shortcut, Theme } from './models';
 
 // Fallback for when no location (and therefore no sunrise/sunset) is available.
 const AUTO_THEME_FALLBACK_DAY_START_HOUR = 7;
@@ -24,8 +24,16 @@ export class MediaHubStore {
   private readonly sunTimesState = signal<{ sunrise: number; sunset: number } | null>(null);
 
   readonly config = this.configState.asReadonly();
-  readonly groups = computed(() => this.configState().groups);
-  readonly settings = computed(() => this.configState().settings);
+  readonly profiles = computed(() => this.configState().profiles);
+  readonly activeProfileId = computed(() => this.configState().activeProfileId);
+  readonly activeProfile = computed<Profile>(() => {
+    const config = this.configState();
+    return (
+      config.profiles.find((profile) => profile.id === config.activeProfileId) ?? config.profiles[0]
+    );
+  });
+  readonly groups = computed(() => this.activeProfile().groups);
+  readonly settings = computed(() => this.activeProfile().settings);
   readonly editMode = this.editModeState.asReadonly();
   readonly toast = this.toastState.asReadonly();
   /** Ticks every 60s. Shared clock source for effectiveTheme and app.ts's header clock. */
@@ -88,20 +96,23 @@ export class MediaHubStore {
   }
 
   updateGroup(group: HubGroup): void {
-    this.commit({
-      ...this.configState(),
-      groups: this.groups().map((item) => (item.id === group.id ? group : item)),
-    });
+    this.updateActiveProfile((profile) => ({
+      ...profile,
+      groups: profile.groups.map((item) => (item.id === group.id ? group : item)),
+    }));
   }
 
   addGroup(group: HubGroup): void {
-    this.commit({ ...this.configState(), groups: [...this.groups(), group] });
+    this.updateActiveProfile((profile) => ({ ...profile, groups: [...profile.groups, group] }));
     this.notify(`Gruppe „${group.name}“ wurde erstellt.`);
   }
 
   deleteGroup(id: string): void {
     const group = this.groups().find((item) => item.id === id);
-    this.commit({ ...this.configState(), groups: this.groups().filter((item) => item.id !== id) });
+    this.updateActiveProfile((profile) => ({
+      ...profile,
+      groups: profile.groups.filter((item) => item.id !== id),
+    }));
     if (group) this.notify(`Gruppe „${group.name}“ wurde gelöscht.`);
   }
 
@@ -109,24 +120,28 @@ export class MediaHubStore {
     const isNew = !this.groups().some((group) =>
       group.shortcuts.some((item) => item.id === shortcut.id),
     );
-    const groups = this.groups().map((group) => {
-      const without = group.shortcuts.filter((item) => item.id !== shortcut.id);
-      if (group.id !== groupId) return { ...group, shortcuts: without };
-      return { ...group, shortcuts: [...without, shortcut] };
-    });
-    this.commit({ ...this.configState(), groups });
+    this.updateActiveProfile((profile) => ({
+      ...profile,
+      groups: profile.groups.map((group) => {
+        const without = group.shortcuts.filter((item) => item.id !== shortcut.id);
+        if (group.id !== groupId) return { ...group, shortcuts: without };
+        return { ...group, shortcuts: [...without, shortcut] };
+      }),
+    }));
     this.notify(
       isNew ? `„${shortcut.name}“ wurde hinzugefügt.` : `„${shortcut.name}“ wurde gespeichert.`,
     );
   }
 
   deleteShortcut(groupId: string, shortcutId: string): void {
-    const groups = this.groups().map((group) =>
-      group.id === groupId
-        ? { ...group, shortcuts: group.shortcuts.filter((item) => item.id !== shortcutId) }
-        : group,
-    );
-    this.commit({ ...this.configState(), groups });
+    this.updateActiveProfile((profile) => ({
+      ...profile,
+      groups: profile.groups.map((group) =>
+        group.id === groupId
+          ? { ...group, shortcuts: group.shortcuts.filter((item) => item.id !== shortcutId) }
+          : group,
+      ),
+    }));
     this.notify('Verknüpfung wurde gelöscht.');
   }
 
@@ -134,7 +149,7 @@ export class MediaHubStore {
     const groups = [...this.groups()];
     const [moved] = groups.splice(previousIndex, 1);
     groups.splice(currentIndex, 0, moved);
-    this.commit({ ...this.configState(), groups });
+    this.updateActiveProfile((profile) => ({ ...profile, groups }));
     this.notify(`„${moved.name}“ ist jetzt an Position ${currentIndex + 1}.`);
   }
 
@@ -147,7 +162,7 @@ export class MediaHubStore {
       this.notify(`„${moved.name}“ ist jetzt an Position ${currentIndex + 1}.`);
       return { ...group, shortcuts };
     });
-    this.commit({ ...this.configState(), groups });
+    this.updateActiveProfile((profile) => ({ ...profile, groups }));
   }
 
   moveShortcutToGroup(
@@ -178,7 +193,7 @@ export class MediaHubStore {
       }
       return group;
     });
-    this.commit({ ...this.configState(), groups });
+    this.updateActiveProfile((profile) => ({ ...profile, groups }));
     this.notify(`„${moved.name}“ ist jetzt in „${target.name}“.`);
   }
 
@@ -196,8 +211,8 @@ export class MediaHubStore {
     if (index !== next) this.reorderShortcuts(groupId, index, next);
   }
 
-  updateSettings(settings: MediaHubConfig['settings']): void {
-    this.commit({ ...this.configState(), settings });
+  updateSettings(settings: GlobalSettings): void {
+    this.updateActiveProfile((profile) => ({ ...profile, settings }));
     this.notify('Einstellungen wurden gespeichert.');
   }
 
@@ -211,6 +226,47 @@ export class MediaHubStore {
     this.notify('Media Hub wurde zurückgesetzt.');
   }
 
+  switchProfile(id: string): void {
+    const config = this.configState();
+    if (id === config.activeProfileId || !config.profiles.some((profile) => profile.id === id)) {
+      return;
+    }
+    this.commit({ ...config, activeProfileId: id });
+  }
+
+  addProfile(profile: Profile): void {
+    const config = this.configState();
+    if (config.profiles.length >= PROFILE_LIMIT) {
+      this.notify(`Es sind höchstens ${PROFILE_LIMIT} Profile möglich.`);
+      return;
+    }
+    this.commit({ ...config, profiles: [...config.profiles, profile] });
+    this.notify(`Profil „${profile.name}“ wurde erstellt.`);
+  }
+
+  renameProfile(id: string, name: string): void {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const config = this.configState();
+    this.commit({
+      ...config,
+      profiles: config.profiles.map((profile) =>
+        profile.id === id ? { ...profile, name: trimmed } : profile,
+      ),
+    });
+  }
+
+  deleteProfile(id: string): void {
+    const config = this.configState();
+    if (config.profiles.length <= 1) return;
+    const deleted = config.profiles.find((profile) => profile.id === id);
+    if (!deleted) return;
+    const profiles = config.profiles.filter((profile) => profile.id !== id);
+    const activeProfileId = config.activeProfileId === id ? profiles[0].id : config.activeProfileId;
+    this.commit({ ...config, profiles, activeProfileId });
+    this.notify(`Profil „${deleted.name}“ wurde gelöscht.`);
+  }
+
   notify(message: string): void {
     this.toastState.set(message);
     window.setTimeout(() => {
@@ -218,8 +274,18 @@ export class MediaHubStore {
     }, 3200);
   }
 
+  private updateActiveProfile(mutate: (profile: Profile) => Profile): void {
+    const config = this.configState();
+    this.commit({
+      ...config,
+      profiles: config.profiles.map((profile) =>
+        profile.id === config.activeProfileId ? mutate(profile) : profile,
+      ),
+    });
+  }
+
   private commit(config: MediaHubConfig): void {
-    const next = { ...config, schemaVersion: 1 as const, updatedAt: new Date().toISOString() };
+    const next = { ...config, schemaVersion: 2 as const, updatedAt: new Date().toISOString() };
     this.repository.save(next);
     this.configState.set(next);
   }

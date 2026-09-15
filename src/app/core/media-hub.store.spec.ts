@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, vi } from 'vitest';
-import { SHORTCUTS_PER_GROUP_LIMIT } from './config-schema';
-import { createDefaultConfig } from './default-config';
+import { PROFILE_LIMIT, SHORTCUTS_PER_GROUP_LIMIT } from './config-schema';
+import { createDefaultConfig, createDefaultProfile } from './default-config';
 import { MediaHubStore } from './media-hub.store';
 import { Shortcut } from './models';
 
@@ -79,8 +79,9 @@ describe('MediaHubStore', () => {
         openBehavior: 'inherit',
         enabled: true,
       });
-      config.groups[1].shortcuts = Array.from({ length: SHORTCUTS_PER_GROUP_LIMIT }, (_, index) =>
-        filler(index),
+      config.profiles[0].groups[1].shortcuts = Array.from(
+        { length: SHORTCUTS_PER_GROUP_LIMIT },
+        (_, index) => filler(index),
       );
       store.importConfig(config);
 
@@ -152,6 +153,71 @@ describe('MediaHubStore', () => {
       sunStore.setSunTimes(null);
 
       expect(sunStore.effectiveTheme()).toBe('dark');
+    });
+  });
+
+  describe('profiles', () => {
+    it('adds a profile without switching to it', () => {
+      const profile = createDefaultProfile('room-2', 'Wohnzimmer');
+
+      store.addProfile(profile);
+
+      expect(store.profiles().map((item) => item.id)).toEqual(['default', 'room-2']);
+      expect(store.activeProfileId()).toBe('default');
+    });
+
+    it('refuses to add a profile past the limit', () => {
+      for (let index = 0; index < PROFILE_LIMIT - 1; index += 1) {
+        store.addProfile(createDefaultProfile(`profile-${index}`, `Profil ${index}`));
+      }
+
+      store.addProfile(createDefaultProfile('one-too-many', 'Zu viel'));
+
+      expect(store.profiles()).toHaveLength(PROFILE_LIMIT);
+      expect(store.toast()).toContain(`höchstens ${PROFILE_LIMIT}`);
+    });
+
+    it('switches the active profile and its groups/settings', () => {
+      store.addProfile(createDefaultProfile('room-2', 'Wohnzimmer'));
+      store.updateSettings({ ...store.settings(), theme: 'light' });
+
+      store.switchProfile('room-2');
+
+      expect(store.activeProfileId()).toBe('room-2');
+      expect(store.settings().theme).toBe('dark');
+    });
+
+    it('renames a profile, ignoring a blank name', () => {
+      store.renameProfile('default', 'Büro');
+      expect(store.profiles()[0].name).toBe('Büro');
+
+      store.renameProfile('default', '   ');
+      expect(store.profiles()[0].name).toBe('Büro');
+    });
+
+    it('refuses to delete the last remaining profile', () => {
+      store.deleteProfile('default');
+
+      expect(store.profiles()).toHaveLength(1);
+    });
+
+    it('deletes a profile and reassigns the active profile if it was active', () => {
+      store.addProfile(createDefaultProfile('room-2', 'Wohnzimmer'));
+
+      store.deleteProfile('default');
+
+      expect(store.profiles().map((item) => item.id)).toEqual(['room-2']);
+      expect(store.activeProfileId()).toBe('room-2');
+    });
+
+    it('persists profile changes so they survive a reload', () => {
+      store.addProfile(createDefaultProfile('room-2', 'Wohnzimmer'));
+      store.switchProfile('room-2');
+
+      const reloaded = TestBed.runInInjectionContext(() => new MediaHubStore());
+
+      expect(reloaded.activeProfileId()).toBe('room-2');
+      expect(reloaded.profiles().map((item) => item.id)).toEqual(['default', 'room-2']);
     });
   });
 });
