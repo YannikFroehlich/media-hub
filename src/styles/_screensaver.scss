@@ -10,7 +10,19 @@
   gap: 18px;
   background: var(--bg);
   cursor: pointer;
-  animation: fade-in 600ms ease-out both;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 1200ms ease-in-out,
+    visibility 0s linear 1200ms;
+
+  &.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 1200ms ease-in-out,
+      visibility 0s;
+  }
 }
 
 .screensaver-clock {
@@ -26,4 +38,10 @@
   gap: 14px;
   font-size: clamp(24px, 3vw, 36px);
   color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screensaver {
+    transition-delay: 0s;
+  }
 }

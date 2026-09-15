@@ -1211,15 +1211,18 @@
   }
   <div class="visually-hidden" aria-live="polite">{{ liveMessage() }}</div>
 
-  @if (screensaverActive()) {
-    <div class="screensaver" (click)="armCursorIdleTimer()" aria-hidden="true">
-      <span class="screensaver-clock">{{ clockLabel() }}</span>
-      @if (weather(); as w) {
-        <span class="screensaver-weather">
-          <i [class]="w.icon" aria-hidden="true"></i>
-          {{ w.temperatureC }}°
-        </span>
-      }
-    </div>
-  }
+  <div
+    class="screensaver"
+    [class.is-visible]="screensaverActive()"
+    (click)="armCursorIdleTimer()"
+    aria-hidden="true"
+  >
+    <span class="screensaver-clock">{{ clockLabel() }}</span>
+    @if (weather(); as w) {
+      <span class="screensaver-weather">
+        <i [class]="w.icon" aria-hidden="true"></i>
+        {{ w.temperatureC }}°
+      </span>
+    }
+  </div>
 </div>
