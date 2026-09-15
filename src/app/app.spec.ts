@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { MediaHubStore } from './core/media-hub.store';
+import { WeatherService } from './core/weather.service';
 
 function mediaQueryList(media: string, matches: boolean): MediaQueryList {
   return {
@@ -112,6 +113,39 @@ describe('App', () => {
 
     const screensaver = (fixture.nativeElement as HTMLElement).querySelector('.screensaver')!;
     expect(screensaver.classList.contains('is-visible')).toBe(false);
+  });
+
+  it('shows the current weather and forecast on the screensaver', async () => {
+    const store = TestBed.inject(MediaHubStore);
+    store.updateSettings({
+      ...store.settings(),
+      weatherEnabled: false,
+      weatherLocation: 'Berlin, Deutschland',
+      weatherLat: 52.5,
+      weatherLon: 13.4,
+    });
+    vi.spyOn(TestBed.inject(WeatherService), 'getForecast').mockResolvedValue({
+      temperatureC: 18,
+      icon: 'fa-solid fa-cloud-sun',
+      label: 'Teilweise bewölkt',
+      daily: [
+        { weekday: 'Di', maxC: 22, minC: 12, icon: 'fa-solid fa-sun', label: 'Klar' },
+        { weekday: 'Mi', maxC: 19, minC: 10, icon: 'fa-solid fa-cloud', label: 'Bedeckt' },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const screensaver = (fixture.nativeElement as HTMLElement).querySelector('.screensaver')!;
+
+    expect(screensaver.textContent).toContain('18°');
+    expect(screensaver.textContent).toContain('Teilweise bewölkt');
+    expect(screensaver.textContent).toContain('Berlin, Deutschland');
+    expect(screensaver.textContent).toContain('Heute');
+    expect(screensaver.textContent).toContain('22° / 12°');
+    expect(screensaver.querySelectorAll('.screensaver-forecast li')).toHaveLength(2);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.weather-widget')).toBeNull();
   });
 
   it('should render the Media Hub dashboard', async () => {
