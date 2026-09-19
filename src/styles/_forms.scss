@@ -270,7 +270,8 @@
   color: white;
 }
 
-.check-row input:focus-visible + span {
+.check-row input:focus-visible + span,
+:root[data-input='gamepad'] .check-row input:focus + span {
   box-shadow:
     0 0 0 2px var(--surface-strong),
     0 0 0 4px var(--focus);

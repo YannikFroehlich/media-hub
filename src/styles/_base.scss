@@ -47,6 +47,8 @@ textarea {
 
 button:focus,
 button:focus-visible,
+/* Gamepad focus moves are script-driven and never match :focus-visible (see core/gamepad.ts). */
+:root[data-input='gamepad'] :is(input, select, textarea, [tabindex]):focus,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
