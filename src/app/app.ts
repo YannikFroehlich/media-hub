@@ -21,6 +21,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { ConfirmService } from './core/confirm.service';
+import { startGamepadNavigation } from './core/gamepad';
 import { handleWebsiteIconError, handleWebsiteIconLoad, iconClass } from './core/icons';
 import { MediaHubStore } from './core/media-hub.store';
 import { HubGroup, Shortcut, WeatherSnapshot } from './core/models';
@@ -147,6 +148,7 @@ export class App {
     window.setInterval(() => this.refreshSunTimes(), 30 * 60 * 1000);
     effect(() => (this.store.editMode() ? this.armLinkCheck() : this.disarmLinkCheck()));
     effect(() => this.resolveWebsiteIcons());
+    startGamepadNavigation(this.document);
   }
 
   // Independent of the weather widget: auto-theme needs sunrise/sunset even if
@@ -337,6 +339,8 @@ export class App {
       this.armCursorIdleTimer();
       return;
     }
+    // Keyboard/gamepad use counts as activity too, but must not reveal the hidden cursor.
+    this.armScreensaverTimer();
     const target = event.target as HTMLElement | null;
     const isTyping = target?.matches('input, textarea, select, [contenteditable="true"]');
     const isSearchFocused = target === this.searchInput?.nativeElement;
