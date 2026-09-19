@@ -1,9 +1,22 @@
 <div
   class="screensaver"
   [class.is-visible]="visible()"
+  [class.has-photo]="currentImage()"
   (click)="dismiss.emit()"
   aria-hidden="true"
 >
+  @if (currentImage(); as image) {
+    <!-- Tracking by URL recreates the <img> per photo, which replays the fade-in. -->
+    @for (src of [image]; track src) {
+      <img
+        class="screensaver-photo"
+        [src]="src"
+        alt=""
+        referrerpolicy="no-referrer"
+        (error)="markFailed(src)"
+      />
+    }
+  }
   <span class="screensaver-clock">{{ clock() }}</span>
   @if (weather(); as w) {
     <div class="screensaver-weather">

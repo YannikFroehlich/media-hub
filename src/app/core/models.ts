@@ -57,6 +57,8 @@ export interface GlobalSettings {
   autoTheme: boolean;
   highContrast: boolean;
   screensaverEnabled: boolean;
+  /** Photo URLs (http/https only) the screensaver cycles through behind the clock. */
+  screensaverImages: string[];
   weatherEnabled: boolean;
   weatherLocation: string;
   weatherLat: number | null;

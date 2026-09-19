@@ -5,6 +5,7 @@ import {
   LIQUID_GLASS_BACKGROUND_DATA_LIMIT,
   LIQUID_GLASS_BLUR_MAX,
   PROFILE_LIMIT,
+  SCREENSAVER_IMAGE_LIMIT,
   parseExport,
 } from '../core/config-schema';
 import { ConfirmService } from '../core/confirm.service';
@@ -64,6 +65,7 @@ export class SettingsPanel implements OnInit {
     autoTheme: [false],
     highContrast: [false],
     screensaverEnabled: [true],
+    screensaverImages: [''],
     weatherEnabled: [false],
     weatherLocation: [''],
   });
@@ -90,6 +92,7 @@ export class SettingsPanel implements OnInit {
       autoTheme: settings.autoTheme,
       highContrast: settings.highContrast,
       screensaverEnabled: settings.screensaverEnabled,
+      screensaverImages: settings.screensaverImages.join('\n'),
       weatherEnabled: settings.weatherEnabled,
       weatherLocation: settings.weatherLocation,
     });
@@ -108,6 +111,17 @@ export class SettingsPanel implements OnInit {
     if (placeholders !== 1 || !testUrl) {
       this.error.set(
         'Die Suchvorlage benötigt genau einen {query}-Platzhalter und eine HTTP(S)-Adresse.',
+      );
+      return;
+    }
+    const imageLines = value.screensaverImages
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const screensaverImages = imageLines.map((line) => this.resolver.normalizeHttpUrl(line));
+    if (screensaverImages.includes(null) || screensaverImages.length > SCREENSAVER_IMAGE_LIMIT) {
+      this.error.set(
+        `Bildschirmschoner-Bilder: höchstens ${SCREENSAVER_IMAGE_LIMIT} HTTP(S)-Adressen, eine pro Zeile.`,
       );
       return;
     }
@@ -141,6 +155,7 @@ export class SettingsPanel implements OnInit {
         autoTheme: value.autoTheme,
         highContrast: value.highContrast,
         screensaverEnabled: value.screensaverEnabled,
+        screensaverImages: screensaverImages as string[],
         weatherEnabled: value.weatherEnabled,
         weatherLocation,
         weatherLat,

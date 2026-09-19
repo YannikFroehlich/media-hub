@@ -5,6 +5,7 @@ export const SHORTCUTS_PER_GROUP_LIMIT = 50;
 export const LIQUID_GLASS_BACKGROUND_DATA_LIMIT = 1_400_000;
 export const LIQUID_GLASS_BLUR_MAX = 20;
 export const PROFILE_LIMIT = 8;
+export const SCREENSAVER_IMAGE_LIMIT = 20;
 
 const colorSchema = z
   .string()
@@ -29,6 +30,18 @@ const liquidGlassBackgroundSchema = z.union([
     .max(LIQUID_GLASS_BACKGROUND_DATA_LIMIT)
     .regex(/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/),
 ]);
+
+const httpUrlSchema = z
+  .string()
+  .max(2048)
+  .refine((value) => {
+    try {
+      const url = new URL(value);
+      return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password;
+    } catch {
+      return false;
+    }
+  }, 'Nur HTTP(S)-Adressen ohne Zugangsdaten sind erlaubt.');
 
 const shortcutSchema = z.object({
   id: z.string().min(1),
@@ -81,6 +94,7 @@ const settingsSchema = z.object({
   autoTheme: z.boolean().default(false),
   highContrast: z.boolean().default(false),
   screensaverEnabled: z.boolean().default(true),
+  screensaverImages: z.array(httpUrlSchema).max(SCREENSAVER_IMAGE_LIMIT).default([]),
   weatherEnabled: z.boolean().default(false),
   weatherLocation: z.string().default(''),
   weatherLat: z.number().nullable().default(null),

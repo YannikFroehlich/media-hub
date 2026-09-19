@@ -100,6 +100,34 @@ describe('App', () => {
     expect(screensaver.classList.contains('is-visible')).toBe(false);
   });
 
+  it('cycles through configured screensaver photos and skips broken ones', () => {
+    vi.useFakeTimers();
+    const store = TestBed.inject(MediaHubStore);
+    store.updateSettings({
+      ...store.settings(),
+      screensaverImages: ['https://a.test/1.jpg', 'https://a.test/2.jpg', 'https://a.test/3.jpg'],
+    });
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const photo = () => compiled.querySelector<HTMLImageElement>('.screensaver-photo');
+
+    expect(photo()).toBeNull();
+
+    vi.advanceTimersByTime(5 * 60 * 1000);
+    fixture.detectChanges();
+    expect(photo()?.src).toBe('https://a.test/1.jpg');
+    expect(compiled.querySelector('.screensaver.has-photo')).toBeTruthy();
+
+    vi.advanceTimersByTime(30_000);
+    fixture.detectChanges();
+    expect(photo()?.src).toBe('https://a.test/2.jpg');
+
+    photo()!.dispatchEvent(new Event('error'));
+    fixture.detectChanges();
+    expect(photo()?.src).toBe('https://a.test/3.jpg');
+  });
+
   it('opens the n-th visible shortcut with the number keys', async () => {
     const store = TestBed.inject(MediaHubStore);
     store.updateSettings({ ...store.settings(), defaultOpenBehavior: 'new-tab' });

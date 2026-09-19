@@ -3,6 +3,23 @@ import { PROFILE_LIMIT, parseConfig } from './config-schema';
 import { createDefaultConfig, createDefaultProfile } from './default-config';
 
 describe('parseConfig', () => {
+  it('defaults screensaver photos to none and only accepts http(s) URLs', () => {
+    const existingConfig = createDefaultConfig() as unknown as {
+      profiles: [{ settings: Record<string, unknown> }];
+    };
+    delete existingConfig.profiles[0].settings['screensaverImages'];
+    expect(parseConfig(existingConfig).profiles[0].settings.screensaverImages).toEqual([]);
+
+    const config = createDefaultConfig();
+    config.profiles[0].settings.screensaverImages = ['https://example.com/a.jpg'];
+    expect(parseConfig(config).profiles[0].settings.screensaverImages).toHaveLength(1);
+
+    for (const url of ['javascript:alert(1)', 'https://user:pw@example.com/a.jpg', 'foo']) {
+      config.profiles[0].settings.screensaverImages = [url];
+      expect(() => parseConfig(config)).toThrow();
+    }
+  });
+
   it('keeps pointer effects enabled for configurations saved before the option existed', () => {
     const existingConfig = createDefaultConfig() as unknown as {
       profiles: [{ settings: Record<string, unknown> }];

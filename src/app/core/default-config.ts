@@ -58,6 +58,7 @@ function createDefaultProfileContent(): Pick<Profile, 'settings' | 'groups'> {
       autoTheme: false,
       highContrast: false,
       screensaverEnabled: true,
+      screensaverImages: [],
       weatherEnabled: false,
       weatherLocation: '',
       weatherLat: null,

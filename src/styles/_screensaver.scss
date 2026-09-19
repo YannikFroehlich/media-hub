@@ -102,8 +102,36 @@
   white-space: nowrap;
 }
 
+/* Optional photo backdrop: text switches to light-on-dark regardless of theme. */
+.screensaver.has-photo {
+  --text: #fff;
+  --muted: rgba(255, 255, 255, 0.82);
+  --line: rgba(255, 255, 255, 0.22);
+  --surface-soft: rgba(0, 0, 0, 0.35);
+  background: #000;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+
+  > :not(.screensaver-photo) {
+    position: relative;
+  }
+}
+
+.screensaver-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.6);
+  animation: fade-in 1200ms ease-in-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .screensaver {
     transition-delay: 0s;
+  }
+
+  .screensaver-photo {
+    animation: none;
   }
 }
