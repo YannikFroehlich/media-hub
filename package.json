@@ -14,7 +14,8 @@
     "electron:start": "electron .",
     "electron:dev": "npm run build && npm run electron:start",
     "electron:pack": "npm run build && electron-builder --win --publish never",
-    "electron:smoke": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/windows/smoke-test.ps1 -ExecutablePath \"release/win-unpacked/Media Hub.exe\""
+    "electron:smoke": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/windows/smoke-test.ps1 -ExecutablePath \"release/win-unpacked/Media Hub.exe\"",
+    "lint": "ng lint"
   },
   "private": true,
   "engines": {
@@ -41,11 +42,15 @@
     "@angular/build": "^22.1.7",
     "@angular/cli": "^22.1.7",
     "@angular/compiler-cli": "^22.1.5",
+    "@eslint/js": "^10.0.1",
+    "angular-eslint": "22.5.0",
     "electron": "^44.2.0",
     "electron-builder": "^26.15.3",
+    "eslint": "^10.9.1",
     "jsdom": "^30.0.1",
     "prettier": "^3.8.1",
     "typescript": "~6.0.3",
+    "typescript-eslint": "8.69.0",
     "vitest": "^4.1.11"
   }
 }

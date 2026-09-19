@@ -56,6 +56,8 @@ const LINK_CHECK_TIMEOUT_MS = 6000;
     Screensaver,
   ],
   templateUrl: './app.html',
+  // Pointer/focus effects and forms-free imperative state predate signals everywhere here.
+  // eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.scss',
 })

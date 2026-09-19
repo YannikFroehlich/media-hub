@@ -1,7 +1,6 @@
 import { computed, effect, Injectable, signal } from '@angular/core';
 import { PROFILE_LIMIT, SHORTCUTS_PER_GROUP_LIMIT } from './config-schema';
 import { ConfigRepository } from './config-repository';
-import { createDefaultConfig } from './default-config';
 import { GlobalSettings, HubGroup, MediaHubConfig, Profile, Shortcut, Theme } from './models';
 
 // Fallback for when no location (and therefore no sunrise/sunset) is available.

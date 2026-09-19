@@ -22,6 +22,7 @@
       </span>
     </div>
 
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events -- mouse convenience; the input itself is keyboard-focusable -->
     <form
       class="search"
       role="search"
@@ -358,6 +359,7 @@
   }
 
   @if (showKeyboardHelp()) {
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- mouse-only backdrop; Esc closes it via the global key handler -->
     <div class="keyboard-help-backdrop" (click)="closeKeyboardHelp()"></div>
     <section class="keyboard-help" role="dialog" aria-modal="true" aria-label="Tastaturkürzel">
       <header class="keyboard-help-header">
@@ -415,6 +417,7 @@
   }
 
   @if (panel()) {
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- mouse-only backdrop; Esc closes it via the global key handler -->
     <div class="panel-backdrop" (click)="closePanel()"></div>
     <aside
       class="sidepanel"
@@ -464,6 +467,7 @@
   }
 
   @if (confirm.state(); as confirmState) {
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- mouse-only backdrop; Esc closes it via the global key handler -->
     <div class="confirm-backdrop" (click)="confirm.resolve(false)"></div>
     <section
       class="confirm-dialog"
