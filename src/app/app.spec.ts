@@ -100,6 +100,31 @@ describe('App', () => {
     expect(screensaver.classList.contains('is-visible')).toBe(false);
   });
 
+  it('opens the n-th visible shortcut with the number keys', async () => {
+    const store = TestBed.inject(MediaHubStore);
+    store.updateSettings({ ...store.settings(), defaultOpenBehavior: 'new-tab' });
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: '3', bubbles: true }));
+    expect(open).toHaveBeenCalledWith('https://www.youtube.com/', '_blank', 'noopener,noreferrer');
+
+    const input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
+      '.search input',
+    )!;
+    input.value = 'radio';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true }));
+    expect(open).toHaveBeenLastCalledWith('https://www.radio.de/', '_blank', 'noopener,noreferrer');
+
+    input.focus();
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: '2', bubbles: true }));
+    expect(open).toHaveBeenCalledTimes(2);
+    open.mockRestore();
+  });
+
   it('never shows the screensaver when disabled in settings', () => {
     vi.useFakeTimers();
     const store = TestBed.inject(MediaHubStore);

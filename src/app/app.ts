@@ -94,6 +94,16 @@ export class App {
       })
       .filter((group) => group.shortcuts.length > 0);
   });
+  /** Shortcuts in on-screen order, as reachable via the 1-9 keys. */
+  private readonly numberedShortcuts = computed(() =>
+    this.visibleGroups()
+      .flatMap((group) =>
+        group.shortcuts
+          .filter((shortcut) => shortcut.enabled)
+          .map((shortcut) => ({ group, shortcut })),
+      )
+      .slice(0, 9),
+  );
   protected readonly weather = signal<WeatherSnapshot | null>(null);
   protected readonly headerWeather = computed(() =>
     this.store.settings().weatherEnabled ? this.weather() : null,
@@ -363,6 +373,16 @@ export class App {
     if (event.key.toLowerCase() === 'e' && !isSearchFocused) {
       event.preventDefault();
       this.store.toggleEditMode();
+      return;
+    }
+
+    // 1-9 open the n-th visible shortcut. Not while typing a search query or editing.
+    if (/^[1-9]$/.test(event.key) && !isSearchFocused && !this.store.editMode()) {
+      const target = this.numberedShortcuts()[Number(event.key) - 1];
+      if (target) {
+        event.preventDefault();
+        this.activateShortcut(target.group, target.shortcut, event);
+      }
       return;
     }
 
