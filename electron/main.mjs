@@ -224,7 +224,7 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.whenReady().then(async () => {
-    app.setAppUserModelId('com.solarlux.mediahub');
+    app.setAppUserModelId('de.yannikfroehlich.mediahub');
     configureUpdater();
     try {
       serverInstance = await startServer({ root: webRoot, port: PORT });

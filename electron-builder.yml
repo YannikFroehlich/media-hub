@@ -1,4 +1,4 @@
-appId: com.solarlux.mediahub
+appId: de.yannikfroehlich.mediahub
 productName: Media Hub
 directories:
   output: release
@@ -24,6 +24,9 @@ win:
         - x64
   icon: public/favicon.png
 nsis:
+  # Derived from the previous appId (com.solarlux.mediahub). Keep it pinned so existing
+  # installs upgrade in place instead of getting a second side-by-side install.
+  guid: 712094fa-2206-5c58-a969-afa4837d0fb1
   artifactName: 'Media-Hub-${version}-setup.${ext}'
   oneClick: false
   allowToChangeInstallationDirectory: true
