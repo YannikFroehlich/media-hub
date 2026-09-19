@@ -12,6 +12,7 @@ Use Node.js 24 LTS and npm 11.
 - `npm start` runs the development server at `http://localhost:4200`.
 - `npm test -- --watch=false` runs the Vitest suite once.
 - `npm run lint` runs angular-eslint.
+- `npm run e2e` runs the Playwright smoke test (`npx playwright install chromium` once first).
 - `npm run build` creates an optimized production build and enforces Angular budgets.
 - `npm run serve:prod` serves the latest production build at `http://127.0.0.1:4173`.
 

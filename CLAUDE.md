@@ -17,6 +17,7 @@ npm ci                        # install exact lockfile dependencies
 npm start                     # dev server at http://localhost:4200
 npm test -- --watch=false     # run the full Vitest suite once
 npm run lint                  # angular-eslint (TS + templates incl. accessibility rules)
+npm run e2e                   # Playwright smoke test against `npm start` (e2e/*.e2e.ts)
 npm run build                 # production build (enforces Angular budgets)
 npm run serve:prod            # serve dist/media-hub/browser at http://127.0.0.1:4173
 npm run electron:dev          # build + launch the Windows tray app locally
@@ -24,7 +25,7 @@ npm run electron:pack         # build + package a portable Windows .exe (release
 npm run electron:smoke        # launch the packaged .exe headlessly and verify it boots
 ```
 
-- Tests use Angular's `@angular/build:unit-test` builder with Vitest and jsdom. Lint is `ng lint` (flat config in `eslint.config.js`); intentional exceptions are disabled inline with a `--` reason. The one exception is `scripts/windows/server.mjs`, covered by `scripts/windows/server.test.mjs` via Node's built-in test runner (`node --test scripts/windows/server.test.mjs`) since that script lives outside `src/` and isn't part of the Angular/Vitest project.
+- Tests use Angular's `@angular/build:unit-test` builder with Vitest and jsdom. Lint is `ng lint` (flat config in `eslint.config.js`); intentional exceptions are disabled inline with a `--` reason. End-to-end tests use Playwright (`playwright.config.ts`, Chromium only); they are named `*.e2e.ts` so Vitest never picks them up. First run needs `npx playwright install chromium`. The one exception is `scripts/windows/server.mjs`, covered by `scripts/windows/server.test.mjs` via Node's built-in test runner (`node --test scripts/windows/server.test.mjs`) since that script lives outside `src/` and isn't part of the Angular/Vitest project.
 - To run a single spec file: `ng test -- src/app/core/url-resolver.spec.ts` (or open Vitest watch mode with `npm test` and filter interactively).
 - Format before submitting broad changes: `npx prettier --write <files>` (100-char print width, single quotes, Angular parser for `*.html`, configured in `.prettierrc`).
 - `scripts/windows/server.mjs` is a small dependency-free static file server (`/health` endpoint, path-traversal guard, SPA fallback) exposing `startServer`/`stopServer`. It's used two ways: directly via `npm run serve:prod` for a local production preview, and as an importable module consumed by the Electron tray app in `electron/main.mjs`. Cache-control is asset-aware, not blanket: hashed build files (`main-*.js`, `styles-*.css`, …) get a year-long immutable cache, but fixed-name entry points listed in `NEVER_CACHE_LONG` (`index.html`, `ngsw.json`, `ngsw-worker.js`, `manifest.webmanifest`) always get `no-cache` — required for the service worker's update detection (and even initial registration) to work at all. Keep any new fixed-name entry point in that set.
@@ -72,4 +73,4 @@ npm run electron:smoke        # launch the packaged .exe headlessly and verify i
 
 ## Testing conventions
 
-Tests live beside their implementation as `*.spec.ts` (e.g. `src/app/core/url-resolver.spec.ts`). Describe observable behavior — URL rejection, persistence recovery, rendered DOM — rather than implementation details. Every bug fix should include a focused regression test when practical. Most UI-behavior tests exercise `App` (with its child panels) through the rendered template (see `app.spec.ts`), so keep panel CSS classes stable. Visually verify panel scrolling and both themes (dark/light) for any layout-sensitive change — run `npm run lint`, `npm test` and `npm run build` after UI or state changes.
+Tests live beside their implementation as `*.spec.ts` (e.g. `src/app/core/url-resolver.spec.ts`). Describe observable behavior — URL rejection, persistence recovery, rendered DOM — rather than implementation details. Every bug fix should include a focused regression test when practical. Most UI-behavior tests exercise `App` (with its child panels) through the rendered template (see `app.spec.ts`), so keep panel CSS classes stable. `e2e/smoke.e2e.ts` covers the add → reorder → export → reset → import → reload flow in a real browser. Visually verify panel scrolling and both themes (dark/light) for any layout-sensitive change — run `npm run lint`, `npm test` and `npm run build` after UI or state changes.
