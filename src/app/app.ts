@@ -17,89 +17,66 @@ import {
   effect,
   inject,
   signal,
+  viewChild,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import {
-  LIQUID_GLASS_BACKGROUND_DATA_LIMIT,
-  LIQUID_GLASS_BLUR_MAX,
-  PROFILE_LIMIT,
-  parseExport,
-} from './core/config-schema';
-import { createDefaultProfile } from './core/default-config';
+import { ConfirmService } from './core/confirm.service';
+import { handleWebsiteIconError, handleWebsiteIconLoad, iconClass } from './core/icons';
 import { MediaHubStore } from './core/media-hub.store';
-import {
-  DisplayMode,
-  ExportEnvelope,
-  GroupLayout,
-  HubGroup,
-  IconConfig,
-  OpenBehavior,
-  Shortcut,
-  VisualStyle,
-  WeatherSnapshot,
-} from './core/models';
+import { HubGroup, Shortcut, WeatherSnapshot } from './core/models';
 import { UrlResolver } from './core/url-resolver';
 import { WeatherService } from './core/weather.service';
 import { WebsiteIconResolver } from './core/website-icon-resolver';
 import { LiquidGlassDirective } from './liquid-glass.directive';
+import { GroupPanel } from './panels/group-panel';
+import { SettingsPanel } from './panels/settings-panel';
+import { ShortcutPanel } from './panels/shortcut-panel';
+import { Screensaver } from './screensaver/screensaver';
 
 type PanelKind = 'shortcut' | 'group' | 'settings' | null;
 
-const BACKGROUND_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
-const BACKGROUND_SOURCE_SIZE_LIMIT = 15 * 1024 * 1024;
-const BACKGROUND_DIRECT_STORE_LIMIT = 900_000;
-const BACKGROUND_MAX_WIDTH = 1920;
-const BACKGROUND_MAX_HEIGHT = 1080;
 const SCREENSAVER_IDLE_MS = 5 * 60 * 1000;
 const LINK_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const LINK_CHECK_TIMEOUT_MS = 6000;
-
-interface IconPreset {
-  id: string;
-  label: string;
-  className: string;
-}
 
 @Component({
   selector: 'app-root',
   imports: [
     LiquidGlassDirective,
-    ReactiveFormsModule,
     CdkDropList,
     CdkDropListGroup,
     CdkDrag,
     CdkDragHandle,
     CdkDragPlaceholder,
     CdkTrapFocus,
+    ShortcutPanel,
+    GroupPanel,
+    SettingsPanel,
+    Screensaver,
   ],
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.scss',
 })
 export class App {
-  protected readonly liquidGlassBlurMax = LIQUID_GLASS_BLUR_MAX;
   protected readonly store = inject(MediaHubStore);
   private readonly resolver = inject(UrlResolver);
   private readonly websiteIconResolver = inject(WebsiteIconResolver);
   private readonly weatherService = inject(WeatherService);
-  private readonly fb = inject(FormBuilder);
+  protected readonly confirm = inject(ConfirmService);
   private readonly document = inject(DOCUMENT);
 
   @ViewChild('searchInput') private searchInput?: ElementRef<HTMLInputElement>;
-  @ViewChild('importInput') private importInput?: ElementRef<HTMLInputElement>;
-  @ViewChild('liquidGlassBackgroundInput')
-  private liquidGlassBackgroundInput?: ElementRef<HTMLInputElement>;
+  private readonly shortcutPanel = viewChild(ShortcutPanel);
+  private readonly groupPanel = viewChild(GroupPanel);
+  private readonly settingsPanel = viewChild(SettingsPanel);
 
   protected readonly panel = signal<PanelKind>(null);
   protected readonly selectedGroupId = signal<string | null>(null);
   protected readonly selectedShortcutId = signal<string | null>(null);
-  protected readonly importError = signal<string | null>(null);
-  protected readonly liquidGlassBackgroundPreview = signal<string | null>(null);
   protected readonly liveMessage = signal('');
   protected readonly cursorIdle = signal(false);
   protected readonly showKeyboardHelp = signal(false);
-  protected readonly confirmState = signal<{ message: string; confirmLabel: string } | null>(null);
   protected readonly screensaverActive = signal(false);
   protected readonly weatherDetailsOpen = signal(false);
   protected readonly searchQuery = signal('');
@@ -142,93 +119,6 @@ export class App {
   protected readonly focusGliderTransform = computed(
     () => `translate(${this.focusGlider().x}px, ${this.focusGlider().y}px)`,
   );
-  protected readonly colorPresets = [
-    '#3882F6',
-    '#2563EB',
-    '#6366F1',
-    '#7C4DFF',
-    '#A855F7',
-    '#D946EF',
-    '#DB2F80',
-    '#F43F5E',
-    '#FF3038',
-    '#FF6B35',
-    '#FF9418',
-    '#F6C945',
-    '#84CC16',
-    '#42B866',
-    '#14B8A6',
-    '#23B8C9',
-  ];
-
-  protected readonly iconPresets: IconPreset[] = [
-    { id: 'streaming', label: 'Streaming', className: 'fa-solid fa-tv' },
-    { id: 'video', label: 'Video', className: 'fa-solid fa-video' },
-    { id: 'movies', label: 'Filme', className: 'fa-solid fa-clapperboard' },
-    { id: 'tv', label: 'Serien', className: 'fa-solid fa-tv' },
-    { id: 'youtube', label: 'YouTube', className: 'fa-brands fa-youtube' },
-    { id: 'broadcast', label: 'Streams', className: 'fa-solid fa-tower-broadcast' },
-    { id: 'folder-play', label: 'Mediathek', className: 'fa-solid fa-folder-open' },
-    { id: 'masks', label: 'Genres', className: 'fa-solid fa-masks-theater' },
-    { id: 'star', label: 'Stern', className: 'fa-solid fa-star' },
-    { id: 'bookmark', label: 'Watchlist', className: 'fa-regular fa-bookmark' },
-    { id: 'heart', label: 'Favoriten', className: 'fa-regular fa-heart' },
-    { id: 'music', label: 'Musik', className: 'fa-solid fa-music' },
-    { id: 'live-tv', label: 'Live TV', className: 'fa-solid fa-tv' },
-    { id: 'microphone', label: 'Podcasts', className: 'fa-solid fa-microphone' },
-    { id: 'radio', label: 'Radio', className: 'fa-solid fa-radio' },
-    { id: 'tools', label: 'Tools', className: 'fa-solid fa-screwdriver-wrench' },
-    { id: 'globe', label: 'Browser', className: 'fa-solid fa-globe' },
-    { id: 'folder', label: 'Dateien', className: 'fa-solid fa-folder' },
-    { id: 'notes', label: 'Notizen', className: 'fa-solid fa-file-lines' },
-    { id: 'settings', label: 'Einstellungen', className: 'fa-solid fa-gear' },
-    { id: 'grid', label: 'Übersicht', className: 'fa-solid fa-table-cells-large' },
-  ];
-
-  protected readonly shortcutForm = this.fb.nonNullable.group({
-    targetGroupId: ['', Validators.required],
-    name: ['', [Validators.required, Validators.maxLength(48)]],
-    url: ['', [Validators.required, Validators.maxLength(2048)]],
-    useWebsiteIcon: [false],
-    iconId: ['youtube', Validators.required],
-    customIcon: ['', Validators.pattern(/^$|^(fa-solid|fa-regular|fa-brands) fa-[a-z0-9-]+$/)],
-    color: ['#7C4DFF', Validators.pattern(/^#[0-9A-Fa-f]{6}$/)],
-    openBehavior: ['inherit' as OpenBehavior],
-    enabled: [true],
-  });
-
-  protected readonly groupForm = this.fb.nonNullable.group({
-    name: ['', [Validators.required, Validators.maxLength(48)]],
-    description: ['', Validators.maxLength(120)],
-    iconId: ['folder', Validators.required],
-    customIcon: ['', Validators.pattern(/^$|^(fa-solid|fa-regular|fa-brands) fa-[a-z0-9-]+$/)],
-    color: ['#3882F6', Validators.pattern(/^#[0-9A-Fa-f]{6}$/)],
-    layout: ['standard' as GroupLayout],
-    allowShortcutReordering: [true],
-    showTitle: [true],
-    useAccentBackground: [false],
-  });
-
-  protected readonly settingsForm = this.fb.nonNullable.group({
-    theme: ['dark' as 'dark' | 'light'],
-    visualStyle: ['classic' as VisualStyle],
-    classicPointerEffects: [true],
-    liquidGlassBackgroundImage: [''],
-    liquidGlassGroupBlur: [3, [Validators.min(0), Validators.max(LIQUID_GLASS_BLUR_MAX)]],
-    liquidGlassShortcutBlur: [0, [Validators.min(0), Validators.max(LIQUID_GLASS_BLUR_MAX)]],
-    displayMode: ['standard' as DisplayMode],
-    defaultOpenBehavior: ['same-tab' as 'same-tab' | 'new-tab'],
-    searchName: ['', [Validators.required, Validators.maxLength(32)]],
-    searchTemplate: ['', Validators.required],
-    showSubtitle: [true],
-    showKeyboardHint: [true],
-    autoTheme: [false],
-    highContrast: [false],
-    screensaverEnabled: [true],
-    weatherEnabled: [false],
-    weatherLocation: [''],
-  });
-
   protected readonly panelTitle = computed(() => {
     if (this.panel() === 'shortcut') {
       return this.selectedShortcutId() ? 'Verknüpfung bearbeiten' : 'Verknüpfung hinzufügen';
@@ -277,62 +167,21 @@ export class App {
     );
   }
 
-  protected iconClass(icon: IconConfig): string {
-    if (icon.kind === 'font-awesome') return `${icon.family} ${icon.name}`;
-    return this.iconPresets.find((item) => item.id === icon.id)?.className ?? 'fa-solid fa-link';
-  }
+  protected readonly iconClass = iconClass;
+  protected readonly handleWebsiteIconLoad = handleWebsiteIconLoad;
+  protected readonly handleWebsiteIconError = handleWebsiteIconError;
 
-  protected presetClass(id: string): string {
-    return this.iconPresets.find((item) => item.id === id)?.className ?? 'fa-solid fa-link';
-  }
-
-  protected previewIconClass(form: 'group' | 'shortcut'): string {
-    const values =
-      form === 'group' ? this.groupForm.getRawValue() : this.shortcutForm.getRawValue();
-    return values.customIcon || this.presetClass(values.iconId);
-  }
-
-  protected websiteIconUrl(url: string): string | null {
-    return this.websiteIconResolver.resolve(url);
-  }
-
-  /** Same as websiteIconUrl, but prefers the locally cached copy once one has resolved. */
+  /** Website favicon URL, preferring the locally cached copy once one has resolved. */
   protected dashboardIconUrl(shortcutUrl: string): string | null {
     const remote = this.websiteIconResolver.resolve(shortcutUrl);
     return remote ? (this.cachedIconUrls().get(remote) ?? remote) : null;
   }
 
-  protected handleWebsiteIconLoad(event: Event): void {
-    const image = event.target as HTMLImageElement;
-    image.classList.remove('load-failed');
-    image.parentElement?.classList.add('favicon-loaded');
-  }
-
-  protected handleWebsiteIconError(event: Event): void {
-    const image = event.target as HTMLImageElement;
-    image.classList.add('load-failed');
-    image.parentElement?.classList.remove('favicon-loaded');
-  }
-
   protected openShortcutPanel(groupId?: string, shortcut?: Shortcut, event?: Event): void {
     event?.stopPropagation();
     this.rememberTrigger(event);
-    const group = this.store.groups().find((item) => item.id === groupId);
     this.selectedGroupId.set(groupId ?? this.store.groups()[0]?.id ?? null);
     this.selectedShortcutId.set(shortcut?.id ?? null);
-    const icon = shortcut?.icon;
-    this.shortcutForm.reset({
-      targetGroupId: group?.id ?? this.store.groups()[0]?.id ?? '',
-      name: shortcut?.name ?? '',
-      url: shortcut?.url === '#settings' ? '' : (shortcut?.url ?? ''),
-      useWebsiteIcon: icon?.kind === 'website',
-      iconId: icon?.kind === 'preset' ? icon.id : 'globe',
-      customIcon: icon?.kind === 'font-awesome' ? `${icon.family} ${icon.name}` : '',
-      color: shortcut?.color ?? group?.color ?? '#7C4DFF',
-      openBehavior: shortcut?.openBehavior ?? 'inherit',
-      enabled: shortcut?.enabled ?? true,
-    });
-    this.importError.set(null);
     this.panel.set('shortcut');
   }
 
@@ -341,272 +190,49 @@ export class App {
     this.rememberTrigger(event);
     this.selectedGroupId.set(group?.id ?? null);
     this.selectedShortcutId.set(null);
-    const icon = group?.icon;
-    this.groupForm.reset({
-      name: group?.name ?? 'Neue Gruppe',
-      description: group?.description ?? '',
-      iconId: icon?.kind === 'preset' ? icon.id : 'folder',
-      customIcon: icon?.kind === 'font-awesome' ? `${icon.family} ${icon.name}` : '',
-      color: group?.color ?? '#3882F6',
-      layout: group?.layout ?? 'standard',
-      allowShortcutReordering: group?.options.allowShortcutReordering ?? true,
-      showTitle: group?.options.showTitle ?? true,
-      useAccentBackground: group?.options.useAccentBackground ?? false,
-    });
-    this.importError.set(null);
     this.panel.set('group');
   }
 
   protected openSettings(event?: Event): void {
     this.rememberTrigger(event);
-    const settings = this.store.settings();
-    this.settingsForm.reset({
-      theme: settings.theme,
-      visualStyle: settings.visualStyle,
-      classicPointerEffects: settings.classicPointerEffects,
-      liquidGlassBackgroundImage: settings.liquidGlassBackgroundImage,
-      liquidGlassGroupBlur: settings.liquidGlassGroupBlur,
-      liquidGlassShortcutBlur: settings.liquidGlassShortcutBlur,
-      displayMode: settings.displayMode,
-      defaultOpenBehavior: settings.defaultOpenBehavior,
-      searchName: settings.searchEngine.name,
-      searchTemplate: settings.searchEngine.urlTemplate,
-      showSubtitle: settings.showSubtitle,
-      showKeyboardHint: settings.showKeyboardHint,
-      autoTheme: settings.autoTheme,
-      highContrast: settings.highContrast,
-      screensaverEnabled: settings.screensaverEnabled,
-      weatherEnabled: settings.weatherEnabled,
-      weatherLocation: settings.weatherLocation,
-    });
-    this.liquidGlassBackgroundPreview.set(
-      this.backgroundPreviewStyle(settings.liquidGlassBackgroundImage),
-    );
-    this.importError.set(null);
     this.panel.set('settings');
   }
 
-  private confirmResolve: ((result: boolean) => void) | null = null;
-  private confirmTrigger: HTMLElement | null = null;
-
-  private requestConfirm(message: string, confirmLabel = 'Bestätigen'): Promise<boolean> {
-    this.confirmTrigger = this.document.activeElement as HTMLElement | null;
-    return new Promise((resolve) => {
-      this.confirmResolve = resolve;
-      this.confirmState.set({ message, confirmLabel });
-    });
-  }
-
-  protected resolveConfirm(result: boolean): void {
-    this.confirmState.set(null);
-    this.confirmResolve?.(result);
-    this.confirmResolve = null;
-    window.setTimeout(() => this.confirmTrigger?.focus());
-  }
-
   protected async closePanel(force = false): Promise<void> {
-    const form = this.activeForm();
     if (
       !force &&
-      form?.dirty &&
-      !(await this.requestConfirm('Ungespeicherte Änderungen verwerfen?', 'Verwerfen'))
+      this.activeForm()?.dirty &&
+      !(await this.confirm.request('Ungespeicherte Änderungen verwerfen?', 'Verwerfen'))
     )
       return;
     this.panel.set(null);
-    this.importError.set(null);
     window.setTimeout(() => this.lastTrigger?.focus());
   }
 
-  protected saveShortcut(): void {
-    this.shortcutForm.markAllAsTouched();
-    if (this.shortcutForm.invalid) return;
-    const value = this.shortcutForm.getRawValue();
-    const url = this.normalizeShortcutUrl(value.url);
-    if (!url) {
-      this.importError.set('Bitte gib eine gültige HTTP- oder HTTPS-Adresse ein.');
-      return;
-    }
-    const shortcut: Shortcut = {
-      id: this.selectedShortcutId() ?? crypto.randomUUID(),
-      name: value.name.trim(),
-      url,
-      icon: value.useWebsiteIcon
-        ? { kind: 'website' }
-        : this.formIcon(value.iconId, value.customIcon),
-      color: value.color.toUpperCase(),
-      openBehavior: value.openBehavior,
-      enabled: value.enabled,
-    };
-    this.store.upsertShortcut(value.targetGroupId, shortcut);
-    this.closePanel(true);
-  }
-
-  protected saveGroup(): void {
-    this.groupForm.markAllAsTouched();
-    if (this.groupForm.invalid) return;
-    const value = this.groupForm.getRawValue();
-    const existing = this.store.groups().find((item) => item.id === this.selectedGroupId());
-    const group: HubGroup = {
-      id: existing?.id ?? crypto.randomUUID(),
-      name: value.name.trim(),
-      description: value.description.trim() || undefined,
-      icon: this.formIcon(value.iconId, value.customIcon),
-      color: value.color.toUpperCase(),
-      layout: value.layout,
-      options: {
-        allowShortcutReordering: value.allowShortcutReordering,
-        showTitle: value.showTitle,
-        useAccentBackground: value.useAccentBackground,
-      },
-      shortcuts: existing?.shortcuts ?? [],
-    };
-    existing ? this.store.updateGroup(group) : this.store.addGroup(group);
-    this.closePanel(true);
-  }
-
-  protected async saveSettings(): Promise<void> {
-    this.settingsForm.markAllAsTouched();
-    if (this.settingsForm.invalid) return;
-    const value = this.settingsForm.getRawValue();
-    const placeholders = value.searchTemplate.match(/\{query\}/g)?.length ?? 0;
-    const testUrl = this.resolver.safeHttpUrl(value.searchTemplate.replace('{query}', 'test'));
-    if (placeholders !== 1 || !testUrl) {
-      this.importError.set(
-        'Die Suchvorlage benötigt genau einen {query}-Platzhalter und eine HTTP(S)-Adresse.',
-      );
-      return;
-    }
-    const settings = this.store.settings();
-    let weatherLocation = settings.weatherLocation;
-    let weatherLat = settings.weatherLat;
-    let weatherLon = settings.weatherLon;
-    const needsLocation = value.weatherEnabled || value.autoTheme;
-    if (needsLocation) {
-      const geocoded = await this.weatherService.geocode(value.weatherLocation.trim() || 'Berlin');
-      if (!geocoded) {
-        this.importError.set('Standort konnte nicht gefunden werden.');
-        return;
-      }
-      weatherLocation = geocoded.name;
-      weatherLat = geocoded.lat;
-      weatherLon = geocoded.lon;
-    }
-    try {
-      this.store.updateSettings({
-        theme: value.theme,
-        visualStyle: value.visualStyle,
-        classicPointerEffects: value.classicPointerEffects,
-        liquidGlassBackgroundImage: value.liquidGlassBackgroundImage,
-        liquidGlassGroupBlur: value.liquidGlassGroupBlur,
-        liquidGlassShortcutBlur: value.liquidGlassShortcutBlur,
-        displayMode: value.displayMode,
-        defaultOpenBehavior: value.defaultOpenBehavior,
-        searchEngine: { name: value.searchName.trim(), urlTemplate: value.searchTemplate.trim() },
-        showSubtitle: value.showSubtitle,
-        showKeyboardHint: value.showKeyboardHint,
-        autoTheme: value.autoTheme,
-        highContrast: value.highContrast,
-        screensaverEnabled: value.screensaverEnabled,
-        weatherEnabled: value.weatherEnabled,
-        weatherLocation,
-        weatherLat,
-        weatherLon,
-      });
-      this.refreshVisualEffects();
-      this.refreshWeather();
-      this.refreshSunTimes();
-      this.armCursorIdleTimer();
-    } catch {
-      this.importError.set(
-        'Das Hintergrundbild konnte nicht lokal gespeichert werden. Bitte wähle ein kleineres Bild.',
-      );
-      return;
-    }
-    this.closePanel(true);
-  }
-
-  protected chooseLiquidGlassBackground(): void {
-    this.liquidGlassBackgroundInput?.nativeElement.click();
-  }
-
-  protected async selectLiquidGlassBackground(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = '';
-    if (!file) return;
-
-    if (!BACKGROUND_IMAGE_TYPES.has(file.type)) {
-      this.importError.set('Bitte wähle ein Bild im Format JPG, PNG oder WebP.');
-      return;
-    }
-    if (file.size > BACKGROUND_SOURCE_SIZE_LIMIT) {
-      this.importError.set('Das gewählte Bild darf höchstens 15 MB groß sein.');
-      return;
-    }
-
-    try {
-      const dataUrl =
-        file.size <= BACKGROUND_DIRECT_STORE_LIMIT
-          ? await this.readFileAsDataUrl(file)
-          : await this.compressBackgroundImage(file);
-      if (dataUrl.length > LIQUID_GLASS_BACKGROUND_DATA_LIMIT) {
-        throw new Error('Optimized image is too large');
-      }
-      this.settingsForm.controls.liquidGlassBackgroundImage.setValue(dataUrl);
-      this.liquidGlassBackgroundPreview.set(this.backgroundPreviewStyle(dataUrl));
-      this.settingsForm.markAsDirty();
-      this.importError.set(null);
-    } catch {
-      this.importError.set(
-        'Das Bild konnte nicht verarbeitet werden. Bitte versuche eine kleinere JPG-, PNG- oder WebP-Datei.',
-      );
-    }
-  }
-
-  protected resetLiquidGlassBackground(): void {
-    this.settingsForm.controls.liquidGlassBackgroundImage.setValue('');
-    this.liquidGlassBackgroundPreview.set(null);
-    this.settingsForm.markAsDirty();
-    this.importError.set(null);
-  }
-
-  protected async deleteShortcut(): Promise<void> {
-    const groupId = this.selectedGroupId();
-    const shortcutId = this.selectedShortcutId();
-    if (!groupId || !shortcutId) return;
-    if (!(await this.requestConfirm('Diese Verknüpfung wirklich löschen?', 'Löschen'))) return;
-    this.store.deleteShortcut(groupId, shortcutId);
-    this.closePanel(true);
-  }
-
-  protected async deleteGroup(): Promise<void> {
-    const group = this.store.groups().find((item) => item.id === this.selectedGroupId());
-    if (!group) return;
-    const detail = group.shortcuts.length
-      ? ` Dabei werden auch ${group.shortcuts.length} Verknüpfung${group.shortcuts.length === 1 ? '' : 'en'} entfernt.`
+  protected async deleteGroup(groupId: string | null): Promise<boolean> {
+    const group = this.store.groups().find((item) => item.id === groupId);
+    if (!group) return false;
+    const count = group.shortcuts.length;
+    const detail = count
+      ? ` Dabei werden auch ${count} Verknüpfung${count === 1 ? '' : 'en'} entfernt.`
       : '';
     if (
-      !(await this.requestConfirm(`Gruppe „${group.name}“ wirklich löschen?${detail}`, 'Löschen'))
+      !(await this.confirm.request(`Gruppe „${group.name}“ wirklich löschen?${detail}`, 'Löschen'))
     )
-      return;
+      return false;
     this.store.deleteGroup(group.id);
-    this.closePanel(true);
+    return true;
   }
 
-  protected resetActiveForm(): void {
-    if (this.panel() === 'shortcut') {
-      const groupId = this.shortcutForm.controls.targetGroupId.value;
-      const shortcut = this.store
-        .groups()
-        .flatMap((group) => group.shortcuts)
-        .find((item) => item.id === this.selectedShortcutId());
-      this.openShortcutPanel(groupId, shortcut);
-    } else if (this.panel() === 'group') {
-      const group = this.store.groups().find((item) => item.id === this.selectedGroupId());
-      this.openGroupPanel(group);
-    } else {
-      this.openSettings();
-    }
+  protected async deleteGroupFromPanel(): Promise<void> {
+    if (await this.deleteGroup(this.selectedGroupId())) this.closePanel(true);
+  }
+
+  /** Settings were saved, imported, reset or switched to another profile. */
+  protected refreshAfterSettingsChange(): void {
+    this.refreshVisualEffects();
+    this.refreshWeather();
+    this.refreshSunTimes();
   }
 
   protected submitSearch(): void {
@@ -687,110 +313,12 @@ export class App {
     this.announce(this.store.toast() ?? 'Verknüpfung neu angeordnet.');
   }
 
-  protected exportConfig(): void {
-    const envelope: ExportEnvelope = {
-      format: 'media-hub-config',
-      exportVersion: 1,
-      exportedAt: new Date().toISOString(),
-      config: this.store.config(),
-    };
-    const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const anchor = this.document.createElement('a');
-    anchor.href = url;
-    anchor.download = `media-hub-${new Date().toISOString().slice(0, 10)}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
-    this.store.notify('Konfiguration wurde exportiert.');
-  }
-
-  protected chooseImport(): void {
-    this.importInput?.nativeElement.click();
-  }
-
-  protected async importConfig(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = '';
-    if (!file) return;
-    if (file.size > 1024 * 1024) {
-      this.importError.set('Die Importdatei darf höchstens 1 MB groß sein.');
-      return;
-    }
-    try {
-      const parsed = parseExport(JSON.parse(await file.text()));
-      if (
-        !(await this.requestConfirm(
-          `Die aktuelle Konfiguration durch ${parsed.config.profiles.length} importierte Profile ersetzen?`,
-          'Ersetzen',
-        ))
-      )
-        return;
-      this.store.importConfig(parsed.config);
-      this.refreshVisualEffects();
-      this.openSettings();
-    } catch {
-      this.importError.set(
-        'Die Datei ist keine gültige Media-Hub-Konfiguration. Es wurde nichts verändert.',
-      );
-    }
-  }
-
-  protected async resetHub(): Promise<void> {
-    if (
-      !(await this.requestConfirm(
-        'Media Hub wirklich auf die Startkonfiguration zurücksetzen?',
-        'Zurücksetzen',
-      ))
-    )
-      return;
-    this.store.reset();
-    this.refreshVisualEffects();
-    this.openSettings();
-  }
-
-  protected readonly profileLimit = PROFILE_LIMIT;
-
-  protected addProfile(): void {
-    const profiles = this.store.profiles();
-    if (profiles.length >= this.profileLimit) return;
-    const profile = createDefaultProfile(crypto.randomUUID(), `Profil ${profiles.length + 1}`);
-    this.store.addProfile(profile);
-  }
-
-  protected async activateProfile(id: string): Promise<void> {
-    if (id === this.store.activeProfileId()) return;
-    if (
-      this.activeForm()?.dirty &&
-      !(await this.requestConfirm('Ungespeicherte Änderungen verwerfen?', 'Verwerfen'))
-    )
-      return;
-    this.store.switchProfile(id);
-    this.refreshVisualEffects();
-    this.refreshWeather();
-    this.refreshSunTimes();
-    this.openSettings();
-  }
-
-  protected renameProfile(id: string, name: string): void {
-    this.store.renameProfile(id, name);
-  }
-
-  protected async deleteProfile(id: string, name: string): Promise<void> {
-    if (!(await this.requestConfirm(`Profil „${name}“ wirklich löschen?`, 'Löschen'))) return;
-    this.store.deleteProfile(id);
-    this.refreshVisualEffects();
-    this.refreshWeather();
-    this.refreshSunTimes();
-    this.openSettings();
-  }
-
   @HostListener('document:keydown', ['$event'])
   protected handleGlobalKeyboard(event: KeyboardEvent): void {
-    if (this.confirmState()) {
+    if (this.confirm.state()) {
       if (event.key === 'Escape') {
         event.preventDefault();
-        this.resolveConfirm(false);
+        this.confirm.resolve(false);
       }
       return;
     }
@@ -1013,74 +541,7 @@ export class App {
   }
 
   private activeForm() {
-    if (this.panel() === 'shortcut') return this.shortcutForm;
-    if (this.panel() === 'group') return this.groupForm;
-    if (this.panel() === 'settings') return this.settingsForm;
-    return null;
-  }
-
-  private formIcon(presetId: string, custom: string): IconConfig {
-    const tokens = custom.trim().split(/\s+/);
-    if (
-      tokens.length === 2 &&
-      /^(fa-solid|fa-regular|fa-brands)$/.test(tokens[0]) &&
-      /^fa-[a-z0-9-]+$/.test(tokens[1])
-    ) {
-      return {
-        kind: 'font-awesome',
-        family: tokens[0] as 'fa-solid' | 'fa-regular' | 'fa-brands',
-        name: tokens[1],
-      };
-    }
-    return { kind: 'preset', id: presetId };
-  }
-
-  private normalizeShortcutUrl(value: string): string | null {
-    return this.resolver.normalizeHttpUrl(value);
-  }
-
-  private backgroundPreviewStyle(dataUrl: string): string | null {
-    return dataUrl
-      ? `linear-gradient(rgba(5, 14, 23, 0.1), rgba(5, 14, 23, 0.1)), url("${dataUrl}")`
-      : null;
-  }
-
-  private readFileAsDataUrl(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(reader.error ?? new Error('Unable to read image'));
-      reader.onload = () => {
-        if (typeof reader.result === 'string') resolve(reader.result);
-        else reject(new Error('Unexpected image result'));
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  private async compressBackgroundImage(file: File): Promise<string> {
-    const bitmap = await createImageBitmap(file);
-    try {
-      if (!bitmap.width || !bitmap.height) throw new Error('Invalid image dimensions');
-      const scale = Math.min(
-        1,
-        BACKGROUND_MAX_WIDTH / bitmap.width,
-        BACKGROUND_MAX_HEIGHT / bitmap.height,
-      );
-      const canvas = this.document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-      const context = canvas.getContext('2d');
-      if (!context) throw new Error('Canvas is unavailable');
-      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-
-      for (const quality of [0.82, 0.68, 0.55]) {
-        const dataUrl = canvas.toDataURL('image/webp', quality);
-        if (dataUrl.length <= LIQUID_GLASS_BACKGROUND_DATA_LIMIT) return dataUrl;
-      }
-      throw new Error('Compressed image is too large');
-    } finally {
-      bitmap.close();
-    }
+    return (this.shortcutPanel() ?? this.groupPanel() ?? this.settingsPanel())?.form ?? null;
   }
 
   private navigate(url: string, behavior: 'same-tab' | 'new-tab'): void {

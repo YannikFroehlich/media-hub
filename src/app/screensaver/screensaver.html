@@ -1,0 +1,31 @@
+<div
+  class="screensaver"
+  [class.is-visible]="visible()"
+  (click)="dismiss.emit()"
+  aria-hidden="true"
+>
+  <span class="screensaver-clock">{{ clock() }}</span>
+  @if (weather(); as w) {
+    <div class="screensaver-weather">
+      <div class="screensaver-weather-current">
+        <i [class]="w.icon" aria-hidden="true"></i>
+        <strong>{{ w.temperatureC }}°</strong>
+        <span>{{ w.label }}</span>
+      </div>
+      @if (location()) {
+        <span class="screensaver-weather-location">{{ location() }}</span>
+      }
+      @if (w.daily.length) {
+        <ul class="screensaver-forecast">
+          @for (day of w.daily; track $index) {
+            <li>
+              <span class="screensaver-day-label">{{ $index === 0 ? 'Heute' : day.weekday }}</span>
+              <i [class]="day.icon" aria-hidden="true"></i>
+              <span class="screensaver-day-range">{{ day.maxC }}° / {{ day.minC }}°</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</div>

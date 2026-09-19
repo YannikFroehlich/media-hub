@@ -1,0 +1,365 @@
+<form class="panel-form settings-form" [formGroup]="form" (ngSubmit)="save()">
+  <div class="panel-scroll">
+    <section class="settings-hero">
+      <span><i class="fa-solid fa-sliders"></i></span>
+      <div>
+        <strong>Dein Hub, deine Regeln.</strong
+        ><small>Darstellung, Navigation und Sicherung zentral verwalten.</small>
+      </div>
+    </section>
+
+    <fieldset class="picker-fieldset option-stack">
+      <legend>Profile</legend>
+      <small
+        >Mehrere unabhängige Dashboards mit eigenen Gruppen und eigenem Erscheinungsbild.</small
+      >
+      @for (profile of store.profiles(); track profile.id) {
+        <div class="profile-row">
+          <input
+            type="text"
+            maxlength="48"
+            [value]="profile.name"
+            [attr.aria-label]="'Profil ' + profile.name + ' umbenennen'"
+            (keydown.enter)="$event.preventDefault()"
+            (change)="renameProfile(profile.id, $any($event.target).value)"
+          />
+          @if (profile.id === store.activeProfileId()) {
+            <span class="profile-active-badge">Aktiv</span>
+          } @else {
+            <button type="button" class="secondary-button" (click)="activateProfile(profile.id)">
+              Aktivieren
+            </button>
+          }
+          @if (store.profiles().length > 1) {
+            <button
+              type="button"
+              class="icon-button danger"
+              aria-label="Profil löschen"
+              (click)="deleteProfile(profile.id, profile.name)"
+            >
+              <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+            </button>
+          }
+        </div>
+      }
+      <button
+        type="button"
+        class="secondary-button"
+        [disabled]="store.profiles().length >= profileLimit"
+        (click)="addProfile()"
+      >
+        <i class="fa-solid fa-plus"></i> Profil hinzufügen
+      </button>
+    </fieldset>
+
+    <fieldset class="picker-fieldset">
+      <legend>Oberflächenstil</legend>
+      <div class="style-cards">
+        <button
+          type="button"
+          [class.selected]="form.controls.visualStyle.value === 'classic'"
+          [attr.aria-pressed]="form.controls.visualStyle.value === 'classic'"
+          (click)="form.controls.visualStyle.setValue('classic'); form.markAsDirty()"
+        >
+          <span class="style-preview classic" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="style-card-copy">
+            <strong>Klassisch</strong>
+            <small>Der vertraute Media-Hub-Look</small>
+          </span>
+        </button>
+        <button
+          type="button"
+          [class.selected]="form.controls.visualStyle.value === 'liquid-glass'"
+          [attr.aria-pressed]="form.controls.visualStyle.value === 'liquid-glass'"
+          (click)="form.controls.visualStyle.setValue('liquid-glass'); form.markAsDirty()"
+        >
+          <span class="style-preview liquid-glass" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="style-card-copy">
+            <strong>Liquid Glass</strong>
+            <small>Fließendes Glas mit Lichtbrechung</small>
+          </span>
+        </button>
+        <button
+          type="button"
+          [class.selected]="form.controls.visualStyle.value === 'minimalist'"
+          [attr.aria-pressed]="form.controls.visualStyle.value === 'minimalist'"
+          (click)="form.controls.visualStyle.setValue('minimalist'); form.markAsDirty()"
+        >
+          <span class="style-preview minimalist" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="style-card-copy">
+            <strong>Minimalistisch</strong>
+            <small>Klare Flächen, maximale Leistung</small>
+          </span>
+        </button>
+      </div>
+    </fieldset>
+
+    @if (form.controls.visualStyle.value === 'classic') {
+      <fieldset class="picker-fieldset option-stack">
+        <legend>Klassische Effekte</legend>
+        <label class="check-row">
+          <input type="checkbox" formControlName="classicPointerEffects" />
+          <span><i class="fa-solid fa-check"></i></span>
+          <strong>Mausfolgender Hover-Effekt</strong>
+        </label>
+        <small>
+          Lichtschein und Neigung der Kacheln folgen der Maus. Ausgeschaltet bleiben die normalen
+          Hover- und Fokusmarkierungen erhalten.
+        </small>
+      </fieldset>
+    }
+
+    @if (form.controls.visualStyle.value === 'liquid-glass') {
+      <fieldset class="picker-fieldset liquid-background-fieldset">
+        <legend>Liquid-Glass-Hintergrund</legend>
+        <div class="background-picker">
+          <span
+            class="background-preview"
+            [style.background-image]="liquidGlassBackgroundPreview()"
+            aria-hidden="true"
+          ></span>
+          <div class="background-picker-copy">
+            <span>
+              <strong>
+                {{
+                  form.controls.liquidGlassBackgroundImage.value
+                    ? 'Eigenes Hintergrundbild'
+                    : 'Standard-Hintergrund'
+                }}
+              </strong>
+              <small>JPG, PNG oder WebP bis 15 MB</small>
+            </span>
+            <div class="background-actions">
+              <button
+                type="button"
+                class="secondary-button"
+                (click)="chooseLiquidGlassBackground()"
+              >
+                <i class="fa-regular fa-image" aria-hidden="true"></i>Bild auswählen
+              </button>
+              @if (form.controls.liquidGlassBackgroundImage.value) {
+                <button
+                  type="button"
+                  class="secondary-button"
+                  (click)="resetLiquidGlassBackground()"
+                >
+                  <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>Standard
+                </button>
+              }
+            </div>
+            <input
+              #liquidGlassBackgroundInput
+              class="visually-hidden liquid-background-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+              (change)="selectLiquidGlassBackground($event)"
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="picker-fieldset">
+        <legend>Glas-Unschärfe</legend>
+        <div class="liquid-blur-grid">
+          <label class="liquid-blur-control">
+            <span>
+              <strong>Gruppen</strong>
+              <output>{{ form.controls.liquidGlassGroupBlur.value }} px</output>
+            </span>
+            <input
+              type="range"
+              min="0"
+              [max]="liquidGlassBlurMax"
+              step="1"
+              formControlName="liquidGlassGroupBlur"
+            />
+            <small>Unschärfe der großen Gruppenflächen</small>
+          </label>
+          <label class="liquid-blur-control">
+            <span>
+              <strong>Verknüpfungen</strong>
+              <output>{{ form.controls.liquidGlassShortcutBlur.value }} px</output>
+            </span>
+            <input
+              type="range"
+              min="0"
+              [max]="liquidGlassBlurMax"
+              step="1"
+              formControlName="liquidGlassShortcutBlur"
+            />
+            <small>Hohe Werte kosten bei vielen Kacheln mehr Leistung.</small>
+          </label>
+        </div>
+      </fieldset>
+    }
+
+    <fieldset class="picker-fieldset">
+      <legend>Farbschema</legend>
+      <label class="check-row">
+        <input type="checkbox" formControlName="autoTheme" />
+        <span><i class="fa-solid fa-check"></i></span
+        ><strong
+          >Automatisch nach Tageszeit wechseln (Sonnenauf-/-untergang bei hinterlegtem Standort,
+          sonst 7–20 Uhr hell)</strong
+        >
+      </label>
+      <div class="theme-cards">
+        <button
+          type="button"
+          [class.selected]="form.controls.theme.value === 'dark'"
+          (click)="form.controls.theme.setValue('dark'); form.markAsDirty()"
+        >
+          <span class="theme-preview dark"><i class="fa-regular fa-moon"></i></span
+          ><strong>Dunkel</strong>
+        </button>
+        <button
+          type="button"
+          [class.selected]="form.controls.theme.value === 'light'"
+          (click)="form.controls.theme.setValue('light'); form.markAsDirty()"
+        >
+          <span class="theme-preview light"><i class="fa-regular fa-sun"></i></span
+          ><strong>Hell</strong>
+        </button>
+      </div>
+    </fieldset>
+
+    <fieldset class="picker-fieldset">
+      <legend>Anzeigegröße</legend>
+      <div class="segment-control">
+        <button
+          type="button"
+          [class.selected]="form.controls.displayMode.value === 'standard'"
+          (click)="form.controls.displayMode.setValue('standard'); form.markAsDirty()"
+        >
+          Standard
+        </button>
+        <button
+          type="button"
+          [class.selected]="form.controls.displayMode.value === 'tv'"
+          (click)="form.controls.displayMode.setValue('tv'); form.markAsDirty()"
+        >
+          TV-Modus
+        </button>
+      </div>
+      <small>Größere Kacheln und Schrift für die Ansicht aus mehreren Metern Entfernung.</small>
+    </fieldset>
+
+    <fieldset class="picker-fieldset option-stack">
+      <legend>Barrierefreiheit</legend>
+      <label class="check-row">
+        <input type="checkbox" formControlName="highContrast" />
+        <span><i class="fa-solid fa-check"></i></span><strong>Kontrastreicher Modus</strong>
+      </label>
+      <small
+        >Kräftigere Ränder, blickdichte Kacheln und kein Weichzeichnen — besser lesbar aus der
+        Distanz.</small
+      >
+    </fieldset>
+
+    <label class="field">
+      <span>Standardsuchmaschine</span>
+      <input formControlName="searchName" placeholder="Google" />
+    </label>
+    <label class="field">
+      <span>Suchvorlage</span>
+      <input
+        formControlName="searchTemplate"
+        placeholder="https://www.google.com/search?q={query}"
+      />
+      <small
+        >Verwende genau einmal den Platzhalter <code>{{ '{query}' }}</code
+        >.</small
+      >
+    </label>
+    <label class="field">
+      <span>Verknüpfungen standardmäßig öffnen</span>
+      <select formControlName="defaultOpenBehavior">
+        <option value="same-tab">Im selben Fenster</option>
+        <option value="new-tab">In neuem Tab</option>
+      </select>
+    </label>
+
+    <fieldset class="picker-fieldset option-stack">
+      <legend>Oberfläche</legend>
+      <label class="check-row">
+        <input type="checkbox" formControlName="showKeyboardHint" />
+        <span><i class="fa-solid fa-check"></i></span><strong>Tastaturhilfe im Editiermodus</strong>
+      </label>
+    </fieldset>
+
+    <fieldset class="picker-fieldset option-stack">
+      <legend>Wetter</legend>
+      <label class="check-row">
+        <input type="checkbox" formControlName="weatherEnabled" />
+        <span><i class="fa-solid fa-check"></i></span
+        ><strong>Wetter in der Kopfzeile anzeigen</strong>
+      </label>
+      <label class="field">
+        <span>Standort</span>
+        <input formControlName="weatherLocation" placeholder="Berlin" />
+        <small>Wird auch für den Sonnenauf-/-untergang beim Farbschema verwendet.</small>
+      </label>
+    </fieldset>
+
+    <fieldset class="picker-fieldset option-stack">
+      <legend>Bildschirmschoner</legend>
+      <label class="check-row">
+        <input type="checkbox" formControlName="screensaverEnabled" />
+        <span><i class="fa-solid fa-check"></i></span
+        ><strong>Nach 5 Minuten Inaktivität Uhr &amp; Wetter anzeigen</strong>
+      </label>
+    </fieldset>
+
+    <section class="data-card">
+      <div>
+        <i class="fa-solid fa-shield-halved"></i>
+        <span
+          ><strong>Deine Daten bleiben lokal</strong
+          ><small>Sichere deine Gruppen und Verknüpfungen als JSON-Datei.</small></span
+        >
+      </div>
+      <div class="data-actions">
+        <button type="button" class="secondary-button" (click)="exportConfig()">
+          <i class="fa-solid fa-download"></i>Exportieren
+        </button>
+        <button type="button" class="secondary-button" (click)="chooseImport()">
+          <i class="fa-solid fa-upload"></i>Importieren
+        </button>
+        <input
+          #importInput
+          class="visually-hidden"
+          type="file"
+          accept="application/json,.json"
+          (change)="importConfig($event)"
+        />
+      </div>
+    </section>
+
+    <button class="reset-card" type="button" (click)="resetHub()">
+      <i class="fa-solid fa-arrow-rotate-left"></i>
+      <span
+        ><strong>Auf Startkonfiguration zurücksetzen</strong
+        ><small>Entfernt alle eigenen Änderungen nach einer Bestätigung.</small></span
+      >
+    </button>
+
+    @if (error()) {
+      <p class="form-message error"><i class="fa-solid fa-circle-exclamation"></i>{{ error() }}</p>
+    }
+  </div>
+  <footer class="panel-footer">
+    <button class="secondary-button push" type="button" (click)="resetForm()">
+      <i class="fa-solid fa-rotate-left"></i><span>Zurücksetzen</span>
+    </button>
+    <button class="secondary-button" type="button" (click)="closed.emit(false)">Abbrechen</button>
+    <button class="primary-button" type="submit">
+      <i class="fa-regular fa-floppy-disk"></i><span>Speichern</span>
+    </button>
+  </footer>
+</form>

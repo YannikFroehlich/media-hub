@@ -1,0 +1,146 @@
+<form class="panel-form" [formGroup]="form" (ngSubmit)="save()">
+  <div class="panel-scroll">
+    <section class="preview-section group-preview-wrap">
+      <span class="field-label">Vorschau</span>
+      <div class="group-preview" [style.--preview-color]="form.controls.color.value">
+        <header>
+          <i [class]="previewIconClass()"></i>
+          <strong>{{ form.controls.name.value || 'Neue Gruppe' }}</strong>
+          <i class="fa-solid fa-ellipsis-vertical"></i>
+        </header>
+        <div>
+          <span><i class="fa-regular fa-circle-play"></i></span>
+          <span><i class="fa-regular fa-star"></i></span>
+          <span><i class="fa-regular fa-heart"></i></span>
+          <span><i class="fa-solid fa-table-cells-large"></i></span>
+        </div>
+      </div>
+    </section>
+
+    <label class="field">
+      <span>Name</span>
+      <input formControlName="name" maxlength="48" placeholder="Neue Gruppe" />
+      @if (form.controls.name.touched && form.controls.name.invalid) {
+        <small class="field-error">Bitte gib einen Namen ein.</small>
+      }
+    </label>
+    <label class="field">
+      <span>Beschreibung <em>(optional)</em></span>
+      <textarea
+        formControlName="description"
+        maxlength="120"
+        rows="2"
+        placeholder="Beschreibe kurz den Inhalt dieser Gruppe …"
+      ></textarea>
+      <small class="counter">{{ form.controls.description.value.length }} / 120</small>
+    </label>
+
+    <fieldset class="picker-fieldset">
+      <legend>Icon auswählen</legend>
+      <div class="icon-picker">
+        @for (icon of iconPresets; track icon.id) {
+          <button
+            type="button"
+            [class.selected]="
+              form.controls.iconId.value === icon.id && !form.controls.customIcon.value
+            "
+            [attr.aria-label]="icon.label"
+            (click)="
+              form.controls.iconId.setValue(icon.id);
+              form.controls.customIcon.setValue('');
+              form.markAsDirty()
+            "
+          >
+            <i [class]="icon.className" aria-hidden="true"></i>
+          </button>
+        }
+      </div>
+    </fieldset>
+    <label class="field">
+      <span>Eigenes Font Awesome Icon</span>
+      <input formControlName="customIcon" placeholder="z. B. fa-solid fa-folder" />
+    </label>
+
+    <fieldset class="picker-fieldset">
+      <legend>Farbe</legend>
+      <div class="color-row">
+        @for (color of colorPresets; track color) {
+          <button
+            class="color-swatch"
+            type="button"
+            [style.--swatch]="color"
+            [class.selected]="form.controls.color.value.toUpperCase() === color"
+            [attr.aria-label]="'Farbe ' + color"
+            (click)="form.controls.color.setValue(color); form.markAsDirty()"
+          ></button>
+        }
+        <label class="color-input" title="Eigene Farbe wählen">
+          <input
+            type="color"
+            [value]="form.controls.color.value"
+            (input)="form.controls.color.setValue($any($event.target).value); form.markAsDirty()"
+          />
+          <i class="fa-solid fa-eye-dropper" aria-hidden="true"></i>
+        </label>
+        <input class="hex-input" formControlName="color" maxlength="7" aria-label="Hex-Farbwert" />
+      </div>
+    </fieldset>
+
+    <fieldset class="picker-fieldset">
+      <legend>Layout</legend>
+      <div class="segment-control three">
+        @for (
+          layout of [
+            { id: 'compact', label: 'Kompakt' },
+            { id: 'standard', label: 'Standard' },
+            { id: 'large', label: 'Groß' },
+          ];
+          track layout.id
+        ) {
+          <button
+            type="button"
+            [class.selected]="form.controls.layout.value === layout.id"
+            (click)="form.controls.layout.setValue($any(layout.id)); form.markAsDirty()"
+          >
+            {{ layout.label }}
+          </button>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset class="picker-fieldset option-stack">
+      <legend>Optionen</legend>
+      <label class="check-row">
+        <input type="checkbox" formControlName="allowShortcutReordering" />
+        <span><i class="fa-solid fa-check"></i></span><strong>Verknüpfungen verschiebbar</strong>
+      </label>
+      <label class="check-row">
+        <input type="checkbox" formControlName="showTitle" />
+        <span><i class="fa-solid fa-check"></i></span><strong>Titel anzeigen</strong>
+      </label>
+      <label class="check-row">
+        <input type="checkbox" formControlName="useAccentBackground" />
+        <span><i class="fa-solid fa-check"></i></span><strong>Farbe als Akzentfläche nutzen</strong>
+      </label>
+    </fieldset>
+
+    @if (error()) {
+      <p class="form-message error"><i class="fa-solid fa-circle-exclamation"></i>{{ error() }}</p>
+    }
+  </div>
+  <footer class="panel-footer">
+    @if (groupId()) {
+      <button class="danger-button" type="button" (click)="deleteRequested.emit()">
+        <i class="fa-regular fa-trash-can"></i><span>Löschen</span>
+      </button>
+    }
+    <button class="secondary-button push" type="button" (click)="resetForm()">
+      <i class="fa-solid fa-rotate-left"></i><span>Zurücksetzen</span>
+    </button>
+    <button class="secondary-button" type="button" (click)="closed.emit(false)">Abbrechen</button>
+    <button class="primary-button" type="submit">
+      <i class="fa-regular fa-folder-open"></i
+      ><span>{{ groupId() ? 'Speichern' : 'Erstellen' }}</span>
+    </button>
+  </footer>
+</form>
