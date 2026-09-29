@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-Media Hub is an Angular 22 standalone SPA. Application bootstrap files live in `src/main.ts` and `src/app/app.config.ts`. The dashboard shell is `src/app/app.ts` + `app.html`; side-panel bodies live in `src/app/panels/`, the screensaver in `src/app/screensaver/`, and global styling in `src/styles.scss` + `src/styles/`. Domain models, validation, persistence, URL handling, defaults, and signal-based state belong in `src/app/core/`. Keep unit tests beside their implementation as `*.spec.ts`. Static brand assets and favicons live under `public/`; the local-server utility lives in `scripts/windows/server.mjs`; the Windows tray app (Electron) lives in `electron/`. Production output is generated in `dist/media-hub/browser/` and must not be committed.
+Media Hub is an Angular 22 standalone SPA. Application bootstrap files live in `src/main.ts` and `src/app/app.config.ts`. The dashboard shell is `src/app/app.ts` + `app.html`; side-panel bodies live in `src/app/panels/`, the screensaver in `src/app/screensaver/`, and global styling in `src/styles.scss` + `src/styles/`. Domain models, validation, persistence, URL handling, defaults, and signal-based state belong in `src/app/core/`. Keep unit tests beside their implementation as `*.spec.ts`. Static brand assets and favicons live under `public/`. Deployment is Vercel (`vercel.json`). Production output is generated in `dist/media-hub/browser/` and must not be committed.
 
 ## Build, Test, and Development Commands
 
@@ -14,8 +14,6 @@ Use Node.js 24 LTS and npm 11.
 - `npm run lint` runs angular-eslint.
 - `npm run e2e` runs the Playwright smoke test (`npx playwright install chromium` once first).
 - `npm run build` creates an optimized production build and enforces Angular budgets.
-- `npm run serve:prod` serves the latest production build at `http://127.0.0.1:4173`.
-
 ## Coding Style & Naming Conventions
 
 Use strict TypeScript, Angular signals for shared reactive state, and Reactive Forms for editors. Indent with two spaces, use single quotes in TypeScript, and keep lines near the Prettier limit of 100 characters. Run `npx prettier --write <files>` before submitting broad formatting changes. Use kebab-case filenames, PascalCase classes/interfaces, camelCase members, and descriptive suffixes such as `Store`, `Repository`, or `Resolver`. Keep user-provided values validated through Zod or focused resolver methods; never inject user HTML or SVG.

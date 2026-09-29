@@ -19,17 +19,12 @@ npm test -- --watch=false     # run the full Vitest suite once
 npm run lint                  # angular-eslint (TS + templates incl. accessibility rules)
 npm run e2e                   # Playwright smoke test against `npm start` (e2e/*.e2e.ts)
 npm run build                 # production build (enforces Angular budgets)
-npm run serve:prod            # serve dist/media-hub/browser at http://127.0.0.1:4173
-npm run electron:dev          # build + launch the Windows tray app locally
-npm run electron:pack         # build + package a portable Windows .exe (release/)
-npm run electron:smoke        # launch the packaged .exe headlessly and verify it boots
 ```
 
-- Tests use Angular's `@angular/build:unit-test` builder with Vitest and jsdom. Lint is `ng lint` (flat config in `eslint.config.js`); intentional exceptions are disabled inline with a `--` reason. End-to-end tests use Playwright (`playwright.config.ts`, Chromium only); they are named `*.e2e.ts` so Vitest never picks them up. First run needs `npx playwright install chromium`. The one exception is `scripts/windows/server.mjs`, covered by `scripts/windows/server.test.mjs` via Node's built-in test runner (`node --test scripts/windows/server.test.mjs`) since that script lives outside `src/` and isn't part of the Angular/Vitest project.
+- Tests use Angular's `@angular/build:unit-test` builder with Vitest and jsdom. Lint is `ng lint` (flat config in `eslint.config.js`); intentional exceptions are disabled inline with a `--` reason. End-to-end tests use Playwright (`playwright.config.ts`, Chromium only); they are named `*.e2e.ts` so Vitest never picks them up. First run needs `npx playwright install chromium`.
 - To run a single spec file: `ng test -- src/app/core/url-resolver.spec.ts` (or open Vitest watch mode with `npm test` and filter interactively).
 - Format before submitting broad changes: `npx prettier --write <files>` (100-char print width, single quotes, Angular parser for `*.html`, configured in `.prettierrc`).
-- `scripts/windows/server.mjs` is a small dependency-free static file server (`/health` endpoint, path-traversal guard, SPA fallback) exposing `startServer`/`stopServer`. It's used two ways: directly via `npm run serve:prod` for a local production preview, and as an importable module consumed by the Electron tray app in `electron/main.mjs`. Cache-control is asset-aware, not blanket: hashed build files (`main-*.js`, `styles-*.css`, …) get a year-long immutable cache, but fixed-name entry points listed in `NEVER_CACHE_LONG` (`index.html`, `ngsw.json`, `ngsw-worker.js`, `manifest.webmanifest`) always get `no-cache` — required for the service worker's update detection (and even initial registration) to work at all. Keep any new fixed-name entry point in that set.
-- The Windows deployment path is an Electron tray application (`electron/main.mjs`), not PowerShell scripts. It has no visible window — a tray icon offers "Dashboard öffnen" (opens the system default browser at the served URL), an autostart checkbox backed by `app.setLoginItemSettings`, and "Beenden" (stops the embedded server gracefully, then quits). Packaging config lives in `electron-builder.yml` (portable, no-admin `.exe` target). These are user-facing deployment tools, not part of the normal dev loop.
+- Deployment is Vercel (`vercel.json`: `npm ci` → `npm run build` → serves `dist/media-hub/browser`). There is no self-hosted server.
 
 ## Architecture
 
@@ -69,7 +64,7 @@ npm run electron:smoke        # launch the packaged .exe headlessly and verify i
 
 **Weather** (`src/app/core/weather.service.ts`, `WeatherService`): wraps Open-Meteo's free, keyless geocoding + forecast endpoints with plain `fetch` (no `HttpClient` anywhere in the app). A city name is geocoded when settings are saved and either the weather widget or auto-theme is enabled (`weatherLat`/`weatherLon` persisted in `GlobalSettings`, shared by both features); `app.ts` refreshes the current-plus-5-day forecast periodically and on save. `getSunTimes()` is a separate, lightweight Open-Meteo call (`daily=sunrise,sunset` only) so auto-theme's sunrise/sunset can be resolved independently of the weather widget being on. Weather data is intentionally _not_ covered by the service worker — see PWA below.
 
-**PWA / offline app shell:** scaffolded via `ng add @angular/pwa` — `ngsw-config.json`, `public/manifest.webmanifest`, `public/icons/`, and `provideServiceWorker(...)` in `app.config.ts` (disabled via `isDevMode()`, so exercise it through `npm run serve:prod`/the packaged Electron app, not `npm start`). It precaches the app shell (JS/CSS/HTML) for offline use; it deliberately does not cache the Open-Meteo weather responses, which stay live-network-only. See the `scripts/windows/server.mjs` cache-control note above — it's the other half of making the service worker actually work.
+**PWA / offline app shell:** scaffolded via `ng add @angular/pwa` — `ngsw-config.json`, `public/manifest.webmanifest`, `public/icons/`, and `provideServiceWorker(...)` in `app.config.ts` (disabled via `isDevMode()`, so exercise it on the Vercel deployment or any static server over `dist/media-hub/browser`, not `npm start`). It precaches the app shell (JS/CSS/HTML) for offline use; it deliberately does not cache the Open-Meteo weather responses, which stay live-network-only. `index.html`, `ngsw.json`, `ngsw-worker.js` and `manifest.webmanifest` must never be served with a long cache lifetime, or update detection breaks.
 
 ## Testing conventions
 
