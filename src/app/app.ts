@@ -20,6 +20,7 @@ import {
   viewChild,
   ChangeDetectionStrategy,
 } from '@angular/core';
+import { SwUpdate } from '@angular/service-worker';
 import { ConfirmService } from './core/confirm.service';
 import { startGamepadNavigation } from './core/gamepad';
 import { handleWebsiteIconError, handleWebsiteIconLoad, iconClass } from './core/icons';
@@ -39,6 +40,7 @@ type PanelKind = 'shortcut' | 'group' | 'settings' | null;
 const SCREENSAVER_IDLE_MS = 5 * 60 * 1000;
 const LINK_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const LINK_CHECK_TIMEOUT_MS = 6000;
+const UPDATE_CHECK_INTERVAL_MS = 30 * 60 * 1000;
 
 @Component({
   selector: 'app-root',
@@ -68,6 +70,8 @@ export class App {
   private readonly weatherService = inject(WeatherService);
   protected readonly confirm = inject(ConfirmService);
   private readonly document = inject(DOCUMENT);
+  // Only provided (and enabled) in production builds with the service worker registered.
+  private readonly swUpdate = inject(SwUpdate, { optional: true });
 
   @ViewChild('searchInput') private searchInput?: ElementRef<HTMLInputElement>;
   private readonly shortcutPanel = viewChild(ShortcutPanel);
@@ -83,6 +87,8 @@ export class App {
   protected readonly screensaverActive = signal(false);
   protected readonly weatherDetailsOpen = signal(false);
   protected readonly searchQuery = signal('');
+  /** A new app version has been downloaded by the service worker and waits for a reload. */
+  protected readonly updateReady = signal(false);
   protected readonly visibleGroups = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
     if (!query || this.store.editMode()) return this.store.groups();
@@ -151,6 +157,25 @@ export class App {
     effect(() => (this.store.editMode() ? this.armLinkCheck() : this.disarmLinkCheck()));
     effect(() => this.resolveWebsiteIcons());
     startGamepadNavigation(this.document);
+    this.watchForUpdates();
+  }
+
+  // The dashboard often stays open for days on a TV, so it never navigates and the service
+  // worker would never look for a new version on its own — poll and offer a reload instead.
+  private watchForUpdates(): void {
+    const swUpdate = this.swUpdate;
+    if (!swUpdate?.isEnabled) return;
+    swUpdate.versionUpdates.subscribe((event) => {
+      if (event.type === 'VERSION_READY') this.updateReady.set(true);
+    });
+    window.setInterval(
+      () => swUpdate.checkForUpdate().catch(() => undefined), // offline: try again next time
+      UPDATE_CHECK_INTERVAL_MS,
+    );
+  }
+
+  protected reloadForUpdate(): void {
+    this.document.location.reload();
   }
 
   // Independent of the weather widget: auto-theme needs sunrise/sunset even if

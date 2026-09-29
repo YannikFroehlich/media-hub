@@ -17,6 +17,20 @@
   animation: toast-in 180ms ease-out both;
 }
 
+// Persistent, so it sits above the transient toast instead of being covered by it.
+.update-toast {
+  bottom: 176px;
+}
+
+.update-toast button {
+  min-height: 40px;
+  margin-left: 4px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
 :root[data-theme='light'] .toast {
   background: rgba(236, 255, 246, 0.98);
   color: #14633a;

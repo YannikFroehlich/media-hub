@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { SwUpdate, VersionEvent } from '@angular/service-worker';
+import { Subject } from 'rxjs';
 import { App } from './app';
 import { MediaHubStore } from './core/media-hub.store';
 import { WeatherService } from './core/weather.service';
@@ -63,6 +65,31 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
+  });
+
+  it('offers a reload once the service worker has a new version ready', async () => {
+    const versionUpdates = new Subject<VersionEvent>();
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: SwUpdate,
+          useValue: { isEnabled: true, versionUpdates, checkForUpdate: vi.fn() },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.update-toast')).toBeNull();
+
+    versionUpdates.next({
+      type: 'VERSION_READY',
+      currentVersion: { hash: 'old' },
+      latestVersion: { hash: 'new' },
+    });
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('.update-toast button')?.textContent).toContain('Neu laden');
   });
 
   it('hides the fixed focus glow when the dashboard scrolls without moving focus', async () => {

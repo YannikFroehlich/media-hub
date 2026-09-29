@@ -495,6 +495,15 @@
       <span>{{ store.toast() }}</span>
     </div>
   }
+  @if (updateReady()) {
+    <div class="toast update-toast" role="status">
+      <i class="fa-solid fa-circle-arrow-up" aria-hidden="true"></i>
+      <span>Neue Version verfügbar.</span>
+      <button type="button" class="primary-button" data-focusable (click)="reloadForUpdate()">
+        Neu laden
+      </button>
+    </div>
+  }
   <div class="visually-hidden" aria-live="polite">{{ liveMessage() }}</div>
 
   <app-screensaver
