@@ -68,11 +68,11 @@ describe('parseConfig', () => {
     expect(parsed.profiles[0].settings.liquidGlassShortcutBlur).toBe(4);
   });
 
-  it('preserves the selected minimalist style', () => {
+  it.each(['minimalist', 'elegant'] as const)('preserves the selected %s style', (style) => {
     const config = createDefaultConfig();
-    config.profiles[0].settings.visualStyle = 'minimalist';
+    config.profiles[0].settings.visualStyle = style;
 
-    expect(parseConfig(config).profiles[0].settings.visualStyle).toBe('minimalist');
+    expect(parseConfig(config).profiles[0].settings.visualStyle).toBe(style);
   });
 
   it('rejects liquid glass blur values outside the supported range', () => {

@@ -179,6 +179,23 @@
   border-top-color: #14b8a6;
 }
 
+.style-preview.elegant {
+  align-items: center;
+  background: #151514;
+}
+
+.style-preview.elegant::before,
+.style-preview.elegant::after {
+  display: none;
+}
+
+.style-preview.elegant > span {
+  height: 30px;
+  border-color: rgba(236, 232, 224, 0.1);
+  border-radius: 5px;
+  background: #1f1f1d;
+}
+
 .style-card-copy {
   display: flex;
   min-width: 0;

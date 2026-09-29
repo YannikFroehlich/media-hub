@@ -1,0 +1,263 @@
+// Elegant: quiet monochrome — warm neutral surfaces, hairline borders, no glow, no blur and
+// no per-group/shortcut color. Group and shortcut colors are set inline, so the tokens are
+// neutralized with !important (the only thing that outranks an inline custom property).
+
+:root[data-style='elegant'] {
+  --bg: #121211;
+  --bg-deep: #121211;
+  --surface: #181817;
+  --surface-strong: #1c1c1b;
+  --surface-soft: #1f1f1d;
+  --surface-hover: #262624;
+  --line: rgba(236, 232, 224, 0.08);
+  --line-strong: rgba(236, 232, 224, 0.16);
+  --text: #ecebe7;
+  --muted: #a19f99;
+  --faint: #7a7873;
+  // White text on it stays readable (>4.5:1) and it still reads as an accent on the dark bg.
+  --primary: #75726d;
+  --primary-bright: #85827c;
+  --focus: #d9d6cf;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow: none;
+  --blur-sm: 0px;
+  --blur-md: 0px;
+  --blur-lg: 0px;
+  --radius-xl: 14px;
+  --radius-lg: 10px;
+  --radius-md: 8px;
+}
+
+:root[data-theme='light'][data-style='elegant'] {
+  --bg: #f5f4f0;
+  --bg-deep: #f5f4f0;
+  --surface: #fbfaf8;
+  --surface-strong: #ffffff;
+  --surface-soft: #f1efea;
+  --surface-hover: #efede8;
+  --line: rgba(28, 27, 24, 0.09);
+  --line-strong: rgba(28, 27, 24, 0.18);
+  --text: #1c1b18;
+  --muted: #65625c;
+  --faint: #8c8982;
+  --primary: #2b2a27;
+  --primary-bright: #3a3935;
+  --focus: #2b2a27;
+}
+
+:root[data-style='elegant'] :is(.group-card, .shortcut-card, .group-placeholder) {
+  --group-color: var(--muted) !important;
+  --shortcut-color: var(--text) !important;
+}
+
+:root[data-style='elegant'] .hub-shell,
+:root[data-theme='light'][data-style='elegant'] .hub-shell {
+  background: var(--bg);
+}
+
+:root[data-style='elegant'] :is(.hub-shell, .group-card, .shortcut-card)::before,
+:root[data-style='elegant'] .hub-shell::after,
+:root[data-style='elegant'] .focus-glider {
+  display: none;
+}
+
+:root[data-style='elegant']
+  :is(
+    .search,
+    .group-card,
+    .shortcut-card,
+    .empty-dashboard,
+    .icon-button,
+    .header-button,
+    .edit-toggle,
+    .panel-close,
+    .secondary-button,
+    .primary-button,
+    .danger-button,
+    .sidepanel,
+    .keyboard-hint
+  ) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+:root[data-style='elegant'] :is(.group-card, .group-card.accent-background),
+:root[data-theme='light'][data-style='elegant'] :is(.group-card, .group-card.accent-background) {
+  border-color: var(--line);
+  background: var(--surface);
+  box-shadow: none;
+}
+
+:root[data-style='elegant'] .group-card:hover,
+:root[data-theme='light'][data-style='elegant'] .group-card:hover {
+  border-color: var(--line-strong);
+  box-shadow: none;
+  transform: none;
+}
+
+:root[data-style='elegant'] .group-header h2 {
+  color: var(--text);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+:root[data-style='elegant'] .group-header h2 i {
+  color: var(--muted);
+  font-size: 22px;
+}
+
+:root[data-style='elegant'] .shortcut-card,
+:root[data-theme='light'][data-style='elegant'] .shortcut-card {
+  border-color: transparent;
+  background: var(--surface-soft);
+  box-shadow: none;
+}
+
+:root[data-style='elegant'] .shortcut-card:hover,
+:root[data-theme='light'][data-style='elegant'] .shortcut-card:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-hover);
+  box-shadow: none;
+  transform: none;
+}
+
+:root[data-style='elegant'] .shortcut-card > span:last-child {
+  font-weight: 450;
+  letter-spacing: 0.01em;
+}
+
+:root[data-style='elegant'] :is(.shortcut-icon, .shortcut-card:focus-visible .shortcut-icon) {
+  filter: none;
+  opacity: 0.86;
+}
+
+// Favicons are the one remaining source of color: muted at rest, full color on interaction.
+:root[data-style='elegant'] .website-icon img {
+  filter: grayscale(1);
+  opacity: 0.8;
+  transition:
+    filter 160ms ease,
+    opacity 160ms ease;
+}
+
+:root[data-style='elegant']
+  :is(.shortcut-card:hover, .shortcut-card:focus-visible)
+  .website-icon
+  img {
+  filter: none;
+  opacity: 1;
+}
+
+:root[data-style='elegant'] .brand-mark img {
+  filter: grayscale(1);
+}
+
+:root[data-style='elegant'] .search:focus-within {
+  border-color: var(--line-strong);
+  box-shadow: none;
+}
+
+:root[data-style='elegant'] :is(.search:focus-within > i, .edit-toggle > i) {
+  color: var(--muted);
+}
+
+:root[data-style='elegant'] :is(.primary-button, .primary-button:hover, .edit-toggle.active) {
+  border-color: var(--primary);
+  background: var(--primary);
+  box-shadow: none;
+  transform: none;
+}
+
+:root[data-style='elegant'] .edit-toggle.active .switch {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+:root[data-style='elegant'] .check-row input:checked + span {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+:root[data-style='elegant'] .sidepanel {
+  background: var(--surface-strong);
+}
+
+// Side-panel accents are hardcoded blues elsewhere; swap them for the neutral palette.
+:root[data-style='elegant'] :is(.panel-header .eyebrow, .data-card > div:first-child > i) {
+  color: var(--muted);
+}
+
+:root[data-style='elegant'] .settings-hero {
+  border-color: var(--line);
+  background: var(--surface-soft);
+}
+
+:root[data-style='elegant']
+  :is(
+    .settings-hero > span,
+    .profile-active-badge,
+    .liquid-blur-control output,
+    .website-icon-choice > i
+  ) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+:root[data-style='elegant']
+  :is(
+    .style-cards > button.selected,
+    .theme-cards > button.selected,
+    .icon-picker button.selected,
+    .segment-control button.selected,
+    .website-icon-choice.selected
+  ) {
+  border-color: var(--focus);
+  background: var(--surface-hover);
+  color: var(--text);
+  box-shadow: none;
+}
+
+:root[data-style='elegant'] :is(.profile-row input:focus, .hex-input:focus) {
+  border-color: var(--focus);
+  box-shadow: none;
+}
+
+:root[data-style='elegant'] .liquid-blur-control input {
+  accent-color: var(--primary);
+}
+
+:root[data-style='elegant'] .empty-dashboard > span {
+  background: var(--surface-hover);
+  color: var(--muted);
+}
+
+:root[data-style='elegant'] .toast,
+:root[data-theme='light'][data-style='elegant'] .toast {
+  border-color: var(--line-strong);
+  background: var(--surface-strong);
+  color: var(--text);
+  box-shadow: none;
+}
+
+:root[data-style='elegant']
+  :is(
+    button,
+    input,
+    select,
+    textarea,
+    [tabindex],
+    [data-focusable],
+    .shortcut-card,
+    .icon-button,
+    .header-button,
+    .panel-close
+  ):focus-visible {
+  border-color: var(--focus) !important;
+  box-shadow: 0 0 0 1px var(--focus) !important;
+}
+
+:root[data-style='elegant'] .search input:focus-visible {
+  box-shadow: none !important;
+}

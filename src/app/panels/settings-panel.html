@@ -97,6 +97,20 @@
             <small>Klare Flächen, maximale Leistung</small>
           </span>
         </button>
+        <button
+          type="button"
+          [class.selected]="form.controls.visualStyle.value === 'elegant'"
+          [attr.aria-pressed]="form.controls.visualStyle.value === 'elegant'"
+          (click)="form.controls.visualStyle.setValue('elegant'); form.markAsDirty()"
+        >
+          <span class="style-preview elegant" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="style-card-copy">
+            <strong>Elegant</strong>
+            <small>Ruhige Graustufen, feine Linien</small>
+          </span>
+        </button>
       </div>
     </fieldset>
 

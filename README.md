@@ -5,7 +5,7 @@ Media Hub ist ein lokales, TV-taugliches Dashboard für Medien, Websites und hä
 ## Enthaltene Funktionen
 
 - mehrere Dashboard-Profile mit eigenen Gruppen und eigenem Erscheinungsbild, umschaltbar über die Einstellungen
-- responsives 16:9-Dashboard mit Dark- und Light-Theme sowie den Stilen Klassisch und Liquid Glass
+- responsives 16:9-Dashboard mit Dark- und Light-Theme sowie den Stilen Klassisch, Liquid Glass, Minimalistisch und Elegant
 - Gruppen und Verknüpfungen erstellen, bearbeiten, löschen und per Drag-and-drop sortieren
 - sichere URL- und Sucheingabe mit konfigurierbarer Suchmaschine
 - Font-Awesome-Iconkatalog, eigene Icon-Klassen und frei wählbare Akzentfarben
