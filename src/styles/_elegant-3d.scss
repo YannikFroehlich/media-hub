@@ -1,50 +1,72 @@
 // Elegant 3D: the elegant palette (see _elegant.scss, which matches this style too) plus
-// physical depth — lit, raised tiles on sunken panels, a pointer-driven tilt with the icon
-// floating above the tile, and a 3D entrance. Rules below repeat each overridden elegant
-// selector's specificity, so they win by source order only.
+// physical depth — keycap tiles with a visible edge on lit panels, a pointer-driven tilt with
+// icon and label floating above the face at different heights, and a 3D entrance. Rules below
+// repeat each overridden elegant selector's specificity, so they win by source order only.
+//
+// Performance: only transform and opacity ever animate (both run on the compositor). Shadows,
+// borders and faces switch instantly — interpolating them repaints the tile on every frame —
+// and the stronger hover shadow is pre-rendered on ::after and faded in. Nothing moves on its
+// own after the entrance, so an idle dashboard costs no frames at all.
 
 $depth: ":root[data-style='elegant-3d']";
 $ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 
 #{$depth} {
-  --depth-face: linear-gradient(160deg, #2b2b28, #1b1b19);
-  --depth-face-hover: linear-gradient(160deg, #33332f, #1f1f1d);
-  --depth-panel: linear-gradient(175deg, #1e1e1c, #151514);
-  --depth-edge: inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
-  --depth-shadow: 0 1px 1px rgba(0, 0, 0, 0.4), 0 10px 22px -10px rgba(0, 0, 0, 0.75);
-  --depth-shadow-raised: 0 2px 3px rgba(0, 0, 0, 0.35), 0 16px 28px -12px rgba(0, 0, 0, 0.85);
+  --depth-face: linear-gradient(160deg, #2c2c29, #1b1b19);
+  --depth-face-hover: linear-gradient(160deg, #353531, #1f1f1d);
+  --depth-panel: linear-gradient(175deg, #1f1f1d, #151514);
+  // The key's side wall: a hard, unblurred step below the face.
+  --depth-side: #0b0b0a;
+  --depth-edge: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+  --depth-shadow: 0 3px 4px -1px rgba(0, 0, 0, 0.45), 0 10px 22px -10px rgba(0, 0, 0, 0.75);
+  --depth-lift: 0 22px 34px -14px rgba(0, 0, 0, 0.9), 0 6px 10px -4px rgba(0, 0, 0, 0.4);
   --depth-panel-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.9);
   --depth-sunken: inset 0 2px 6px rgba(0, 0, 0, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
-  --depth-sheen: rgba(255, 255, 255, 0.09);
+  --depth-sheen: rgba(255, 255, 255, 0.1);
   --depth-sheen-soft: rgba(255, 255, 255, 0.035);
-  --depth-bg: radial-gradient(ellipse 90% 70% at 50% -12%, #272725, transparent 70%);
+  --depth-bg: radial-gradient(ellipse 90% 70% at 50% -12%, #292927, transparent 70%);
+  --depth-vignette: radial-gradient(
+    ellipse 120% 95% at 50% 30%,
+    transparent 55%,
+    rgba(0, 0, 0, 0.4)
+  );
+  --depth-key: var(--depth-edge), 0 2px 0 var(--depth-side), var(--depth-shadow);
+  --depth-key-pressed: var(--depth-edge), 0 0 0 var(--depth-side), 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-sm: var(--depth-shadow);
   --shadow-md: var(--depth-shadow);
-  --shadow-lg: var(--depth-shadow-raised);
-  --shadow: var(--depth-shadow-raised);
+  --shadow-lg: var(--depth-lift);
+  --shadow: var(--depth-lift);
 }
 
 #{$depth}[data-theme='light'] {
   --depth-face: linear-gradient(160deg, #ffffff, #eeece7);
   --depth-face-hover: linear-gradient(160deg, #ffffff, #f4f2ee);
   --depth-panel: linear-gradient(175deg, #fcfbf9, #f3f1ec);
+  --depth-side: #d5d2ca;
   --depth-edge: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(28, 27, 24, 0.07);
-  --depth-shadow: 0 1px 1px rgba(28, 27, 24, 0.08), 0 10px 20px -10px rgba(28, 27, 24, 0.28);
-  --depth-shadow-raised: 0 2px 3px rgba(28, 27, 24, 0.08), 0 16px 28px -12px rgba(28, 27, 24, 0.32);
+  --depth-shadow: 0 3px 4px -1px rgba(28, 27, 24, 0.1), 0 10px 20px -10px rgba(28, 27, 24, 0.28);
+  --depth-lift: 0 22px 32px -14px rgba(28, 27, 24, 0.34), 0 6px 10px -4px rgba(28, 27, 24, 0.1);
   --depth-panel-shadow: 0 28px 56px -32px rgba(28, 27, 24, 0.32);
   --depth-sunken: inset 0 2px 5px rgba(28, 27, 24, 0.1), inset 0 -1px 0 rgba(255, 255, 255, 0.9);
-  --depth-sheen: rgba(255, 255, 255, 0.7);
+  --depth-sheen: rgba(255, 255, 255, 0.75);
   --depth-sheen-soft: rgba(255, 255, 255, 0.55);
   --depth-bg: radial-gradient(ellipse 90% 70% at 50% -12%, #ffffff, transparent 70%);
+  --depth-vignette: radial-gradient(
+    ellipse 120% 95% at 50% 30%,
+    transparent 55%,
+    rgba(28, 27, 24, 0.07)
+  );
+  --depth-key-pressed: var(--depth-edge), 0 0 0 var(--depth-side), 0 1px 2px rgba(28, 27, 24, 0.12);
 }
 
 #{$depth},
 #{$depth}[data-theme='light'] {
   .hub-shell {
-    background: var(--depth-bg), var(--bg);
+    background: var(--depth-vignette), var(--depth-bg), var(--bg);
   }
 
-  // Panels: a soft lit face sitting on a deep, diffuse shadow.
+  // Panels: a soft lit plate on a deep, diffuse shadow. They deliberately don't lift on
+  // hover: moving a panel this large re-rasterizes it together with every tile inside.
   :is(.group-card, .group-card.accent-background) {
     border-color: var(--line);
     background: var(--depth-panel);
@@ -52,10 +74,7 @@ $ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   .group-card {
-    transition:
-      transform 420ms $ease-out,
-      border-color 240ms ease,
-      box-shadow 320ms ease;
+    transition: border-color 240ms ease;
     // `backwards` releases the entrance transform afterwards, so hover transforms still apply.
     animation-name: depth-in;
     animation-duration: 720ms;
@@ -65,17 +84,30 @@ $ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   .group-card:hover {
     border-color: var(--line-strong);
     box-shadow: var(--depth-edge), var(--depth-panel-shadow);
-    transform: translateY(-2px);
+    transform: none;
   }
 
-  // Pointer-following light (positions fed by App.updatePointerEffects).
+  // The group icon becomes a small embossed key of its own.
+  .group-header h2 i {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: var(--depth-face);
+    box-shadow: var(--depth-key);
+    font-size: 17px;
+  }
+
+  // Pointer-following light (positions fed by App.updatePointerEffects). The group layer is
+  // composited on its own (will-change in _dashboard.scss), so moving it never repaints tiles.
   :is(.group-card, .shortcut-card)::before {
     display: block;
   }
 
   .group-card::before {
     background: radial-gradient(
-      circle 360px at var(--group-glow-x) var(--group-glow-y),
+      circle 380px at var(--group-glow-x) var(--group-glow-y),
       var(--depth-sheen-soft),
       transparent 70%
     );
@@ -85,29 +117,38 @@ $ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
     background: radial-gradient(
       circle at var(--glow-x) var(--glow-y),
       var(--depth-sheen),
-      transparent 60%
+      transparent 62%
     );
   }
 
   // The strip scrolls horizontally, which also clips vertically: make room for the raised
   // shadows and the hover lift, and cancel it out with negative margins so layout stays put.
   .shortcut-strip {
-    margin: -12px -14px -30px;
-    padding: 14px 16px 36px;
+    margin: -12px -14px -32px;
+    padding: 14px 16px 38px;
   }
 
-  // Tiles: raised keycaps; preserve-3d lets the icon float above the face on hover.
+  // Tiles: raised keycaps; preserve-3d lets icon and label float above the face on hover.
   .shortcut-card {
     overflow: visible;
     border-color: var(--line);
     background: var(--depth-face);
-    box-shadow: var(--depth-edge), var(--depth-shadow);
+    box-shadow: var(--depth-key);
     transform-style: preserve-3d;
-    transition:
-      transform 460ms $ease-out,
-      box-shadow 320ms ease,
-      background 200ms ease,
-      border-color 200ms ease;
+    transition: transform 460ms $ease-out;
+  }
+
+  // Pre-rendered lift shadow: fading its opacity is compositor work, a box-shadow transition
+  // would repaint the tile every frame.
+  .shortcut-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: var(--depth-lift);
+    opacity: 0;
+    transition: opacity 320ms ease;
+    pointer-events: none;
   }
 
   .shortcut-card:not(.add-card):not(.cdk-drag-preview) {
@@ -116,35 +157,45 @@ $ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
     animation-fill-mode: backwards;
   }
 
-  .shortcut-icon {
+  // Filters stay out of the transition on purpose: interpolating a drop-shadow repaints.
+  :is(.shortcut-icon, .shortcut-card > span:last-child) {
     transition:
       transform 460ms $ease-out,
-      filter 320ms ease,
       opacity 200ms ease;
   }
 
   :is(.shortcut-card:hover, .shortcut-card:focus-visible) .shortcut-icon {
     opacity: 1;
     filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.35));
-    transform: translateZ(28px);
+    transform: translateZ(32px);
+  }
+
+  :is(.shortcut-card:hover, .shortcut-card:focus-visible) > span:last-child {
+    transform: translateZ(14px);
   }
 
   .shortcut-card:hover {
     border-color: var(--line-strong);
     background: var(--depth-face-hover);
-    box-shadow: var(--depth-edge), var(--depth-shadow-raised);
-    transform: perspective(700px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateZ(18px);
+    box-shadow: var(--depth-key);
+    transform: perspective(700px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateZ(20px);
     // Short, not zero: smooths the lift on enter while still tracking the pointer closely.
-    transition:
-      transform 140ms ease-out,
-      box-shadow 240ms ease,
-      background 200ms ease,
-      border-color 200ms ease;
+    transition: transform 140ms ease-out;
   }
 
+  :is(.shortcut-card:hover, .shortcut-card:focus-visible)::after {
+    opacity: 1;
+  }
+
+  // Pressed: the key travels down onto its side wall.
   .shortcut-card:active {
-    box-shadow: var(--depth-edge), var(--depth-shadow);
-    transform: perspective(700px) translateZ(4px) scale(0.985);
+    box-shadow: var(--depth-key-pressed);
+    transform: perspective(700px) translateY(2px) scale(0.985);
+    transition-duration: 80ms;
+  }
+
+  .shortcut-card:active::after {
+    opacity: 0;
     transition-duration: 80ms;
   }
 
@@ -159,16 +210,22 @@ $ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
       0 0 0 1px var(--line-strong);
   }
 
-  :is(.header-button, .edit-toggle, .info-chip) {
+  :is(.header-button, .edit-toggle, .info-chip, .icon-button) {
     border-color: var(--line);
     background: var(--depth-face);
-    box-shadow: var(--depth-edge), var(--depth-shadow);
+    box-shadow: var(--depth-key);
   }
 
   :is(.primary-button, .primary-button:hover, .edit-toggle.active) {
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      0 2px 0 var(--depth-side),
       var(--depth-shadow);
+  }
+
+  :is(.header-button, .edit-toggle, .icon-button, .primary-button):active {
+    box-shadow: var(--depth-key-pressed);
+    transform: translateY(2px);
   }
 
   .sidepanel {
@@ -176,7 +233,7 @@ $ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   .toast {
-    box-shadow: var(--depth-shadow-raised);
+    box-shadow: var(--depth-lift);
   }
 }
 
@@ -186,33 +243,43 @@ $ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   border-color: var(--focus);
   box-shadow:
     0 0 0 1px var(--focus),
-    var(--depth-edge),
-    var(--depth-shadow-raised) !important;
+    var(--depth-key) !important;
   transform: perspective(700px) translateZ(20px);
+}
+
+#{$depth}[data-input='gamepad'] .shortcut-card:focus::after {
+  opacity: 1;
 }
 
 #{$depth}[data-input='gamepad'] .shortcut-card:focus .shortcut-icon {
   opacity: 1;
-  transform: translateZ(28px);
+  transform: translateZ(32px);
+}
+
+#{$depth}[data-input='gamepad'] .shortcut-card:focus > span:last-child {
+  transform: translateZ(14px);
 }
 
 // Windows reports reduced motion whenever its animation effects are off, often by default.
 // Like Liquid Glass (_responsive.scss), keep the depth that only moves in direct response to
 // pointer or focus, with brief timings; the autonomous entrance is already cut globally.
 @media (prefers-reduced-motion: reduce) {
-  #{$depth} :is(.group-card, .shortcut-card, .shortcut-icon) {
+  // Pseudo-elements aren't allowed inside :is(), so ::after gets its own selector.
+  #{$depth} :is(.shortcut-card, .shortcut-icon, .shortcut-card > span),
+  #{$depth} .shortcut-card::after {
     transition-duration: 180ms !important;
   }
 }
 
-// Touch-only screens: no sticky hover tilt or light after a tap; focus lift stays.
+// Touch-only screens: no sticky hover tilt, light or lift after a tap; focus lift stays.
 // !important: the nested light-theme rules above are more specific than these.
 @media (any-hover: none) {
   #{$depth} :is(.group-card, .shortcut-card):hover {
     transform: none !important;
   }
 
-  #{$depth} :is(.group-card, .shortcut-card)::before {
+  #{$depth} :is(.group-card, .shortcut-card)::before,
+  #{$depth} .shortcut-card:hover:not(:focus-visible)::after {
     display: none !important;
   }
 }
