@@ -111,6 +111,20 @@
             <small>Ruhige Graustufen, feine Linien</small>
           </span>
         </button>
+        <button
+          type="button"
+          [class.selected]="form.controls.visualStyle.value === 'elegant-3d'"
+          [attr.aria-pressed]="form.controls.visualStyle.value === 'elegant-3d'"
+          (click)="form.controls.visualStyle.setValue('elegant-3d'); form.markAsDirty()"
+        >
+          <span class="style-preview elegant-3d" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="style-card-copy">
+            <strong>Elegant 3D</strong>
+            <small>Graustufen mit Tiefe und Bewegung</small>
+          </span>
+        </button>
       </div>
     </fieldset>
 

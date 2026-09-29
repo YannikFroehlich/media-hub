@@ -510,6 +510,34 @@ describe('App', () => {
     expect(group.style.getPropertyValue('--group-glow-x')).toBe('');
   });
 
+  it('should tilt shortcuts in the Elegant 3D style', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('.settings-toggle')?.click();
+    fixture.detectChanges();
+
+    Array.from(compiled.querySelectorAll<HTMLButtonElement>('.style-cards > button'))
+      .find((button) => button.textContent?.includes('Elegant 3D'))
+      ?.click();
+    compiled.querySelector<HTMLButtonElement>('.settings-form button[type="submit"]')?.click();
+    await fixture.whenStable();
+    expect(document.documentElement.getAttribute('data-style')).toBe('elegant-3d');
+
+    const card = compiled.querySelector('.shortcut-card') as HTMLElement;
+    const group = card.closest('.group-card') as HTMLElement;
+    mockPointerRects(card, group);
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    });
+    card.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 60, clientY: 95 }));
+
+    expect(card.style.getPropertyValue('--glow-x')).toBe('25.0%');
+    expect(card.style.getPropertyValue('--tilt-x')).toBe('-3.50deg');
+    expect(group.style.getPropertyValue('--group-glow-x')).toBe('15.0%');
+  });
+
   it('defaults to Berlin when weather/auto-theme is enabled without a location', async () => {
     const geocodeFetch = vi.fn().mockResolvedValue({
       ok: true,

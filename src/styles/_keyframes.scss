@@ -29,6 +29,20 @@
   }
 }
 
+// Elegant 3D entrance: tiles stand up from a backward lean around their bottom edge.
+@keyframes depth-in {
+  from {
+    opacity: 0;
+    transform-origin: 50% 100%;
+    transform: perspective(900px) translateY(24px) rotateX(28deg);
+  }
+  to {
+    opacity: 1;
+    transform-origin: 50% 100%;
+    transform: perspective(900px) translateY(0) rotateX(0deg);
+  }
+}
+
 @keyframes card-in {
   from {
     opacity: 0;

@@ -645,8 +645,7 @@ export class App {
   // Both glow layers follow the same pointer event. This keeps the larger group
   // wash alive beneath shortcuts, so moving between both surfaces feels seamless.
   private updatePointerEffects(event: MouseEvent): void {
-    const settings = this.store.settings();
-    if (settings.visualStyle !== 'classic' || !settings.classicPointerEffects) {
+    if (!this.pointerEffectsActive()) {
       this.resetPointerEffects();
       return;
     }
@@ -728,11 +727,17 @@ export class App {
 
   private refreshVisualEffects(): void {
     this.armCursorIdleTimer();
-    const settings = this.store.settings();
-    if (settings.visualStyle !== 'classic' || !settings.classicPointerEffects) {
-      this.resetPointerEffects();
-    }
+    if (!this.pointerEffectsActive()) this.resetPointerEffects();
     this.updateFocusGlider(this.document.activeElement as HTMLElement | null);
+  }
+
+  /** Tilt + pointer light: optional in the classic style, built into Elegant 3D. */
+  private pointerEffectsActive(): boolean {
+    const settings = this.store.settings();
+    return (
+      settings.visualStyle === 'elegant-3d' ||
+      (settings.visualStyle === 'classic' && settings.classicPointerEffects)
+    );
   }
 
   private resetTilt(element: HTMLElement | null): void {

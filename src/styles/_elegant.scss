@@ -1,8 +1,11 @@
 // Elegant: quiet monochrome — warm neutral surfaces, hairline borders, no glow, no blur and
 // no per-group/shortcut color. Group and shortcut colors are set inline, so the tokens are
 // neutralized with !important (the only thing that outranks an inline custom property).
+// Elegant 3D shares everything here and only layers depth and motion on top (_elegant-3d.scss).
+$elegant: ":root:is([data-style='elegant'], [data-style='elegant-3d'])";
+$elegant-light: "#{$elegant}[data-theme='light']";
 
-:root[data-style='elegant'] {
+#{$elegant} {
   --bg: #121211;
   --bg-deep: #121211;
   --surface: #181817;
@@ -30,7 +33,7 @@
   --radius-md: 8px;
 }
 
-:root[data-theme='light'][data-style='elegant'] {
+#{$elegant-light} {
   --bg: #f5f4f0;
   --bg-deep: #f5f4f0;
   --surface: #fbfaf8;
@@ -47,23 +50,23 @@
   --focus: #2b2a27;
 }
 
-:root[data-style='elegant'] :is(.group-card, .shortcut-card, .group-placeholder) {
+#{$elegant} :is(.group-card, .shortcut-card, .group-placeholder) {
   --group-color: var(--muted) !important;
   --shortcut-color: var(--text) !important;
 }
 
-:root[data-style='elegant'] .hub-shell,
-:root[data-theme='light'][data-style='elegant'] .hub-shell {
+#{$elegant} .hub-shell,
+#{$elegant-light} .hub-shell {
   background: var(--bg);
 }
 
-:root[data-style='elegant'] :is(.hub-shell, .group-card, .shortcut-card)::before,
-:root[data-style='elegant'] .hub-shell::after,
-:root[data-style='elegant'] .focus-glider {
+#{$elegant} :is(.hub-shell, .group-card, .shortcut-card)::before,
+#{$elegant} .hub-shell::after,
+#{$elegant} .focus-glider {
   display: none;
 }
 
-:root[data-style='elegant']
+#{$elegant}
   :is(
     .search,
     .group-card,
@@ -84,58 +87,58 @@
   box-shadow: none;
 }
 
-:root[data-style='elegant'] :is(.group-card, .group-card.accent-background),
-:root[data-theme='light'][data-style='elegant'] :is(.group-card, .group-card.accent-background) {
+#{$elegant} :is(.group-card, .group-card.accent-background),
+#{$elegant-light} :is(.group-card, .group-card.accent-background) {
   border-color: var(--line);
   background: var(--surface);
   box-shadow: none;
 }
 
-:root[data-style='elegant'] .group-card:hover,
-:root[data-theme='light'][data-style='elegant'] .group-card:hover {
+#{$elegant} .group-card:hover,
+#{$elegant-light} .group-card:hover {
   border-color: var(--line-strong);
   box-shadow: none;
   transform: none;
 }
 
-:root[data-style='elegant'] .group-header h2 {
+#{$elegant} .group-header h2 {
   color: var(--text);
   font-weight: 500;
   letter-spacing: 0.02em;
 }
 
-:root[data-style='elegant'] .group-header h2 i {
+#{$elegant} .group-header h2 i {
   color: var(--muted);
   font-size: 22px;
 }
 
-:root[data-style='elegant'] .shortcut-card,
-:root[data-theme='light'][data-style='elegant'] .shortcut-card {
+#{$elegant} .shortcut-card,
+#{$elegant-light} .shortcut-card {
   border-color: transparent;
   background: var(--surface-soft);
   box-shadow: none;
 }
 
-:root[data-style='elegant'] .shortcut-card:hover,
-:root[data-theme='light'][data-style='elegant'] .shortcut-card:hover {
+#{$elegant} .shortcut-card:hover,
+#{$elegant-light} .shortcut-card:hover {
   border-color: var(--line-strong);
   background: var(--surface-hover);
   box-shadow: none;
   transform: none;
 }
 
-:root[data-style='elegant'] .shortcut-card > span:last-child {
+#{$elegant} .shortcut-card > span:last-child {
   font-weight: 450;
   letter-spacing: 0.01em;
 }
 
-:root[data-style='elegant'] :is(.shortcut-icon, .shortcut-card:focus-visible .shortcut-icon) {
+#{$elegant} :is(.shortcut-icon, .shortcut-card:focus-visible .shortcut-icon) {
   filter: none;
   opacity: 0.86;
 }
 
 // Favicons are the one remaining source of color: muted at rest, full color on interaction.
-:root[data-style='elegant'] .website-icon img {
+#{$elegant} .website-icon img {
   filter: grayscale(1);
   opacity: 0.8;
   transition:
@@ -143,58 +146,55 @@
     opacity 160ms ease;
 }
 
-:root[data-style='elegant']
-  :is(.shortcut-card:hover, .shortcut-card:focus-visible)
-  .website-icon
-  img {
+#{$elegant} :is(.shortcut-card:hover, .shortcut-card:focus-visible) .website-icon img {
   filter: none;
   opacity: 1;
 }
 
-:root[data-style='elegant'] .brand-mark img {
+#{$elegant} .brand-mark img {
   filter: grayscale(1);
 }
 
-:root[data-style='elegant'] .search:focus-within {
+#{$elegant} .search:focus-within {
   border-color: var(--line-strong);
   box-shadow: none;
 }
 
-:root[data-style='elegant'] :is(.search:focus-within > i, .edit-toggle > i) {
+#{$elegant} :is(.search:focus-within > i, .edit-toggle > i) {
   color: var(--muted);
 }
 
-:root[data-style='elegant'] :is(.primary-button, .primary-button:hover, .edit-toggle.active) {
+#{$elegant} :is(.primary-button, .primary-button:hover, .edit-toggle.active) {
   border-color: var(--primary);
   background: var(--primary);
   box-shadow: none;
   transform: none;
 }
 
-:root[data-style='elegant'] .edit-toggle.active .switch {
+#{$elegant} .edit-toggle.active .switch {
   background: rgba(255, 255, 255, 0.28);
 }
 
-:root[data-style='elegant'] .check-row input:checked + span {
+#{$elegant} .check-row input:checked + span {
   border-color: var(--primary);
   background: var(--primary);
 }
 
-:root[data-style='elegant'] .sidepanel {
+#{$elegant} .sidepanel {
   background: var(--surface-strong);
 }
 
 // Side-panel accents are hardcoded blues elsewhere; swap them for the neutral palette.
-:root[data-style='elegant'] :is(.panel-header .eyebrow, .data-card > div:first-child > i) {
+#{$elegant} :is(.panel-header .eyebrow, .data-card > div:first-child > i) {
   color: var(--muted);
 }
 
-:root[data-style='elegant'] .settings-hero {
+#{$elegant} .settings-hero {
   border-color: var(--line);
   background: var(--surface-soft);
 }
 
-:root[data-style='elegant']
+#{$elegant}
   :is(
     .settings-hero > span,
     .profile-active-badge,
@@ -205,7 +205,7 @@
   color: var(--text);
 }
 
-:root[data-style='elegant']
+#{$elegant}
   :is(
     .style-cards > button.selected,
     .theme-cards > button.selected,
@@ -219,29 +219,29 @@
   box-shadow: none;
 }
 
-:root[data-style='elegant'] :is(.profile-row input:focus, .hex-input:focus) {
+#{$elegant} :is(.profile-row input:focus, .hex-input:focus) {
   border-color: var(--focus);
   box-shadow: none;
 }
 
-:root[data-style='elegant'] .liquid-blur-control input {
+#{$elegant} .liquid-blur-control input {
   accent-color: var(--primary);
 }
 
-:root[data-style='elegant'] .empty-dashboard > span {
+#{$elegant} .empty-dashboard > span {
   background: var(--surface-hover);
   color: var(--muted);
 }
 
-:root[data-style='elegant'] .toast,
-:root[data-theme='light'][data-style='elegant'] .toast {
+#{$elegant} .toast,
+#{$elegant-light} .toast {
   border-color: var(--line-strong);
   background: var(--surface-strong);
   color: var(--text);
   box-shadow: none;
 }
 
-:root[data-style='elegant']
+#{$elegant}
   :is(
     button,
     input,
@@ -258,6 +258,6 @@
   box-shadow: 0 0 0 1px var(--focus) !important;
 }
 
-:root[data-style='elegant'] .search input:focus-visible {
+#{$elegant} .search input:focus-visible {
   box-shadow: none !important;
 }

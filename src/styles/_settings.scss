@@ -196,6 +196,32 @@
   background: #1f1f1d;
 }
 
+.style-preview.elegant-3d {
+  align-items: center;
+  background: radial-gradient(ellipse 90% 80% at 50% -10%, #2a2a27, #121211 72%);
+  perspective: 180px;
+}
+
+.style-preview.elegant-3d::before,
+.style-preview.elegant-3d::after {
+  display: none;
+}
+
+.style-preview.elegant-3d > span {
+  height: 30px;
+  border-color: rgba(255, 255, 255, 0.06);
+  border-radius: 5px;
+  background: linear-gradient(160deg, #2e2e2b, #1b1b19);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 8px 10px -4px rgba(0, 0, 0, 0.75);
+  transform: rotateX(16deg);
+}
+
+.style-preview.elegant-3d > span:nth-child(2) {
+  transform: rotateX(16deg) translateZ(12px);
+}
+
 .style-card-copy {
   display: flex;
   min-width: 0;

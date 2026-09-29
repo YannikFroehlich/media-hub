@@ -71,7 +71,7 @@ const groupsArraySchema = z.array(groupSchema).max(30);
 
 const settingsSchema = z.object({
   theme: z.enum(['dark', 'light']),
-  visualStyle: z.enum(['classic', 'liquid-glass', 'minimalist', 'elegant']).default('classic'),
+  visualStyle: z.enum(['classic', 'liquid-glass', 'minimalist', 'elegant', 'elegant-3d']).default('classic'),
   classicPointerEffects: z.boolean().default(true),
   liquidGlassBackgroundImage: liquidGlassBackgroundSchema.default(''),
   liquidGlassGroupBlur: z.number().int().min(0).max(LIQUID_GLASS_BLUR_MAX).default(3),

@@ -1,5 +1,5 @@
 export type Theme = 'dark' | 'light';
-export type VisualStyle = 'classic' | 'liquid-glass' | 'minimalist' | 'elegant';
+export type VisualStyle = 'classic' | 'liquid-glass' | 'minimalist' | 'elegant' | 'elegant-3d';
 export type OpenBehavior = 'inherit' | 'same-tab' | 'new-tab';
 export type GroupLayout = 'compact' | 'standard' | 'large';
 export type DisplayMode = 'standard' | 'tv';
