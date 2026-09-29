@@ -10,6 +10,7 @@ import {
 import { DOCUMENT } from '@angular/common';
 import {
   Component,
+  DestroyRef,
   ElementRef,
   HostListener,
   ViewChild,
@@ -158,6 +159,13 @@ export class App {
     effect(() => this.resolveWebsiteIcons());
     startGamepadNavigation(this.document);
     this.watchForUpdates();
+    // Not a @HostListener: that would run change detection for the whole dashboard on every
+    // pointer move, although the handler only writes inline styles and (rarely changing) signals.
+    const onPointerMove = (event: MouseEvent) => this.handlePointerActivity(event);
+    this.document.addEventListener('mousemove', onPointerMove, { passive: true });
+    inject(DestroyRef).onDestroy(() =>
+      this.document.removeEventListener('mousemove', onPointerMove),
+    );
   }
 
   // The dashboard often stays open for days on a TV, so it never navigates and the service
@@ -446,8 +454,7 @@ export class App {
     }
   }
 
-  @HostListener('document:mousemove', ['$event'])
-  protected handlePointerActivity(event: MouseEvent): void {
+  private handlePointerActivity(event: MouseEvent): void {
     this.armCursorIdleTimer();
     this.updatePointerEffects(event);
   }
