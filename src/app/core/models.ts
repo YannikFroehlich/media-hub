@@ -63,6 +63,8 @@ export interface GlobalSettings {
   weatherLocation: string;
   weatherLat: number | null;
   weatherLon: number | null;
+  /** 4–8 digits that lock edit mode and settings; '' = no kiosk lock. Guards against accidents only. */
+  kioskPin: string;
 }
 
 export interface WeatherDay {

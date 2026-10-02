@@ -55,6 +55,7 @@ npm run build                 # production build (enforces Angular budgets)
 **Editing UX conventions worth knowing:**
 
 - Edit mode (toggled with `E`) enables drag-and-drop reordering (`@angular/cdk/drag-drop`) for both groups and shortcuts, plus keyboard reordering via arrow keys on the drag handles.
+- Kiosk lock: a per-profile `settings.kioskPin` (4–8 digits, `''` = off) gates entering edit mode and opening settings through `App.whenUnlocked()`, which asks via `ConfirmService.requestPin()` (same dialog plus an on-screen keypad for the gamepad). Once entered it stays unlocked until the screensaver starts (which also leaves edit mode) or the page reloads. It guards against accidents, not access — the PIN sits in localStorage in plain text.
 - `/` focuses the search bar; `Esc` closes open side panels (with an unsaved-changes confirm via `ConfirmService` if the active form is dirty), the keyboard-help overlay, and the weather forecast popover.
 - Arrow-key spatial navigation (`spatialNavigate` in `app.ts`) moves focus between `[data-focusable]` elements based on geometric position, independent of DOM order — needed for the grid layout's non-linear tab order.
 - Side panels (shortcut/group/settings) share one `panel` signal (`PanelKind`) and one focus-return mechanism (`lastTrigger`) in `App`; the panel components are recreated on every open and initialise their form from the store in `ngOnInit`.

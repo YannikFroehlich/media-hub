@@ -143,7 +143,7 @@
         data-focusable
         [class.active]="store.editMode()"
         [attr.aria-pressed]="store.editMode()"
-        (click)="store.toggleEditMode()"
+        (click)="toggleEditMode()"
       >
         <i class="fa-solid fa-pencil" aria-hidden="true"></i>
         <span>Bearbeitungsmodus</span>
@@ -481,6 +481,34 @@
       [cdkTrapFocusAutoCapture]="true"
     >
       <p>{{ confirmState.message }}</p>
+      @if (confirmState.pin) {
+        <input
+          #pinInput
+          class="pin-input"
+          type="password"
+          inputmode="numeric"
+          autocomplete="off"
+          aria-label="PIN"
+          [value]="confirm.pin()"
+          (input)="confirm.setPin(pinInput.value)"
+          (keydown.enter)="confirm.resolve(true)"
+        />
+        <div class="pin-pad">
+          @for (digit of pinDigits; track digit) {
+            <button type="button" class="secondary-button" (click)="confirm.appendPinDigit(digit)">
+              {{ digit }}
+            </button>
+          }
+          <button
+            type="button"
+            class="secondary-button"
+            aria-label="Letzte Ziffer löschen"
+            (click)="confirm.removePinDigit()"
+          >
+            <i class="fa-solid fa-delete-left" aria-hidden="true"></i>
+          </button>
+        </div>
+      }
       <div class="confirm-actions">
         <button type="button" class="secondary-button" (click)="confirm.resolve(false)">
           Abbrechen

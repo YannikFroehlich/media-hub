@@ -71,7 +71,9 @@ const groupsArraySchema = z.array(groupSchema).max(30);
 
 const settingsSchema = z.object({
   theme: z.enum(['dark', 'light']),
-  visualStyle: z.enum(['classic', 'liquid-glass', 'minimalist', 'elegant', 'elegant-3d']).default('classic'),
+  visualStyle: z
+    .enum(['classic', 'liquid-glass', 'minimalist', 'elegant', 'elegant-3d'])
+    .default('classic'),
   classicPointerEffects: z.boolean().default(true),
   liquidGlassBackgroundImage: liquidGlassBackgroundSchema.default(''),
   liquidGlassGroupBlur: z.number().int().min(0).max(LIQUID_GLASS_BLUR_MAX).default(3),
@@ -99,6 +101,10 @@ const settingsSchema = z.object({
   weatherLocation: z.string().default(''),
   weatherLat: z.number().nullable().default(null),
   weatherLon: z.number().nullable().default(null),
+  kioskPin: z
+    .string()
+    .regex(/^(\d{4,8})?$/)
+    .default(''),
 });
 
 const profileSchema = z.object({

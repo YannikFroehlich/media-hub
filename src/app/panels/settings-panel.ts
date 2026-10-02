@@ -74,6 +74,7 @@ export class SettingsPanel implements OnInit {
     screensaverImages: [''],
     weatherEnabled: [false],
     weatherLocation: [''],
+    kioskPin: [''],
   });
 
   ngOnInit(): void {
@@ -101,6 +102,7 @@ export class SettingsPanel implements OnInit {
       screensaverImages: settings.screensaverImages.join('\n'),
       weatherEnabled: settings.weatherEnabled,
       weatherLocation: settings.weatherLocation,
+      kioskPin: settings.kioskPin,
     });
     this.liquidGlassBackgroundPreview.set(
       this.backgroundPreviewStyle(settings.liquidGlassBackgroundImage),
@@ -129,6 +131,11 @@ export class SettingsPanel implements OnInit {
       this.error.set(
         `Bildschirmschoner-Bilder: höchstens ${SCREENSAVER_IMAGE_LIMIT} HTTP(S)-Adressen, eine pro Zeile.`,
       );
+      return;
+    }
+    const kioskPin = value.kioskPin.trim();
+    if (!/^(\d{4,8})?$/.test(kioskPin)) {
+      this.error.set('Die Kiosk-PIN muss aus 4 bis 8 Ziffern bestehen.');
       return;
     }
     const settings = this.store.settings();
@@ -166,6 +173,7 @@ export class SettingsPanel implements OnInit {
         weatherLocation,
         weatherLat,
         weatherLon,
+        kioskPin,
       });
     } catch {
       this.error.set(

@@ -204,6 +204,52 @@ describe('App', () => {
     open.mockRestore();
   });
 
+  it('asks for the kiosk PIN before settings or edit mode, until the screensaver locks again', async () => {
+    const store = TestBed.inject(MediaHubStore);
+    store.updateSettings({ ...store.settings(), kioskPin: '2580' });
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const enterPin = async (digits: string) => {
+      fixture.detectChanges();
+      const keys = Array.from(compiled.querySelectorAll<HTMLButtonElement>('.pin-pad button'));
+      for (const digit of digits) keys.find((key) => key.textContent?.trim() === digit)?.click();
+      compiled.querySelector<HTMLButtonElement>('.confirm-actions .danger-button')?.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    };
+
+    compiled.querySelector<HTMLButtonElement>('.settings-toggle')?.click();
+    await enterPin('1111');
+    expect(compiled.querySelector('.sidepanel')).toBeNull();
+    expect(store.toast()).toBe('Falsche PIN.');
+
+    compiled.querySelector<HTMLButtonElement>('.settings-toggle')?.click();
+    await enterPin('2580');
+    expect(compiled.querySelector('.sidepanel')).not.toBeNull();
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await fixture.whenStable();
+
+    // Unlocked: edit mode no longer asks.
+    store.setEditMode(false);
+    compiled.querySelector<HTMLButtonElement>('.edit-toggle')?.click();
+    await fixture.whenStable();
+    expect(compiled.querySelector('.confirm-dialog')).toBeNull();
+    expect(store.editMode()).toBe(true);
+
+    vi.useFakeTimers();
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', bubbles: true }));
+    vi.advanceTimersByTime(5 * 60 * 1000);
+    vi.useRealTimers();
+    expect(store.editMode()).toBe(false);
+
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); // wake up
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', bubbles: true }));
+    fixture.detectChanges();
+    expect(compiled.querySelector('.pin-input')).not.toBeNull();
+    expect(store.editMode()).toBe(false);
+  });
+
   it('never shows the screensaver when disabled in settings', () => {
     vi.useFakeTimers();
     const store = TestBed.inject(MediaHubStore);

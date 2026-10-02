@@ -89,6 +89,9 @@ export class App {
   protected readonly screensaverActive = signal(false);
   protected readonly weatherDetailsOpen = signal(false);
   protected readonly searchQuery = signal('');
+  protected readonly pinDigits = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+  /** Kiosk lock: the PIN unlocks editing until the screensaver starts or the page reloads. */
+  private readonly kioskUnlocked = signal(false);
   /** A new app version has been downloaded by the service worker and waits for a reload. */
   protected readonly updateReady = signal(false);
   protected readonly visibleGroups = computed(() => {
@@ -272,7 +275,30 @@ export class App {
 
   protected openSettings(event?: Event): void {
     this.rememberTrigger(event);
-    this.panel.set('settings');
+    this.whenUnlocked(() => this.panel.set('settings'));
+  }
+
+  protected toggleEditMode(): void {
+    if (this.store.editMode()) this.store.setEditMode(false);
+    else this.whenUnlocked(() => this.store.setEditMode(true));
+  }
+
+  /** Runs `action` right away unless the kiosk PIN is set and not yet entered; then asks first. */
+  private whenUnlocked(action: () => void): void {
+    const pin = this.store.settings().kioskPin;
+    if (!pin || this.kioskUnlocked()) {
+      action();
+      return;
+    }
+    this.confirm.requestPin('Bearbeitung ist gesperrt. Bitte PIN eingeben.').then((entered) => {
+      if (entered === null) return;
+      if (entered !== pin) {
+        this.store.notify('Falsche PIN.');
+        return;
+      }
+      this.kioskUnlocked.set(true);
+      action();
+    });
   }
 
   protected async closePanel(force = false): Promise<void> {
@@ -441,7 +467,7 @@ export class App {
     // 'E' should not trigger while typing into the search input
     if (event.key.toLowerCase() === 'e' && !isSearchFocused) {
       event.preventDefault();
-      this.store.toggleEditMode();
+      this.toggleEditMode();
       return;
     }
 
@@ -538,10 +564,12 @@ export class App {
       this.screensaverTimer = null;
       return;
     }
-    this.screensaverTimer = window.setTimeout(
-      () => this.screensaverActive.set(true),
-      SCREENSAVER_IDLE_MS,
-    );
+    this.screensaverTimer = window.setTimeout(() => {
+      this.screensaverActive.set(true);
+      // Nobody is watching any more: lock the kiosk again and leave edit mode behind it.
+      this.kioskUnlocked.set(false);
+      if (this.store.settings().kioskPin) this.store.setEditMode(false);
+    }, SCREENSAVER_IDLE_MS);
   }
 
   private linkCheckTimer: ReturnType<typeof setInterval> | null = null;

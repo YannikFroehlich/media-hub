@@ -63,6 +63,7 @@ function createDefaultProfileContent(): Pick<Profile, 'settings' | 'groups'> {
       weatherLocation: '',
       weatherLat: null,
       weatherLon: null,
+      kioskPin: '',
     },
     groups: [
       group('streaming', 'Streaming', 'streaming', '#18b9ff', [

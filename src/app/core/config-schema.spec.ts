@@ -20,6 +20,22 @@ describe('parseConfig', () => {
     }
   });
 
+  it('defaults the kiosk PIN to none and only accepts 4 to 8 digits', () => {
+    const existingConfig = createDefaultConfig() as unknown as {
+      profiles: [{ settings: Record<string, unknown> }];
+    };
+    delete existingConfig.profiles[0].settings['kioskPin'];
+    expect(parseConfig(existingConfig).profiles[0].settings.kioskPin).toBe('');
+
+    const config = createDefaultConfig();
+    config.profiles[0].settings.kioskPin = '12345678';
+    expect(parseConfig(config).profiles[0].settings.kioskPin).toBe('12345678');
+    for (const pin of ['123', '123456789', '12a4']) {
+      config.profiles[0].settings.kioskPin = pin;
+      expect(() => parseConfig(config)).toThrow();
+    }
+  });
+
   it('keeps pointer effects enabled for configurations saved before the option existed', () => {
     const existingConfig = createDefaultConfig() as unknown as {
       profiles: [{ settings: Record<string, unknown> }];

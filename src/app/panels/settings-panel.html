@@ -353,6 +353,25 @@
       </label>
     </fieldset>
 
+    <fieldset class="picker-fieldset option-stack">
+      <legend>Kiosk-Sperre</legend>
+      <label class="field">
+        <span>PIN <em>(optional)</em></span>
+        <input
+          formControlName="kioskPin"
+          type="password"
+          inputmode="numeric"
+          autocomplete="off"
+          maxlength="8"
+          placeholder="Keine Sperre"
+        />
+        <small
+          >4–8 Ziffern. Sperrt Bearbeitungsmodus und Einstellungen dieses Profils, bis die PIN
+          eingegeben wird. Schutz vor versehentlichen Änderungen, nicht vor Zugriff.</small
+        >
+      </label>
+    </fieldset>
+
     <section class="data-card">
       <div>
         <i class="fa-solid fa-shield-halved"></i>
