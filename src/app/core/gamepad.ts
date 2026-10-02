@@ -33,8 +33,7 @@ const DIALOG_FOCUSABLE =
  * confirm dialog, keyboard help), wrapping at the ends. Without an open modal it does nothing,
  * so the dashboard keeps App's spatial navigation.
  */
-// ponytail: linear order, not spatial; selects/ranges can't change value via the pad (use a
-// keyboard for editing).
+// ponytail: linear order, not spatial; fine for single-column side panels.
 export function moveFocusInDialog(from: HTMLElement, step: 1 | -1): void {
   // Focus can end up outside an open modal (e.g. after a mouse click); pull it into the topmost.
   const dialog =
@@ -49,6 +48,28 @@ export function moveFocusInDialog(from: HTMLElement, step: 1 | -1): void {
   const next =
     index < 0 ? (step > 0 ? 0 : items.length - 1) : (index + step + items.length) % items.length;
   items[next].focus({ focusVisible: true });
+}
+
+/**
+ * Steps a select or range one option/step, firing the events Angular forms listen to — synthetic
+ * arrow keys don't do that on their own. Returns false for any other element, which leaves the
+ * arrow to focus movement. At either end the value just stays put.
+ */
+export function stepControlValue(target: HTMLElement, step: 1 | -1): boolean {
+  if (target instanceof HTMLSelectElement) {
+    let index = target.selectedIndex + step;
+    while (target.options[index]?.disabled) index += step;
+    if (!target.options[index]) return true;
+    target.selectedIndex = index;
+  } else if (target instanceof HTMLInputElement && target.type === 'range') {
+    if (step > 0) target.stepUp();
+    else target.stepDown();
+  } else {
+    return false;
+  }
+  target.dispatchEvent(new Event('input', { bubbles: true }));
+  target.dispatchEvent(new Event('change', { bubbles: true }));
+  return true;
 }
 
 /**
@@ -78,9 +99,12 @@ export function startGamepadNavigation(document: Document): void {
     // App didn't already handle it (e.g. buttons inside a side panel).
     if (key === 'Enter' && !event.defaultPrevented) target.click();
     // App ignores arrows while a modal is open (keyboard users keep native select/text/range
-    // behavior there), so the pad moves focus through the modal itself.
+    // behavior there), so the pad moves focus through the modal itself. Left/Right change the
+    // value of a focused select or range instead.
     if (key.startsWith('Arrow') && !event.defaultPrevented) {
-      moveFocusInDialog(target, key === 'ArrowDown' || key === 'ArrowRight' ? 1 : -1);
+      const step = key === 'ArrowDown' || key === 'ArrowRight' ? 1 : -1;
+      const horizontal = key === 'ArrowLeft' || key === 'ArrowRight';
+      if (!(horizontal && stepControlValue(target, step))) moveFocusInDialog(target, step);
     }
   };
 

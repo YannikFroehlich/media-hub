@@ -1,4 +1,9 @@
-import { moveFocusInDialog, pressedKeys, startGamepadNavigation } from './gamepad';
+import {
+  moveFocusInDialog,
+  pressedKeys,
+  startGamepadNavigation,
+  stepControlValue,
+} from './gamepad';
 
 function pad(pressed: number[], axes: number[] = [0, 0]): Gamepad {
   const buttons = Array.from({ length: 17 }, (_, index) => ({
@@ -50,6 +55,34 @@ describe('gamepad navigation', () => {
     byId('outside').focus();
     moveFocusInDialog(byId('outside'), 1);
     expect(focusedId()).toBe('outside');
+    document.body.innerHTML = '';
+  });
+
+  it('steps selects and ranges, skipping disabled options and stopping at the ends', () => {
+    document.body.innerHTML = `
+      <select id="select"><option>a</option><option disabled>b</option><option>c</option></select>
+      <input id="range" type="range" min="0" max="2" value="1" />
+      <button id="button"></button>`;
+    const select = document.getElementById('select') as HTMLSelectElement;
+    const range = document.getElementById('range') as HTMLInputElement;
+    const changes: string[] = [];
+    document.addEventListener('change', (event) => changes.push((event.target as HTMLElement).id));
+
+    expect(stepControlValue(select, 1)).toBe(true);
+    expect(select.selectedIndex).toBe(2);
+    expect(stepControlValue(select, 1)).toBe(true);
+    expect(select.selectedIndex).toBe(2);
+    stepControlValue(select, -1);
+    expect(select.selectedIndex).toBe(0);
+
+    stepControlValue(range, 1);
+    stepControlValue(range, 1);
+    expect(range.value).toBe('2');
+    stepControlValue(range, -1);
+    expect(range.value).toBe('1');
+
+    expect(stepControlValue(document.getElementById('button')!, 1)).toBe(false);
+    expect(changes).toEqual(['select', 'select', 'range', 'range', 'range']);
     document.body.innerHTML = '';
   });
 
