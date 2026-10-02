@@ -2,7 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { SwUpdate, VersionEvent } from '@angular/service-worker';
 import { Subject } from 'rxjs';
 import { App } from './app';
+import { createDefaultConfig } from './core/default-config';
 import { MediaHubStore } from './core/media-hub.store';
+import { createShareLink } from './core/share-link';
 import { WeatherService } from './core/weather.service';
 
 function mediaQueryList(media: string, matches: boolean): MediaQueryList {
@@ -90,6 +92,28 @@ describe('App', () => {
     fixture.detectChanges();
 
     expect(compiled.querySelector('.update-toast button')?.textContent).toContain('Neu laden');
+  });
+
+  it('imports a share link only after confirmation and drops it from the address', async () => {
+    const shared = createDefaultConfig();
+    shared.profiles[0].groups[0].name = 'Geteilt';
+    const link = await createShareLink(shared, location.href);
+    history.replaceState(null, '', new URL(link).hash);
+
+    const fixture = TestBed.createComponent(App);
+    const compiled = fixture.nativeElement as HTMLElement;
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(compiled.querySelector('.confirm-dialog')).not.toBeNull();
+    });
+    expect(location.hash).toBe('');
+    expect(localStorage.getItem('media-hub.config')).toBeNull();
+
+    compiled.querySelector<HTMLButtonElement>('.confirm-actions .danger-button')?.click();
+    await fixture.whenStable();
+
+    const saved = JSON.parse(localStorage.getItem('media-hub.config') ?? '{}');
+    expect(saved.profiles[0].groups[0].name).toBe('Geteilt');
   });
 
   it('hides the fixed focus glow when the dashboard scrolls without moving focus', async () => {

@@ -26,7 +26,8 @@ import { ConfirmService } from './core/confirm.service';
 import { startGamepadNavigation } from './core/gamepad';
 import { handleWebsiteIconError, handleWebsiteIconLoad, iconClass } from './core/icons';
 import { MediaHubStore } from './core/media-hub.store';
-import { HubGroup, Shortcut, WeatherSnapshot } from './core/models';
+import { HubGroup, MediaHubConfig, Shortcut, WeatherSnapshot } from './core/models';
+import { readShareHash } from './core/share-link';
 import { UrlResolver } from './core/url-resolver';
 import { WeatherService } from './core/weather.service';
 import { WebsiteIconResolver } from './core/website-icon-resolver';
@@ -159,6 +160,7 @@ export class App {
     effect(() => this.resolveWebsiteIcons());
     startGamepadNavigation(this.document);
     this.watchForUpdates();
+    this.importFromShareLink();
     // Not a @HostListener: that would run change detection for the whole dashboard on every
     // pointer move, although the handler only writes inline styles and (rarely changing) signals.
     const onPointerMove = (event: MouseEvent) => this.handlePointerActivity(event);
@@ -180,6 +182,34 @@ export class App {
       () => swUpdate.checkForUpdate().catch(() => undefined), // offline: try again next time
       UPDATE_CHECK_INTERVAL_MS,
     );
+  }
+
+  /** Opening a share link (`#import=…`) replaces the config, but only after a confirmation. */
+  private async importFromShareLink(): Promise<void> {
+    const { hash, pathname, search } = this.document.location;
+    let config: MediaHubConfig | null = null;
+    try {
+      config = await readShareHash(hash);
+      if (!config) return;
+    } catch {
+      // invalid link: still drop the hash below so a reload does not ask again
+    }
+    this.document.defaultView?.history.replaceState(null, '', pathname + search);
+    if (!config) {
+      this.store.notify('Der Teilen-Link ist ungültig. Es wurde nichts verändert.');
+      return;
+    }
+    const count = config.profiles.length;
+    const profiles = count === 1 ? 'das Profil' : `${count} Profile`;
+    if (
+      !(await this.confirm.request(
+        `Die aktuelle Konfiguration durch ${profiles} aus dem Teilen-Link ersetzen?`,
+        'Ersetzen',
+      ))
+    )
+      return;
+    this.store.importConfig(config);
+    this.refreshAfterSettingsChange();
   }
 
   protected reloadForUpdate(): void {

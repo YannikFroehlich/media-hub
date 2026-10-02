@@ -358,7 +358,9 @@
         <i class="fa-solid fa-shield-halved"></i>
         <span
           ><strong>Deine Daten bleiben lokal</strong
-          ><small>Sichere deine Gruppen und Verknüpfungen als JSON-Datei.</small></span
+          ><small
+            >Sichere deine Gruppen und Verknüpfungen als JSON-Datei oder teile sie per Link.</small
+          ></span
         >
       </div>
       <div class="data-actions">
@@ -375,7 +377,47 @@
           accept="application/json,.json"
           (change)="importConfig($event)"
         />
+        <button type="button" class="secondary-button full-width" (click)="createShareLink()">
+          <i class="fa-solid fa-qrcode"></i>Teilen-Link mit QR-Code
+        </button>
       </div>
+      @if (share(); as share) {
+        <div class="share-result">
+          @if (share.qr; as qr) {
+            <svg
+              class="share-qr"
+              [attr.viewBox]="'0 0 ' + qr.size + ' ' + qr.size"
+              role="img"
+              aria-label="QR-Code des Teilen-Links"
+            >
+              <path [attr.d]="qr.path" />
+            </svg>
+          } @else {
+            <p class="form-message">Zu viele Daten für einen QR-Code. Teile den Link direkt.</p>
+          }
+          <input
+            #shareInput
+            class="share-link"
+            readonly
+            aria-label="Teilen-Link"
+            [value]="share.link"
+            (focus)="shareInput.select()"
+          />
+          <div class="data-actions">
+            <button
+              type="button"
+              class="secondary-button full-width"
+              (click)="copyShareLink(share.link)"
+            >
+              <i class="fa-solid fa-copy"></i>Link kopieren
+            </button>
+          </div>
+          <small
+            >Enthält alle Profile, aber kein Hintergrundbild. Beim Öffnen auf einem anderen Gerät
+            wird dessen Konfiguration nach Rückfrage ersetzt.</small
+          >
+        </div>
+      }
     </section>
 
     <button class="reset-card" type="button" (click)="resetHub()">

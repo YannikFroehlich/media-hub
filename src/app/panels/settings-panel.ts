@@ -12,6 +12,7 @@ import { ConfirmService } from '../core/confirm.service';
 import { createDefaultProfile } from '../core/default-config';
 import { MediaHubStore } from '../core/media-hub.store';
 import { DisplayMode, ExportEnvelope, VisualStyle } from '../core/models';
+import { createShareLink } from '../core/share-link';
 import { UrlResolver } from '../core/url-resolver';
 import { WeatherService } from '../core/weather.service';
 
@@ -48,6 +49,11 @@ export class SettingsPanel implements OnInit {
   protected readonly profileLimit = PROFILE_LIMIT;
   protected readonly error = signal<string | null>(null);
   protected readonly liquidGlassBackgroundPreview = signal<string | null>(null);
+  /** `qr` is null when the link holds more data than a QR code can. */
+  protected readonly share = signal<{
+    link: string;
+    qr: { size: number; path: string } | null;
+  } | null>(null);
 
   readonly form = inject(FormBuilder).nonNullable.group({
     theme: ['dark' as 'dark' | 'light'],
@@ -231,6 +237,31 @@ export class SettingsPanel implements OnInit {
     anchor.click();
     URL.revokeObjectURL(url);
     this.store.notify('Konfiguration wurde exportiert.');
+  }
+
+  protected async createShareLink(): Promise<void> {
+    const link = await createShareLink(this.store.config(), this.document.baseURI);
+    const { encode } = await import('uqr');
+    let qr = null;
+    try {
+      const { data, size } = encode(link, { border: 2 });
+      const path = data
+        .flatMap((row, y) => row.map((dark, x) => (dark ? `M${x} ${y}h1v1h-1z` : '')))
+        .join('');
+      qr = { size, path };
+    } catch {
+      // too long for a QR code; the link itself still works
+    }
+    this.share.set({ link, qr });
+  }
+
+  protected async copyShareLink(link: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(link);
+      this.store.notify('Link wurde kopiert.');
+    } catch {
+      this.store.notify('Kopieren nicht möglich. Markiere den Link und kopiere ihn manuell.');
+    }
   }
 
   protected chooseImport(): void {
