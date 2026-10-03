@@ -133,8 +133,16 @@
     flex: 1;
   }
 
+  // Icon-only, but the label stays the button's accessible name (same as .visually-hidden;
+  // Sass can't @extend it from inside a media query).
   .panel-footer button span {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
   }
 
   .icon-picker {
