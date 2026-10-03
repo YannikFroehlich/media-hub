@@ -392,18 +392,7 @@ describe('App', () => {
     expect(browserCard?.classList.contains('link-broken')).toBe(false);
   });
 
-  it('caches a website-icon shortcut and swaps the tile to the cached copy', async () => {
-    const cache = {
-      match: vi.fn().mockResolvedValue(undefined),
-      put: vi.fn().mockResolvedValue(undefined),
-    };
-    vi.stubGlobal('caches', { open: vi.fn().mockResolvedValue(cache) });
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({ clone: () => ({}), blob: () => Promise.resolve(new Blob()) }),
-    );
-    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:cached-icon');
-
+  it('loads a website-icon tile straight from the favicon service', () => {
     const store = TestBed.inject(MediaHubStore);
     const group = store.groups()[0];
     store.upsertShortcut(group.id, { ...group.shortcuts[0], icon: { kind: 'website' } });
@@ -411,15 +400,10 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
 
-    await vi.waitFor(() => {
-      fixture.detectChanges();
-      const img = (fixture.nativeElement as HTMLElement).querySelector<HTMLImageElement>(
-        '.website-icon img',
-      );
-      expect(img?.src).toBe('blob:cached-icon');
-    });
-    expect(cache.put).toHaveBeenCalled();
-    createObjectURL.mockRestore();
+    const img = (fixture.nativeElement as HTMLElement).querySelector<HTMLImageElement>(
+      '.website-icon img',
+    );
+    expect(img?.src).toContain('https://www.google.com/s2/favicons?');
   });
 
   it('should focus the search input when the visible search field is clicked', async () => {

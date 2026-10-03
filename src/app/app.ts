@@ -124,9 +124,6 @@ export class App {
   );
   /** Shortcut IDs whose URL failed the last reachability check. Only populated in edit mode. */
   protected readonly brokenLinks = signal<ReadonlySet<string>>(new Set());
-  /** Favicon proxy URL -> locally cached object URL, once resolved (see resolveWebsiteIcons). */
-  private readonly cachedIconUrls = signal<ReadonlyMap<string, string>>(new Map());
-  private readonly resolvingIcons = new Set<string>();
   protected readonly clockLabel = computed(() =>
     new Date(this.store.clockTick()).toLocaleTimeString('de-DE', {
       hour: '2-digit',
@@ -160,7 +157,8 @@ export class App {
     window.setInterval(() => this.refreshWeather(), 30 * 60 * 1000);
     window.setInterval(() => this.refreshSunTimes(), 30 * 60 * 1000);
     effect(() => (this.store.editMode() ? this.armLinkCheck() : this.disarmLinkCheck()));
-    effect(() => this.resolveWebsiteIcons());
+    // The former favicon cache only ever held empty opaque responses; drop what it left behind.
+    void globalThis.caches?.delete('media-hub-favicons-v1').catch(() => undefined);
     startGamepadNavigation(this.document);
     this.watchForUpdates();
     this.importFromShareLink();
@@ -251,10 +249,8 @@ export class App {
   protected readonly handleWebsiteIconLoad = handleWebsiteIconLoad;
   protected readonly handleWebsiteIconError = handleWebsiteIconError;
 
-  /** Website favicon URL, preferring the locally cached copy once one has resolved. */
   protected dashboardIconUrl(shortcutUrl: string): string | null {
-    const remote = this.websiteIconResolver.resolve(shortcutUrl);
-    return remote ? (this.cachedIconUrls().get(remote) ?? remote) : null;
+    return this.websiteIconResolver.resolve(shortcutUrl);
   }
 
   protected openShortcutPanel(groupId?: string, shortcut?: Shortcut, event?: Event): void {
@@ -615,23 +611,6 @@ export class App {
       return false;
     } finally {
       window.clearTimeout(timeout);
-    }
-  }
-
-  private resolveWebsiteIcons(): void {
-    const remoteUrls = this.store
-      .groups()
-      .flatMap((group) => group.shortcuts)
-      .filter((shortcut) => shortcut.icon.kind === 'website')
-      .map((shortcut) => this.websiteIconResolver.resolve(shortcut.url))
-      .filter((url): url is string => url !== null);
-
-    for (const remoteUrl of new Set(remoteUrls)) {
-      if (this.resolvingIcons.has(remoteUrl) || this.cachedIconUrls().has(remoteUrl)) continue;
-      this.resolvingIcons.add(remoteUrl);
-      this.websiteIconResolver.getCachedIconUrl(remoteUrl).then((cachedUrl) => {
-        this.cachedIconUrls.update((map) => new Map(map).set(remoteUrl, cachedUrl));
-      });
     }
   }
 
